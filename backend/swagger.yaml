@@ -1,0 +1,407 @@
+openapi: 3.0.0
+info:
+  title: Invoice Management API
+  description: API for managing invoices, users, and payments
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Production Server
+paths:
+  /v1/user/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                  example: "company name"
+                password:
+                  type: string
+              required:
+                - email
+                - companyName
+                - password
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Invalid details
+
+  /v1/user/login:
+    post:
+      summary: User login
+      operationId: loginUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Invalid details
+
+  /v1/user/logout:
+    post:
+      summary: User logout
+      operationId: logoutUser
+      tags:
+        - Users
+      parameters:
+        - in: header
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          description: Invalid token
+          
+  /v1/user/{userid}:
+    delete:
+      summary: Remove user profile
+      operationId: removeUser
+      tags:
+        - Users
+      parameters:
+        - name: userid
+          in: path
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User removed successfully
+        '400':
+          description: Invalid details
+        '401':
+          description: Invalid token
+
+  # The rest of your API endpoints remain unchanged
+  /v1/invoices:
+    post:
+      summary: Create a new invoice
+      description: likely need to add more for the info required, just included the barebones for now
+      operationId: createInvoice
+      tags:
+        - Invoices
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seller:
+                  type: string
+                buyer:
+                  type: string
+                amount:
+                  type: number
+                  format: double
+                currency:
+                  type: string
+                  description: currency 3 letter codes
+                issuedate:
+                  type: string
+                  format: date
+                duedate:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoiceid:
+                    type: string
+        '400':
+          description: Invalid details
+        '401':
+          description: Invalid token
+    get:
+      summary: List all pending/completed invoices
+      operationId: listInvoices
+      tags:
+        - Invoices
+      description: DISCUSS -- im not sure how to do this one
+      responses:
+        '200':
+          description: Retrieved invoices successfully
+
+  /v1/invoices/{invoiceid}:
+    get:
+      summary: Retrieve an invoice
+      operationId: getInvoice
+      tags:
+        - Invoices
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string 
+      responses:
+        '200':
+          description: Invoice retrieved successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  seller:
+                    type: string
+                  buyer:
+                    type: string
+                  amount:
+                    type: number
+                    format: double
+                  currency:
+                    type: string
+                    description: 3 letter currency code
+                  issuedate:
+                    type: string
+                    format: date
+                  duedate:
+                    type: string
+                    format: date
+        '400':
+          description: Invoice does not exist
+        '401': 
+          description: Invalid token
+    put:
+      summary: Update an invoice
+      operationId: updateInvoice
+      tags:
+        - Invoices
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seller:
+                  type: string
+                buyer:
+                  type: string
+                amount:
+                  type: number
+                  format: double
+                currency:
+                  type: string
+                  description: 3 letter currency code
+                issuedate:
+                  type: string
+                  format: date
+                duedate:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Invoice updated successfully
+        '400':
+          description: Invalid details
+        '401':
+          description: Invalid token
+    
+    delete:
+      summary: Delete an invoice
+      operationId: deleteInvoice
+      tags:
+        - Invoices
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token 
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice deleted successfully
+        '400':
+          description: Invalid details
+        '401':
+          description: Invalid token
+
+  /v1/invoices/{invoiceid}/send:
+    post:
+      summary: Send an invoice to a user
+      operationId: sendInvoice
+      tags:
+        - Invoices
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "buyer company name"
+        
+      responses:
+        '200':
+          description: Invoice sent successfully
+        '400':
+          description: Invalid details
+        '401':
+          description: Invalid token
+
+  /v1/invoices/{id}/validate:
+    post:
+      summary: Validate invoice format against UBL schema
+      operationId: validateInvoice
+      tags:
+        - Invoices
+      description: DISCUSS -- does this need authentification; and does it do it itself or simply return true/false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice validated successfully
+        '400':
+          description: Invalid details
+        '401':
+          description: Invalid token
+
+  /v1/invoices/{invoiceid}/status:
+    get:
+      summary: Get invoice payment status
+      operationId: getInvoiceStatus
+      tags:
+        - Invoices
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice status retrieved successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paid: 
+                    type: boolean
+
+  /v1/invoices/summary:
+    get:
+      summary: Get summary of invoices
+      operationId: getInvoiceSummary
+      tags:
+        - Reports
+      description: discuss on how we want to do this
+      responses:
+        '200':
+          description: Invoice summary retrieved successfully
+
+  /v1/health:
+    get:
+      summary: Check API’s status
+      operationId: checkAPIStatus
+      tags:
+        - System
+      responses:
+        '200':
+          description: API is running
