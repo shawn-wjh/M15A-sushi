@@ -26,11 +26,14 @@ paths:
                 name:
                   type: string
                   example: "company name"
+                  description: "Must be at least 3 characters long and contain only letters and spaces."
                 password:
                   type: string
+                  description: "Must be at least 8 characters long, include one uppercase letter, one number, and one special character."
+                  example: password123!
               required:
                 - email
-                - companyName
+                - name
                 - password
       responses:
         '200':
@@ -44,6 +47,8 @@ paths:
                     type: string
         '400':
           description: Invalid details
+        '409':
+          description: Email already registered
 
   /v1/user/login:
     post:
@@ -63,6 +68,7 @@ paths:
                   format: email
                 password:
                   type: string
+                  example: password123!
               required:
                 - email
                 - password
@@ -83,7 +89,7 @@ paths:
     post:
       summary: User logout
       operationId: logoutUser
-      tags:
+      tags: 
         - Users
       parameters:
         - in: header
@@ -97,18 +103,13 @@ paths:
         '401':
           description: Invalid token
           
-  /v1/user/{userid}:
+  /v1/user:
     delete:
       summary: Remove user profile
       operationId: removeUser
       tags:
         - Users
       parameters:
-        - name: userid
-          in: path
-          required: true
-          schema:
-            type: string
         - in: header
           name: token
           required: true
@@ -117,16 +118,13 @@ paths:
       responses:
         '200':
           description: User removed successfully
-        '400':
-          description: Invalid details
         '401':
           description: Invalid token
 
-  # The rest of your API endpoints remain unchanged
   /v1/invoices:
     post:
       summary: Create a new invoice
-      description: likely need to add more for the info required, just included the barebones for now
+      description: Need to add more for the info required, just included the basics for now
       operationId: createInvoice
       tags:
         - Invoices
@@ -145,18 +143,20 @@ paths:
               properties:
                 seller:
                   type: string
+                  example: seller name
                 buyer:
                   type: string
+                  example: buyer name
                 amount:
                   type: number
                   format: double
                 currency:
                   type: string
                   description: currency 3 letter codes
-                issuedate:
+                issueDate:
                   type: string
                   format: date
-                duedate:
+                dueDate:
                   type: string
                   format: date
       responses:
@@ -173,61 +173,250 @@ paths:
           description: Invalid details
         '401':
           description: Invalid token
+          
     get:
-      summary: List all pending/completed invoices
+      summary: List invoices with optional filters
       operationId: listInvoices
-      tags:
-        - Invoices
-      description: DISCUSS -- im not sure how to do this one
-      responses:
-        '200':
-          description: Retrieved invoices successfully
-
-  /v1/invoices/{invoiceid}:
-    get:
-      summary: Retrieve an invoice
-      operationId: getInvoice
       tags:
         - Invoices
       parameters:
         - name: token
           in: header
           required: true
+          schema: 
+            type: string
+        - name: status
+          in: query
+          required: false
           schema:
             type: string
-        - name: invoiceid
-          in: path
-          required: true
+            enum: ["pending", "paid", "overdue"]
+          description: "Filter invoices by status."
+        - name: limit
+          in: query
+          required: false
           schema:
-            type: string 
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: "Number of invoices to return (default: 10)."
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: "Pagination: number of invoices to skip (default: 0)."
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["date_issued", "amount"]
+          description: "Sort by date_issued or amount."
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+          description: "Sorting order: `asc` (ascending) or `desc` (descending)."
       responses:
-        '200':
-          description: Invoice retrieved successfully
+        '200': 
+          description: List of invoices retrieved successfully
           content: 
-            application/json:
+            application/xml:
               schema:
-                type: object
-                properties:
-                  seller:
-                    type: string
-                  buyer:
-                    type: string
-                  amount:
-                    type: number
-                    format: double
-                  currency:
-                    type: string
-                    description: 3 letter currency code
-                  issuedate:
-                    type: string
-                    format: date
-                  duedate:
-                    type: string
-                    format: date
+                type: array
+                xml:
+                  wrapped: true
+                  name: Invoices
+                  namespace: "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+                items:
+                  type: object
+                  xml:
+                    name: Invoice
+                  properties:
+                    ID:
+                      type: string
+                      example: INV-001
+                      xml:
+                        name: cbc:ID
+                    IssueDate:
+                      type: string
+                      format: date
+                      xml:
+                        name: cbc:IssueDate
+                    AccountingSupplierParty:
+                      type: object
+                      xml:
+                        name: cac:AccountingSupplierParty
+                      properties:
+                        Party:
+                          type: object
+                          xml:
+                            name: cac:Party
+                          properties:
+                            Name:
+                              type: string
+                              xml:
+                                name: cbc:Name
+                    AccountingCustomerParty:
+                      type: object
+                      xml:
+                        name: cac:AccountingCustomerParty
+                      properties:
+                        Party:
+                          type: object
+                          xml:
+                            name: cac:Party
+                          properties:
+                            Name:
+                              type: string
+                              xml:
+                                name: cbc:Name
+                    LegalMonetaryTotal:
+                      type: object
+                      xml:
+                        name: cac:LegalMonetaryTotal
+                      properties:
+                        PayableAmount:
+                          type: object
+                          xml:
+                            name: cbc:PayableAmount
+                          properties:
+                            CurrencyId:
+                              type: string
+                              example: AUD
+                              xml:
+                                attribute: true
+                            value:
+                              type: number
+                              format: double
+                              description: Total amount payable
+                              example: "0.00"
+                    PaymentTerms:
+                      type: object
+                      xml:
+                        name: cac:PaymentTerms
+                      properties:
+                        PaymentDueDate:
+                          type: string
+                          format: date
+                          xml:
+                            name: cbc:PaymentDueDate
+                description: Array of UBL-compliant XML invoices
         '400':
           description: Invoice does not exist
         '401': 
           description: Invalid token
+  
+  /v1/invoices/{invoiceid}:
+    get:
+      summary: retrieve an invoice
+      operationId: getInvoice
+      tags:
+        - Invoices
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Retrieved invoice successfully
+          content:
+            application/xml:
+              schema:
+                type: object
+                description: UBL-compliant XML invoice
+                xml:
+                  name: Invoice
+                properties:
+                  ID:
+                    type: string
+                    example: INV-001
+                    xml:
+                      name: cbc:ID
+                  IssueDate:
+                    type: string
+                    format: date
+                    xml:
+                      name: cbc:IssueDate
+                  AccountingSupplierParty:
+                    type: object
+                    xml:
+                      name: cac:AccountingSupplierParty
+                    properties:
+                      Party:
+                        type: object
+                        xml:
+                          name: cac:Party
+                        properties:
+                          Name:
+                            type: string
+                            xml:
+                              name: cbc:Name
+                  AccountingCustomerParty:
+                    type: object
+                    xml:
+                      name: cac:AccountingCustomerParty
+                    properties:
+                      Party:
+                        type: object
+                        xml:
+                          name: cac:Party
+                        properties:
+                          Name:
+                            type: string
+                            xml:
+                              name: cbc:Name
+                  LegalMonetaryTotal:
+                    type: object
+                    xml:
+                      name: cac:LegalMonetaryTotal
+                    properties:
+                      PayableAmount:
+                        type: object
+                        xml:
+                          name: cbc:PayableAmount
+                        properties:
+                          CurrencyId:
+                            type: string
+                            example: AUD
+                            xml:
+                              attribute: true
+                          value:
+                            type: number
+                            format: double
+                            description: Total amount payable
+                            example: "0.00"
+                  PaymentTerms:
+                    type: object
+                    xml:
+                      name: cac:PaymentTerms
+                    properties:
+                      PaymentDueDate:
+                        type: string
+                        format: date
+                        xml:
+                          name: cbc:PaymentDueDate
+                  
+        '400':
+          description: Invalid invoiceid
+        '401': 
+          description: Invalid token
+        '403':
+          description: Unauthorised access
+
     put:
       summary: Update an invoice
       operationId: updateInvoice
@@ -261,6 +450,7 @@ paths:
                 currency:
                   type: string
                   description: 3 letter currency code
+                  example: "AUD"
                 issuedate:
                   type: string
                   format: date
@@ -274,6 +464,8 @@ paths:
           description: Invalid details
         '401':
           description: Invalid token
+        '403':
+          description: Unauthorised access
     
     delete:
       summary: Delete an invoice
@@ -298,6 +490,8 @@ paths:
           description: Invalid details
         '401':
           description: Invalid token
+        '403':
+          description: Unauthorised access
 
   /v1/invoices/{invoiceid}/send:
     post:
@@ -334,20 +528,26 @@ paths:
           description: Invalid details
         '401':
           description: Invalid token
+        '403':
+          description: Unauthorised access
 
-  /v1/invoices/{id}/validate:
+  /v1/invoices/{invoiceid}/validate:
     post:
-      summary: Validate invoice format against UBL schema
+      summary: DISCUSS -- Validate invoice
       operationId: validateInvoice
       tags:
         - Invoices
-      description: DISCUSS -- does this need authentification; and does it do it itself or simply return true/false
+      description: "DISCUSS -- does this need authentification; and does it do it itself or simply return true /false. Things to check for: dates, currency code, amount,,,"
       parameters:
-        - name: id
+        - name: invoiceid
           in: path
           required: true
-          description: Invoice ID
           schema:
+            type: string
+        - name: token
+          in: header
+          required: true
+          schema: 
             type: string
       responses:
         '200':
@@ -356,6 +556,8 @@ paths:
           description: Invalid details
         '401':
           description: Invalid token
+        '403':
+          description: Unauthorised access
 
   /v1/invoices/{invoiceid}/status:
     get:
@@ -382,19 +584,63 @@ paths:
               schema:
                 type: object
                 properties:
-                  paid: 
-                    type: boolean
+                  status: 
+                    type: string
+                    enum: ["pending", "paid", "overdue"]
+        '401':
+          description: Invalid token
+        '403':
+          description: Unauthorised access
 
   /v1/invoices/summary:
     get:
       summary: Get summary of invoices
       operationId: getInvoiceSummary
       tags:
-        - Reports
-      description: discuss on how we want to do this
+        - Invoices
+      description: "discuss on how we want to do this; right now: shows breakdown of the user's payable and receivable invoices"
+      parameters:
+        - name: token
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Invoice summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payable:
+                    type: object
+                    description: invoices yet to be paid
+                    properties:
+                      pending: 
+                        type: number
+                        format: integer 
+                      paid: 
+                        type: number
+                        format: integer
+                      overdue: 
+                        type: number
+                        format: integer
+                  receivable:
+                    type: object
+                    description: invoices payments yet to be collected
+                    properties: 
+                      pending: 
+                        type: number
+                        format: integer 
+                      paid: 
+                        type: number
+                        format: integer
+                      overdue: 
+                        type: number
+                        format: integer
+        '400':
+          description: Invalid token
 
   /v1/health:
     get:
@@ -405,3 +651,4 @@ paths:
       responses:
         '200':
           description: API is running
+>>>>>>> ba2bafd48a60e758e945e88292c5e3e5e72e85de:swagger.yaml
