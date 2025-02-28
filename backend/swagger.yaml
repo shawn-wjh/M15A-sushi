@@ -36,7 +36,7 @@ paths:
                 - name
                 - password
       responses:
-        '200':
+        "200":
           description: User registered successfully
           content:
             application/json:
@@ -45,9 +45,9 @@ paths:
                 properties:
                   token:
                     type: string
-        '400':
+        "400":
           description: Invalid details
-        '409':
+        "409":
           description: Email already registered
 
   /v1/user/login:
@@ -73,7 +73,7 @@ paths:
                 - email
                 - password
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
@@ -82,14 +82,14 @@ paths:
                 properties:
                   token:
                     type: string
-        '400':
+        "400":
           description: Invalid details
 
   /v1/user/logout:
     post:
       summary: User logout
       operationId: logoutUser
-      tags: 
+      tags:
         - Users
       parameters:
         - in: header
@@ -98,11 +98,11 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Logout successful
-        '401':
+        "401":
           description: Invalid token
-          
+
   /v1/user:
     delete:
       summary: Remove user profile
@@ -116,9 +116,9 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: User removed successfully
-        '401':
+        "401":
           description: Invalid token
 
   /v1/invoices:
@@ -160,7 +160,7 @@ paths:
                   type: string
                   format: date
       responses:
-        '200':
+        "200":
           description: Invoice created successfully
           content:
             application/json:
@@ -169,11 +169,11 @@ paths:
                 properties:
                   invoiceid:
                     type: string
-        '400':
+        "400":
           description: Invalid details
-        '401':
+        "401":
           description: Invalid token
-          
+
     get:
       summary: List invoices with optional filters
       operationId: listInvoices
@@ -183,7 +183,7 @@ paths:
         - name: token
           in: header
           required: true
-          schema: 
+          schema:
             type: string
         - name: status
           in: query
@@ -224,9 +224,9 @@ paths:
             enum: ["asc", "desc"]
           description: "Sorting order: `asc` (ascending) or `desc` (descending)."
       responses:
-        '200': 
+        "200":
           description: List of invoices retrieved successfully
-          content: 
+          content:
             application/xml:
               schema:
                 type: array
@@ -308,11 +308,11 @@ paths:
                           xml:
                             name: cbc:PaymentDueDate
                 description: Array of UBL-compliant XML invoices
-        '400':
+        "400":
           description: Invoice does not exist
-        '401': 
+        "401":
           description: Invalid token
-  
+
   /v1/invoices/{invoiceid}:
     get:
       summary: retrieve an invoice
@@ -331,7 +331,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Retrieved invoice successfully
           content:
             application/xml:
@@ -409,12 +409,12 @@ paths:
                         format: date
                         xml:
                           name: cbc:PaymentDueDate
-                  
-        '400':
+
+        "400":
           description: Invalid invoiceid
-        '401': 
+        "401":
           description: Invalid token
-        '403':
+        "403":
           description: Unauthorised access
 
     put:
@@ -458,15 +458,15 @@ paths:
                   type: string
                   format: date
       responses:
-        '200':
+        "200":
           description: Invoice updated successfully
-        '400':
+        "400":
           description: Invalid details
-        '401':
+        "401":
           description: Invalid token
-        '403':
+        "403":
           description: Unauthorised access
-    
+
     delete:
       summary: Delete an invoice
       operationId: deleteInvoice
@@ -478,19 +478,19 @@ paths:
           required: true
           schema:
             type: string
-        - name: token 
+        - name: token
           in: header
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Invoice deleted successfully
-        '400':
+        "400":
           description: Invalid details
-        '401':
+        "401":
           description: Invalid token
-        '403':
+        "403":
           description: Unauthorised access
 
   /v1/invoices/{invoiceid}/send:
@@ -520,15 +520,15 @@ paths:
                 name:
                   type: string
                   example: "buyer company name"
-        
+
       responses:
-        '200':
+        "200":
           description: Invoice sent successfully
-        '400':
+        "400":
           description: Invalid details
-        '401':
+        "401":
           description: Invalid token
-        '403':
+        "403":
           description: Unauthorised access
 
   /v1/invoices/{invoiceid}/validate:
@@ -547,16 +547,16 @@ paths:
         - name: token
           in: header
           required: true
-          schema: 
+          schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Invoice validated successfully
-        '400':
+        "400":
           description: Invalid details
-        '401':
+        "401":
           description: Invalid token
-        '403':
+        "403":
           description: Unauthorised access
 
   /v1/invoices/{invoiceid}/status:
@@ -577,19 +577,19 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Invoice status retrieved successfully
-          content: 
+          content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status: 
+                  status:
                     type: string
                     enum: ["pending", "paid", "overdue"]
-        '401':
+        "401":
           description: Invalid token
-        '403':
+        "403":
           description: Unauthorised access
 
   /v1/invoices/summary:
@@ -606,7 +606,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Invoice summary retrieved successfully
           content:
             application/json:
@@ -617,29 +617,29 @@ paths:
                     type: object
                     description: invoices yet to be paid
                     properties:
-                      pending: 
-                        type: number
-                        format: integer 
-                      paid: 
+                      pending:
                         type: number
                         format: integer
-                      overdue: 
+                      paid:
+                        type: number
+                        format: integer
+                      overdue:
                         type: number
                         format: integer
                   receivable:
                     type: object
                     description: invoices payments yet to be collected
-                    properties: 
-                      pending: 
-                        type: number
-                        format: integer 
-                      paid: 
+                    properties:
+                      pending:
                         type: number
                         format: integer
-                      overdue: 
+                      paid:
                         type: number
                         format: integer
-        '400':
+                      overdue:
+                        type: number
+                        format: integer
+        "400":
           description: Invalid token
 
   /v1/health:
@@ -649,6 +649,5 @@ paths:
       tags:
         - System
       responses:
-        '200':
+        "200":
           description: API is running
->>>>>>> ba2bafd48a60e758e945e88292c5e3e5e72e85de:swagger.yaml
