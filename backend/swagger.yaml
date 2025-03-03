@@ -47,8 +47,24 @@ paths:
                     type: string
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "409":
           description: Email already registered
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/user/login:
     post:
@@ -84,6 +100,14 @@ paths:
                     type: string
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/user/logout:
     post:
@@ -102,6 +126,14 @@ paths:
           description: Logout successful
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/user:
     delete:
@@ -120,6 +152,14 @@ paths:
           description: User removed successfully
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/invoices:
     post:
@@ -171,8 +211,24 @@ paths:
                     type: string
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
     get:
       summary: List invoices with optional filters
@@ -310,8 +366,24 @@ paths:
                 description: Array of UBL-compliant XML invoices
         "400":
           description: Invoice does not exist
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/invoices/{invoiceid}:
     get:
@@ -412,10 +484,34 @@ paths:
 
         "400":
           description: Invalid invoiceid
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "403":
           description: Unauthorised access
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
     put:
       summary: Update an invoice
@@ -462,10 +558,34 @@ paths:
           description: Invoice updated successfully
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "403":
           description: Unauthorised access
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
     delete:
       summary: Delete an invoice
@@ -488,10 +608,34 @@ paths:
           description: Invoice deleted successfully
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "403":
           description: Unauthorised access
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/invoices/{invoiceid}/send:
     post:
@@ -526,10 +670,34 @@ paths:
           description: Invoice sent successfully
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "403":
           description: Unauthorised access
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/invoices/{invoiceid}/validate:
     post:
@@ -554,10 +722,34 @@ paths:
           description: Invoice validated successfully
         "400":
           description: Invalid details
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "403":
           description: Unauthorised access
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/invoices/{invoiceid}/status:
     get:
@@ -589,8 +781,24 @@ paths:
                     enum: ["pending", "paid", "overdue"]
         "401":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
         "403":
           description: Unauthorised access
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/invoices/summary:
     get:
@@ -641,6 +849,14 @@ paths:
                         format: integer
         "400":
           description: Invalid token
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+                    example: Specific error message
 
   /v1/health:
     get:
@@ -651,3 +867,4 @@ paths:
       responses:
         "200":
           description: API is running
+          
