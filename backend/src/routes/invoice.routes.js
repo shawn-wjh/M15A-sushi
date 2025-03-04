@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-// Import middleware (we'll create these next)
-const { validateInvoiceInput } = require('../middleware/invoice-validation');
-const { generateUBLInvoice, validateUBLFormat } = require('../middleware/ubl-handler');
+// Import middleware (more needs to be added)
+const { validateInvoiceInput, validateInvoiceStandard } = require('../middleware/invoice-validation');
+const { generateUBLInvoice } = require('../middleware/invoice-generation');
 
-// Import controllers (we'll create these next)
+// Import controllers (more needs to be added)
 const { 
     createInvoice,
     validateInvoice,
@@ -17,14 +17,24 @@ const {
 
 /**
  * Generate UBL 2.4-compliant invoice
- * @route POST /v1/invoices/generate
+ * @route POST /v1/invoices
  * @param {object} req.body - Invoice details (IssueDate, DueDate, SupplierName, etc.)
  * @returns {object} 200 - Generated UBL invoice
  */
-router.post('/generate', 
-    validateInvoiceInput,    // Validate JSON input
+router.post('/v1/invoices', 
+    validateInvoiceInput,    // Initial Validation of JSON input (correct number of parameters, correct data types, etc.)
     generateUBLInvoice,      // Convert to UBL 2.4 XML
-    createInvoice            // Store in DynamoDB
+    validateInvoiceStandard, // Validate invoice standard against UBL 2.4, peppol, etc.
+    createInvoice            // Outputs the UBL 2.4 XML to the user and stores it in the database
+);
+
+/**
+ * List all invoices
+ * @route GET /v1/invoices
+ * @returns {object} 200 - Array of invocies
+ */
+router.get('/v1/invoices', 
+    listInvoices
 );
 
 /**
