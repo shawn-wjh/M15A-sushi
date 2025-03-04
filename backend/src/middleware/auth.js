@@ -41,44 +41,44 @@ const auth = {
         }
     },
 
-    /**
-     * Check user role permissions
-     * Used to restrict routes based on user role
-     */
-    checkRole: (allowedRoles) => {
-        return async (req, res, next) => {
-            try {
-                // TODO:
-                // 1. Get user role from request
-                // 2. Check if role is in allowedRoles
-                // 3. Call next() if allowed
-            } catch (error) {
-                return res.status(403).json({
-                    status: 'error',
-                    message: 'Insufficient permissions'
-                });
-            }
-        };
-    },
+    // /**
+    //  * Check user role permissions
+    //  * Used to restrict routes based on user role
+    //  */
+    // checkRole: (allowedRoles) => {
+    //     return async (req, res, next) => {
+    //         try {
+    //             // TODO:
+    //             // 1. Get user role from request
+    //             // 2. Check if role is in allowedRoles
+    //             // 3. Call next() if allowed
+    //         } catch (error) {
+    //             return res.status(403).json({
+    //                 status: 'error',
+    //                 message: 'Insufficient permissions'
+    //             });
+    //         }
+    //     };
+    // },
 
-    /**
-     * Refresh JWT token
-     * Used to issue a new token before the old one expires
-     */
-    refreshToken: async (req, res, next) => {
-        try {
-            // TODO:
-            // 1. Get current token
-            // 2. Verify it's still valid
-            // 3. Generate new token
-            // 4. Return new token
-        } catch (error) {
-            return res.status(401).json({
-                status: 'error',
-                message: 'Could not refresh token'
-            });
-        }
-    }
+    // /**
+    //  * Refresh JWT token
+    //  * Used to issue a new token before the old one expires
+    //  */
+    // refreshToken: async (req, res, next) => {
+    //     try {
+    //         // TODO:
+    //         // 1. Get current token
+    //         // 2. Verify it's still valid
+    //         // 3. Generate new token
+    //         // 4. Return new token
+    //     } catch (error) {
+    //         return res.status(401).json({
+    //             status: 'error',
+    //             message: 'Could not refresh token'
+    //         });
+    //     }
+    // }
 };
 
 module.exports = auth; 
