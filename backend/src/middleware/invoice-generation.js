@@ -20,5 +20,4 @@ const generateUBLInvoice = (req, res, next) => {
 
 module.exports = {
     generateUBLInvoice,
-    validateUBLFormat
 }; 

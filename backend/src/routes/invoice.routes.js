@@ -21,7 +21,7 @@ const {
  * @param {object} req.body - Invoice details (IssueDate, DueDate, SupplierName, etc.)
  * @returns {object} 200 - Generated UBL invoice
  */
-router.post('/v1/invoices', 
+router.post('/', 
     validateInvoiceInput,    // Initial Validation of JSON input (correct number of parameters, correct data types, etc.)
     generateUBLInvoice,      // Convert to UBL 2.4 XML
     validateInvoiceStandard, // Validate invoice standard against UBL 2.4, peppol, etc.
@@ -33,9 +33,50 @@ router.post('/v1/invoices',
  * @route GET /v1/invoices
  * @returns {object} 200 - Array of invocies
  */
-router.get('/v1/invoices', 
+router.get('/', 
     listInvoices
 );
+
+/**
+ * Get specific invoice
+ * @route GET /v1/invoices/:invoiceId
+ * @param {string} invoiceId.path.required - Invoice ID
+ * @returns {object} 200 - Invoice details
+ */
+router.get('/:invoiceId',
+    getInvoice
+);
+
+/**
+ * update specific invoice
+ * @route PUT /v1/invoices/:invoiceId
+ * @param {string} invoiceId.path.required - Invoice ID
+ * @returns {object} 200 - Invoice details
+ */
+router.put('/:invoiceId',
+    updateInvoice
+);
+
+/**
+ * Delete invoice
+ * @route DELETE /v1/invoices/:invoiceId
+ * @param {string} invoiceId.path.required - Invoice ID
+ * @returns {object} 200 - Success message
+ */
+router.delete('/:invoiceId',
+    deleteInvoice
+);
+
+// /**
+//  * Download invoice as UBL XML
+//  * @route GET /v1/invoices/:invoiceId/download
+//  * @param {string} invoiceId.path.required - Invoice ID
+//  * @returns {file} 200 - UBL XML file
+//  */
+// router.get('/:invoiceId/download',
+//     downloadInvoice
+// );
+
 
 /**
  * Validate UBL invoice format
@@ -46,45 +87,6 @@ router.get('/v1/invoices',
 router.post('/validate',
     validateUBLFormat,
     validateInvoice
-);
-
-/**
- * List all invoices
- * @route GET /v1/invoices
- * @returns {array} 200 - Array of invoices
- */
-router.get('/',
-    listInvoices
-);
-
-/**
- * Get specific invoice
- * @route GET /v1/invoices/:id
- * @param {string} id.path.required - Invoice ID
- * @returns {object} 200 - Invoice details
- */
-router.get('/:id',
-    getInvoice
-);
-
-/**
- * Download invoice as UBL XML
- * @route GET /v1/invoices/:id/download
- * @param {string} id.path.required - Invoice ID
- * @returns {file} 200 - UBL XML file
- */
-router.get('/:id/download',
-    downloadInvoice
-);
-
-/**
- * Delete invoice
- * @route DELETE /v1/invoices/:id
- * @param {string} id.path.required - Invoice ID
- * @returns {object} 200 - Success message
- */
-router.delete('/:id',
-    deleteInvoice
 );
 
 module.exports = router; 

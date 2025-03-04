@@ -45,6 +45,20 @@ const validation = {
     },
 
     /**
+     * Validate email format
+     * Checks if email is in valid format
+     */
+    validateEmail: (email) => {
+        try {
+            // TODO:
+            // 1. Check email format using regex
+            // 2. Return true if valid
+        } catch (error) {
+            return false;
+        }
+    },
+
+    /**
      * Validate password meets requirements
      * Used for password changes and registration
      */
@@ -60,36 +74,6 @@ const validation = {
             return false;
         }
     },
-
-    /**
-     * Sanitize user input
-     * Removes any potentially dangerous content
-     */
-    sanitizeInput: (data) => {
-        try {
-            // TODO:
-            // 1. Remove HTML tags
-            // 2. Remove script tags
-            // 3. Trim whitespace
-            // 4. Return sanitized data
-        } catch (error) {
-            return data; // Return original if sanitization fails
-        }
-    },
-
-    /**
-     * Validate email format
-     * Checks if email is in valid format
-     */
-    validateEmail: (email) => {
-        try {
-            // TODO:
-            // 1. Check email format using regex
-            // 2. Return true if valid
-        } catch (error) {
-            return false;
-        }
-    }
 };
 
 module.exports = validation; 

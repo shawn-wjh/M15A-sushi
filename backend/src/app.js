@@ -5,6 +5,10 @@ const dotenv = require('dotenv');
 // Load environment variables from .env file
 dotenv.config();
 
+// Import routes
+const invoiceRoutes = require('./routes/invoice.routes');
+const userRoutes = require('./routes/user.routes');
+
 // Create Express app
 const app = express();
 
@@ -14,17 +18,10 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (for form data)
 
-// Basic health check route
-app.get('/v1/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Server is running' });
-});
-
-const invoiceRoutes = require('./routes/invoice.routes');
-app.use('/v1/invoices', invoiceRoutes);
-// const invoiceRoutes = require('./routes/invoice.routes');
-
 // Use routes
-// app.use('/v1/invoices', invoiceRoutes);
+app.use('/v1/invoices', invoiceRoutes);
+app.use('/v1/users', userRoutes);
+
 
 // Error handling middleware (When our function outputs errors)
 // This is a global error handler that will help us debug errors in development
