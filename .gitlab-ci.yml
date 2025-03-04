@@ -9,5 +9,3 @@ dummy-job:
     - echo "This is a dummy CI pipeline"
     - echo "No actual checks are being performed"
     - echo "Pipeline will always pass"
-
-  allow_failure: true
