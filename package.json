@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "eslint-plugin-jest": "^28.11.0",
+    "ts-jest": "^29.2.6"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
