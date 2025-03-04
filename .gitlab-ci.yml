@@ -1,0 +1,13 @@
+image: node:18
+
+stages:
+  - dummy
+
+dummy-job:
+  stage: dummy
+  script:
+    - echo "This is a dummy CI pipeline"
+    - echo "No actual checks are being performed"
+    - echo "Pipeline will always pass"
+
+  allow_failure: true
