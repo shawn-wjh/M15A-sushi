@@ -3,6 +3,10 @@
  */
 const { createDynamoDBClient, Tables } = require('../config/database');
 const config = require('../config/auth');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -13,29 +17,93 @@ const registrationController = {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  register: async (req, res) => {
+  register: async (req, res) => { 
+    // using async because we're using await, allowing other requests to continue while we wait for the database to respond
     try {
-      // TODO:
       // 1. Extract user data from request body
-      // 2. Check if user already exists (wait for Dihlan to set up the database)
-      // 3. Hash the password (Maybe not needed for now)
-      // 4. Generate user ID
-      // 5. Create user object
-      // 6. Store user in database (wait for Dihlan to set up the database)
-      // 7. Send verification email (optional for now)
-      // 8. Generate JWT token
-      // 9. Return success response
+      const { email, password, name } = req.body;
 
-      return res.status(200).json({
+      // Additional validation for required fields
+      if (!name) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Name is required'
+        });
+      }
+
+      // 2. Check if user already exists
+      const getUserParams = {
+        TableName: Tables.USERS,
+        Key: {
+          email: email.toLowerCase()
+        }
+      };
+
+      const existingUser = await dbClient.send(new GetCommand(getUserParams));
+      
+      if (existingUser.Item) {
+        return res.status(409).json({
+          status: 'error',
+          message: 'User with this email already exists'
+        });
+      }
+
+      // 3. Hash the password
+      const hashedPassword = await bcrypt.hash(password, config.password.saltRounds);
+
+      // 4. Generate user ID
+      const userId = uuidv4();
+
+      // 5. Create user object
+      const newUser = {
+        userId,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: 'user', // Default role
+        status: 'active', // Default status
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // 6. Store user in database
+      const putUserParams = {
+        TableName: Tables.USERS,
+        Item: newUser
+      };
+
+      await dbClient.send(new PutCommand(putUserParams));
+
+      // 7. Generate JWT token
+      const tokenPayload = {
+        userId: newUser.userId,
+        email: newUser.email,
+        role: newUser.role
+      };
+
+      const token = jwt.sign(
+        tokenPayload,
+        config.jwt.secret,
+        { expiresIn: config.jwt.expiresIn }
+      );
+
+      // 8. Return success response
+      return res.status(201).json({
         status: 'success',
-        message: 'User registered successfully. Please verify your email.',
+        message: 'User registered successfully',
         data: {
-          // User data will go here
+          userId: newUser.userId,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+          token
         }
       });
     } catch (error) {
       console.error('Registration error:', error);
-      return res.status(401).json({
+      return res.status(500).json({
         status: 'error',
         message: 'Failed to register',
         details: error.message

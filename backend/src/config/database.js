@@ -11,7 +11,7 @@ const createDynamoDBClient = () => {
         }
     };
 
-    // Add local endpoint for development and testing
+    // Add local endpoint for development and testing if specified
     if (config.dynamodb.endpoint) {
         clientConfig.endpoint = config.dynamodb.endpoint;
     }
@@ -20,11 +20,10 @@ const createDynamoDBClient = () => {
     return DynamoDBDocumentClient.from(client);
 };
 
-// Table names with environment prefixes
+// Direct table names without prefixes
 const Tables = {
-    INVOICES: `${config.dynamodb.tablePrefix}invoices`,
-    USERS: `${config.dynamodb.tablePrefix}users`,
-    TEMPLATES: `${config.dynamodb.tablePrefix}templates`
+    INVOICES: config.dynamodb.invoicesTable,
+    USERS: config.dynamodb.usersTable
 };
 
 module.exports = {
