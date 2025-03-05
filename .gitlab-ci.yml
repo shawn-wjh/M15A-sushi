@@ -1,23 +1,10 @@
 stages:
   - build
-  - test
 
 build-job:
   stage: build
   script:
-    - echo "Building the project..."
-    # - cd backend && npm install
-  only:
-    - main
-    - merge_requests
-
-test-job:
-  stage: test
-  script:
-    - echo "Running tests..."
-    # - cd backend && npm install
-    # Add actual test commands when you have tests
-    # - npm test
+    - echo "Pipeline is passing!"
   only:
     - main
     - merge_requests
