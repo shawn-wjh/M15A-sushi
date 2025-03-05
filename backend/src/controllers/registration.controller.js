@@ -6,7 +6,7 @@ const config = require('../config/auth');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -32,16 +32,16 @@ const registrationController = {
       }
 
       // 2. Check if user already exists
-      const getUserParams = {
+      const scanParams = {
         TableName: Tables.USERS,
-        Key: {
-          email: email.toLowerCase()
+        FilterExpression: "email = :email",
+        ExpressionAttributeValues: {
+          ":email": email.toLowerCase()
         }
       };
-
-      const existingUser = await dbClient.send(new GetCommand(getUserParams));
       
-      if (existingUser.Item) {
+      const scanResult = await dbClient.send(new ScanCommand(scanParams));
+      if (scanResult.Items && scanResult.Items.length > 0) {
         return res.status(409).json({
           status: 'error',
           message: 'User with this email already exists'
@@ -52,11 +52,11 @@ const registrationController = {
       const hashedPassword = await bcrypt.hash(password, config.password.saltRounds);
 
       // 4. Generate user ID
-      const userId = uuidv4();
+      const UserID = uuidv4();
 
       // 5. Create user object
       const newUser = {
-        userId,
+        UserID,
         email: email.toLowerCase(),
         password: hashedPassword,
         previousPassword: '',
@@ -77,7 +77,7 @@ const registrationController = {
 
       // 7. Generate JWT token
       const tokenPayload = {
-        userId: newUser.userId,
+        userId: newUser.UserID,
         email: newUser.email,
         role: newUser.role
       };
@@ -93,7 +93,7 @@ const registrationController = {
         status: 'success',
         message: 'User registered successfully',
         data: {
-          userId: newUser.userId,
+          userId: newUser.UserID,
           email: newUser.email,
           name: newUser.name,
           role: newUser.role,
