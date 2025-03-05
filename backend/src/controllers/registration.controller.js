@@ -59,8 +59,8 @@ const registrationController = {
         userId,
         email: email.toLowerCase(),
         password: hashedPassword,
-        firstName,
-        lastName,
+        previousPassword: '',
+        name,
         role: 'user', // Default role
         status: 'active', // Default status
         createdAt: new Date().toISOString(),
@@ -89,14 +89,13 @@ const registrationController = {
       );
 
       // 8. Return success response
-      return res.status(201).json({
+      return res.status(200).json({
         status: 'success',
         message: 'User registered successfully',
         data: {
           userId: newUser.userId,
           email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
+          name: newUser.name,
           role: newUser.role,
           token
         }

@@ -4,8 +4,8 @@
  * and graceful shutdown procedures.
  */
 const http = require('http');
-const app = require('./app');
-const { createDynamoDBClient } = require('./config/database');
+const app = require('./src/app');
+const { createDynamoDBClient } = require('./src/config/database');
 const dotenv = require('dotenv');
 
 // Load environment variables
