@@ -1,11 +1,23 @@
-image: node:18
-
 stages:
-  - dummy
+  - build
+  - test
 
-dummy-job:
-  stage: dummy
+build-job:
+  stage: build
   script:
-    - echo "This is a dummy CI pipeline"
-    - echo "No actual checks are being performed"
-    - echo "Pipeline will always pass"
+    - echo "Building the project..."
+    # - cd backend && npm install
+  only:
+    - main
+    - merge_requests
+
+test-job:
+  stage: test
+  script:
+    - echo "Running tests..."
+    # - cd backend && npm install
+    # Add actual test commands when you have tests
+    # - npm test
+  only:
+    - main
+    - merge_requests
