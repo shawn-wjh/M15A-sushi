@@ -1,6 +1,7 @@
 const dotenv = require('dotenv');
 
 // Load environment variables
+// creates process.env object, which contains all the environment variables
 dotenv.config();
 
 // Default configurations
