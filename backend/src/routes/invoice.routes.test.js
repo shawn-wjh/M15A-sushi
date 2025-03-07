@@ -3,6 +3,10 @@ const mockInvoice = require('../middleware/mockInvoice')
 const request = require('supertest');
 const app = require('../app'); // adjust path as needed
 
+// jest.mock('@aws-sdk/client-s3');
+// jest.mock('@aws-sdk/lib-dynamodb');
+// jest.mock('@aws-sdk/client-dynamodb');
+
 describe('POST /v1/invoices', () => {
     test('should create new invoice', async () => {
         const response = await request(app)

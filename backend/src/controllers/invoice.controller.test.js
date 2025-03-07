@@ -10,6 +10,9 @@ const {
 const httpMocks = require('node-mocks-http');
 const mockInvoice = require('../middleware/mockInvoice')
 
+jest.mock('@aws-sdk/client-s3');
+// jest.mock('@aws-sdk/client-dynamodb');
+
 describe('createInvoice', () => {
     it('should return 200 when creating a new invoice', async () => {
         const request = httpMocks.createRequest({

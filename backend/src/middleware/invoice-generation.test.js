@@ -2,6 +2,7 @@ const { convertToUBL, generateAndUploadUBLInvoice, uploadToS3 } = require('./inv
 const mockInvoice = require('./mockInvoice');
 
 jest.mock('@aws-sdk/client-s3');
+jest.mock('@aws-sdk/lib-dynamodb');
 
 describe('Invoice Generation Tests', () => {
 
