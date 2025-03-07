@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
 const fs = require('fs').promises;
 const path = require('path');
-const generateAndUploadUBLInvoice = require('../middleware/invoice-generation');
+const { generateAndUploadUBLInvoice } = require('../middleware/invoice-generation');
 const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 // Initialize DynamoDB client
@@ -16,7 +16,7 @@ const invoiceController = {
     /**
      * Create a new invoice
      * Stores the generated UBL invoice in DynamoDB
-     * @param {Object} req - Express request object
+     * @param {Object} req - invoice object
      * @param {Object} res - Express response object
      */
     createInvoice: async (req, res) => {
@@ -51,9 +51,7 @@ const invoiceController = {
             return res.status(200).json({
                 status: 'success',
                 message: 'Invoice created successfully',
-                data: {
-                    // Invoice details will go here
-                }
+                invoiceId: invoiceId
             });
         } catch (error) {
             return res.status(500).json({

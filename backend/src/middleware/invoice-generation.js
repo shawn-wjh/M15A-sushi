@@ -24,7 +24,7 @@ const exampleInvoice = {
 */
 
 /**
- * Converts invoice data in JSON format to UBL XML format, by filling out a 
+ * Converts invoice data in JSON format to UBL XML format, by filling out a
  * template using fields provided in the JSON object.
  *
  * @param {object} invoice - refer to exampleInvoice above
@@ -124,14 +124,18 @@ const s3Client = new S3Client({
 });
 
 async function uploadToS3(xml, invoiceId) {
-  try {
-    const params = {
-      Bucket: config.s3.bucketName || 'sushi-invoice-storage',
-      Key: `invoices/${invoiceId}.xml`,
-      Body: xml,
-      ContentType: "application/xml",
-    };
+  if (!xml || !invoiceId) {
+    throw new Error("Empty XML or invoiceId");
+  }
 
+  const params = {
+    Bucket: config.s3.bucketName || "sushi-invoice-storage",
+    Key: `invoices/${invoiceId}.xml`,
+    Body: xml,
+    ContentType: "application/xml",
+  };
+
+  try {
     const command = new PutObjectCommand(params);
     const response = await s3Client.send(command);
 
@@ -141,8 +145,7 @@ async function uploadToS3(xml, invoiceId) {
       response,
     };
   } catch (error) {
-    console.error("Error uploading to S3:", error);
-    throw error;
+    throw new Error(`Failed to upload to S3: ${error.message}`);
   }
 }
 
@@ -150,9 +153,17 @@ async function uploadToS3(xml, invoiceId) {
  * Generate and upload UBL invoice given invoice data as js object
  */
 async function generateAndUploadUBLInvoice(invoiceData, invoiceId) {
-  const ublXml = convertToUBL(invoiceData);
-  const uploadResult = await uploadToS3(ublXml, invoiceId);
-  return uploadResult;
+  try {
+    const ublXml = convertToUBL(invoiceData);
+    const uploadResult = await uploadToS3(ublXml, invoiceId);
+    return uploadResult;
+  } catch (error) {
+    throw new Error(`Failed to generate and upload UBL invoice: ${error.message}`);
+  }
 }
 
-module.exports = generateAndUploadUBLInvoice;
+module.exports = {
+  convertToUBL,
+  uploadToS3,
+  generateAndUploadUBLInvoice,
+};

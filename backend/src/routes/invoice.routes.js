@@ -3,7 +3,6 @@ const router = express.Router();
 
 // Import middleware (more needs to be added)
 const { validateInvoiceInput, validateInvoiceStandard } = require('../middleware/invoice-validation');
-const { generateUBLInvoice } = require('../middleware/invoice-generation');
 
 // Import controllers (more needs to be added)
 const { 
@@ -23,8 +22,7 @@ const {
  * @returns {object} 200 - Generated UBL invoice
  */
 router.post('/', 
-    // validateInvoiceInput,    // Initial Validation of JSON input (correct number of parameters, correct data types, etc.)
-    // generateUBLInvoice,      // Convert to UBL 2.4 XML
+    validateInvoiceInput,    // Initial Validation of JSON input (correct number of parameters, correct data types, etc.)
     // validateInvoiceStandard, // Validate invoice standard against UBL 2.4, peppol, etc.
     createInvoice            // Outputs the UBL 2.4 XML to the user and stores it in the database
 );
