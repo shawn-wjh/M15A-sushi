@@ -20,6 +20,9 @@ const config = {
         usersTable: process.env.DYNAMODB_USERS_TABLE,
         invoicesTable: process.env.DYNAMODB_INVOICES_TABLE,
     },
+    s3: {
+        bucket: process.env.S3_BUCKET_NAME,
+    },
     jwt: {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXPIRE || '24h',

@@ -2,6 +2,8 @@ const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
 const fs = require('fs').promises;
 const path = require('path');
+const generateAndUploadUBLInvoice = require('../middleware/invoice-generation');
+const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -24,8 +26,29 @@ const invoiceController = {
             // 2. Create timestamp
             // 3. Prepare invoice item for DynamoDB
             // 4. Store in DynamoDB
+            
+            const data = req.body;
+            const timestamp = new Date().toISOString();
+            const invoiceId = uuidv4();
 
-            return res.status(201).json({
+            // Generate and store UBL invoice in S3
+            const status = await generateAndUploadUBLInvoice(data, invoiceId);
+
+            // Prepare invoice item for DynamoDB
+            const invoiceItem = {
+                TableName: Tables.INVOICES,
+                Item: {
+                    InvoiceID: invoiceId,
+                    timestamp: timestamp,
+                    UserID: "123", // TODO: Get UserID from request 
+                    s3Url: status.location,
+                }
+            };
+
+            // Store in DynamoDB
+            await dbClient.send(new PutCommand(invoiceItem));
+
+            return res.status(200).json({
                 status: 'success',
                 message: 'Invoice created successfully',
                 data: {
@@ -120,6 +143,33 @@ const invoiceController = {
     //         });
     //     }
     // },
+
+    /**
+     * Update an invoice
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     * @returns 
+     */
+    updateInvoice: async (req, res) => {
+        try {
+            // TODO:
+            // 1. Get invoiceId from request parameters
+            // 2. Check if invoice exists
+            // 3. Update invoice in DynamoDB with given data 
+            // 4. Return success message
+
+            return res.status(200).json({
+                status: 'success',
+                message: 'Invoice updated successfully'
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'error',
+                message: 'Failed to update invoice',
+                details: error.message
+            });
+        }
+    },
 
     /**
      * Delete an invoice
