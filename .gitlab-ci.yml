@@ -14,6 +14,7 @@ run_tests:
   stage: test
   script:
     - cd backend
+    - npm ci
     - npx jest
   dependencies:
     - install_dependencies
