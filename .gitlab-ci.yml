@@ -9,9 +9,6 @@ install_dependencies:
   script:
     - cd backend
     - npm install
-  artifacts:
-    paths:
-      - backend/node_modules/
 
 run_tests:
   stage: test
