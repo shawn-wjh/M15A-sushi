@@ -5,12 +5,12 @@ const { v4: uuidv4 } = require('uuid');
  */
 
 const generateUBLInvoice = (req, res, next) => {
-    try {
-        const invoice = req.validatedInvoice;
-        const invoiceId = uuidv4();
+  try {
+    const invoice = req.validatedInvoice;
+    const invoiceId = uuidv4();
 
-        // Create UBL 2.4 XML structure
-        const ublXml = `<?xml version="1.0" encoding="UTF-8"?>
+    // Create UBL 2.4 XML structure
+    const ublXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
@@ -45,69 +45,69 @@ const generateUBLInvoice = (req, res, next) => {
     </cac:LegalMonetaryTotal>
 </Invoice>`;
 
-        // Attach generated XML to request for next middleware
-        req.generatedInvoice = {
-            id: invoiceId,
-            xml: ublXml,
-            metadata: {
-                issueDate: invoice.issueDate,
-                dueDate: invoice.dueDate,
-                supplierName: invoice.supplierName,
-                buyerName: invoice.buyerName,
-                amount: invoice.payableAmount,
-                currency: invoice.currency
-            }
-        };
+    // Attach generated XML to request for next middleware
+    req.generatedInvoice = {
+      id: invoiceId,
+      xml: ublXml,
+      metadata: {
+        issueDate: invoice.issueDate,
+        dueDate: invoice.dueDate,
+        supplierName: invoice.supplierName,
+        buyerName: invoice.buyerName,
+        amount: invoice.payableAmount,
+        currency: invoice.currency
+      }
+    };
 
-        next();
-    } catch (error) {
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error generating UBL invoice',
-            details: error.message
-        });
-    }
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error generating UBL invoice',
+      details: error.message
+    });
+  }
 };
 
 const validateUBLFormat = (req, res, next) => {
-    try {
-        const { xml } = req.body;
+  try {
+    const { xml } = req.body;
 
-        if (!xml) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'No XML content provided'
-            });
-        }
-
-        // Basic XML structure validation
-        if (!xml.includes('Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"')) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Invalid UBL format: Missing required UBL namespace'
-            });
-        }
-
-        // TODO: Add more detailed UBL 2.4 schema validation
-        // This would typically involve validating against the official UBL 2.4 XSD schema
-
-        // If validation passes, attach XML to request for next middleware
-        req.validatedXml = xml;
-        next();
-    } catch (error) {
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error validating UBL format',
-            details: error.message
-        });
+    if (!xml) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No XML content provided'
+      });
     }
+
+    // Basic XML structure validation
+    if (!xml.includes('Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"')) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid UBL format: Missing required UBL namespace'
+      });
+    }
+
+    // TODO: Add more detailed UBL 2.4 schema validation
+    // This would typically involve validating against the official UBL 2.4 XSD schema
+
+    // If validation passes, attach XML to request for next middleware
+    req.validatedXml = xml;
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error validating UBL format',
+      details: error.message
+    });
+  }
 };
 
 // Helper function to generate XML for invoice items
 const generateItemsXml = (items) => {
-    if (!items || !Array.isArray(items)) return '';
+  if (!items || !Array.isArray(items)) return '';
 
-    return items.map((item, index) => `
+  return items.map((item, index) => `
     <cac:InvoiceLine>
         <cbc:ID>${index + 1}</cbc:ID>
         <cbc:InvoicedQuantity>${item.quantity}</cbc:InvoicedQuantity>
@@ -123,6 +123,6 @@ const generateItemsXml = (items) => {
 };
 
 module.exports = {
-    generateUBLInvoice,
-    validateUBLFormat
-}; 
+  generateUBLInvoice,
+  validateUBLFormat
+};
