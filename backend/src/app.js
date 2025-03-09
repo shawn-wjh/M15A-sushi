@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Import routes
-// const invoiceRoutes = require('./routes/invoice.routes');
+const invoiceRoutes = require('./routes/invoice.routes');
 const userRoutes = require('./routes/user.routes');
 
 // Create Express app
@@ -19,7 +19,7 @@ app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (for form data)
 
 // Use routes
-// app.use('/v1/invoices', invoiceRoutes);
+app.use('/v1/invoices', invoiceRoutes);
 app.use('/v1/users', userRoutes);
 
 // Error handling middleware (When our function outputs errors)
