@@ -48,7 +48,7 @@ const invoiceController = {
       };
 
       // Store in DynamoDB
-      const x = await dbClient.send(new PutCommand(invoiceItem));
+      await dbClient.send(new PutCommand(invoiceItem));
 
       return res.status(200).json({
         status: "success",
