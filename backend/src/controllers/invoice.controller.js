@@ -50,14 +50,14 @@ const invoiceController = {
 
       // Store in DynamoDB
       const test = await dbClient.send(new PutCommand(invoiceItem));
-      console.log("dbclient.sent worked: ", test);
-
+      
       return res.status(200).json({
-        status: "success",
-        message: "Invoice created successfully",
-        invoiceId: invoiceId,
-      });
+          status: "success",
+          message: "Invoice created successfully",
+          invoiceId: invoiceId,
+        });
     } catch (error) {
+        console.log(test);
       return res.status(500).json({
         status: "error",
         message: "Failed to create invoice",
