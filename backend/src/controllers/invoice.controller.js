@@ -35,6 +35,7 @@ const invoiceController = {
 
       // Generate and store UBL invoice in S3
       const status = await generateAndUploadUBLInvoice(data, invoiceId);
+      console.log("generateAndUploadUBLInvoice status: ", status);
 
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
@@ -48,7 +49,8 @@ const invoiceController = {
       };
 
       // Store in DynamoDB
-      await dbClient.send(new PutCommand(invoiceItem));
+      const test = await dbClient.send(new PutCommand(invoiceItem));
+      console.log("dbclient.sent worked: ", test);
 
       return res.status(200).json({
         status: "success",
@@ -56,7 +58,6 @@ const invoiceController = {
         invoiceId: invoiceId,
       });
     } catch (error) {
-      console.log("dbClient", x);
       return res.status(500).json({
         status: "error",
         message: "Failed to create invoice",
