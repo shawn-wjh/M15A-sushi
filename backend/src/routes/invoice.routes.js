@@ -6,14 +6,14 @@ const router = express.Router();
 const { validateInvoiceInput, validateInvoiceStandard } = require('../middleware/invoice-validation');
 
 // Import controllers (more needs to be added)
-const { 
-    createInvoice,
-    validateInvoice,
-    listInvoices,
-    getInvoice,
-    // downloadInvoice,
-    updateInvoice,
-    deleteInvoice 
+const {
+  createInvoice,
+  validateInvoice,
+  listInvoices,
+  getInvoice,
+  // downloadInvoice,
+  updateInvoice,
+  deleteInvoice
 } = require('../controllers/invoice.controller');
 
 /**
@@ -22,10 +22,11 @@ const {
  * @param {object} req.body - Invoice details (IssueDate, DueDate, SupplierName, etc.)
  * @returns {object} 200 - Generated UBL invoice
  */
-router.post('/', 
-    validateInvoiceInput,    // Initial Validation of JSON input (correct number of parameters, correct data types, etc.)
-    // validateInvoiceStandard, // Validate invoice standard against UBL 2.4, peppol, etc.
-    createInvoice            // Outputs the UBL 2.4 XML to the user and stores it in the database
+router.post(
+  '/',
+  validateInvoiceInput, // Initial Validation of JSON input (correct number of parameters, correct data types, etc.)
+  // validateInvoiceStandard, // Validate invoice standard against UBL 2.4, peppol, etc.
+  createInvoice // Outputs the UBL 2.4 XML to the user and stores it in the database
 );
 
 /**
@@ -33,8 +34,9 @@ router.post('/',
  * @route GET /v1/invoices
  * @returns {object} 200 - Array of invocies
  */
-router.get('/', 
-    listInvoices
+router.get(
+  '/',
+  listInvoices
 );
 
 /**
@@ -43,8 +45,9 @@ router.get('/',
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.get('/:invoiceId',
-    getInvoice
+router.get(
+  '/:invoiceId',
+  getInvoice
 );
 
 /**
@@ -53,8 +56,9 @@ router.get('/:invoiceId',
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.put('/:invoiceId',
-    updateInvoice
+router.put(
+  '/:invoiceId',
+  updateInvoice
 );
 
 /**
@@ -63,8 +67,9 @@ router.put('/:invoiceId',
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Success message
  */
-router.delete('/:invoiceId',
-    deleteInvoice
+router.delete(
+  '/:invoiceId',
+  deleteInvoice
 );
 
 // /**
@@ -76,7 +81,6 @@ router.delete('/:invoiceId',
 // router.get('/:invoiceId/download',
 //     downloadInvoice
 // );
-
 
 /**
  * Validate UBL invoice format

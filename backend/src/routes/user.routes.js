@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 
 // Import middleware
@@ -13,10 +14,11 @@ const authController = require('../controllers/auth.controller');
  * @route POST /v1/users/register
  * @returns {object} 200 - User registered successfully
  */
-router.post('/register', 
-    validation.validateEmail,
-    validation.validatePassword,
-    registrationController.register
+router.post(
+  '/register',
+  validation.validateEmail,
+  validation.validatePassword,
+  registrationController.register
 );
 
 /**
@@ -24,26 +26,11 @@ router.post('/register',
  * @route POST /v1/users/login
  * @returns {object} 200 - User logged in successfully
  */
-router.post('/login', 
-    validation.validateEmail,  
-    validation.validatePassword,
-    authController.login
+router.post(
+  '/login',
+  validation.validateEmail,
+  validation.validatePassword,
+  authController.login
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = router;
