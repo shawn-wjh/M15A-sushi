@@ -1,12 +1,12 @@
 /**
  * Registration Controller
  */
-const { createDynamoDBClient, Tables } = require('../config/database');
-const config = require('../config/auth');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const config = require('../config/auth');
+const { createDynamoDBClient, Tables } = require('../config/database');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -17,7 +17,7 @@ const registrationController = {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  register: async (req, res) => { 
+  register: async (req, res) => {
     // using async because we're using await, allowing other requests to continue while we wait for the database to respond
     try {
       // 1. Extract user data from request body
@@ -34,12 +34,12 @@ const registrationController = {
       // 2. Check if user already exists
       const scanParams = {
         TableName: Tables.USERS,
-        FilterExpression: "email = :email",
+        FilterExpression: 'email = :email',
         ExpressionAttributeValues: {
-          ":email": email.toLowerCase()
+          ':email': email.toLowerCase()
         }
       };
-      
+
       const scanResult = await dbClient.send(new ScanCommand(scanParams));
       if (scanResult.Items && scanResult.Items.length > 0) {
         return res.status(409).json({
@@ -108,7 +108,7 @@ const registrationController = {
         details: error.message
       });
     }
-  },
+  }
 };
 
 module.exports = registrationController;

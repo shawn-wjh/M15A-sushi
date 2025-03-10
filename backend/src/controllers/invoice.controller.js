@@ -1,11 +1,11 @@
-const { v4: uuidv4 } = require("uuid");
-const { createDynamoDBClient, Tables } = require("../config/database");
-const fs = require("fs").promises;
-const path = require("path");
+const { v4: uuidv4 } = require('uuid');
+const { createDynamoDBClient, Tables } = require('../config/database');
+const fs = require('fs').promises;
+const path = require('path');
+const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 const {
-  generateAndUploadUBLInvoice,
-} = require("../middleware/invoice-generation");
-const { PutCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+  generateAndUploadUBLInvoice
+} = require('../middleware/invoice-generation');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -35,32 +35,32 @@ const invoiceController = {
 
       // Generate and store UBL invoice in S3
       const status = await generateAndUploadUBLInvoice(data, invoiceId);
-      console.log("generateAndUploadUBLInvoice status: ", status);
+      console.log('generateAndUploadUBLInvoice status: ', status);
 
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
         TableName: Tables.INVOICES,
         Item: {
           InvoiceID: invoiceId,
-          timestamp: timestamp,
-          UserID: "123", // TODO: Get UserID from request
-          s3Url: status.location,
-        },
+          timestamp,
+          UserID: '123', // TODO: Get UserID from request
+          s3Url: status.location
+        }
       };
 
       // Store in DynamoDB
       console.log(await dbClient.send(new PutCommand(invoiceItem)));
-      
+
       return res.status(200).json({
-          status: "success",
-          message: "Invoice created successfully",
-          invoiceId: invoiceId,
-        });
+        status: 'success',
+        message: 'Invoice created successfully',
+        invoiceId
+      });
     } catch (error) {
       return res.status(500).json({
-        status: "error",
-        message: "Failed to create invoice",
-        details: error.message,
+        status: 'error',
+        message: 'Failed to create invoice',
+        details: error.message
       });
     }
   },
@@ -78,17 +78,17 @@ const invoiceController = {
       // 3. Return formatted response
 
       return res.status(200).json({
-        status: "success",
+        status: 'success',
         data: {
           count: 0,
-          invoices: [],
-        },
+          invoices: []
+        }
       });
     } catch (error) {
       return res.status(500).json({
-        status: "error",
-        message: "Failed to list invoices",
-        details: error.message,
+        status: 'error',
+        message: 'Failed to list invoices',
+        details: error.message
       });
     }
   },
@@ -107,16 +107,16 @@ const invoiceController = {
       // 4. Return invoice details
 
       return res.status(200).json({
-        status: "success",
+        status: 'success',
         data: {
           // Invoice details will go here
-        },
+        }
       });
     } catch (error) {
       return res.status(500).json({
-        status: "error",
-        message: "Failed to get invoice",
-        details: error.message,
+        status: 'error',
+        message: 'Failed to get invoice',
+        details: error.message
       });
     }
   },
@@ -160,14 +160,14 @@ const invoiceController = {
       // 4. Return success message
 
       return res.status(200).json({
-        status: "success",
-        message: "Invoice updated successfully",
+        status: 'success',
+        message: 'Invoice updated successfully'
       });
     } catch (error) {
       return res.status(500).json({
-        status: "error",
-        message: "Failed to update invoice",
-        details: error.message,
+        status: 'error',
+        message: 'Failed to update invoice',
+        details: error.message
       });
     }
   },
@@ -187,17 +187,17 @@ const invoiceController = {
       // 5. Return success message
 
       return res.status(200).json({
-        status: "success",
-        message: "Invoice deleted successfully",
+        status: 'success',
+        message: 'Invoice deleted successfully'
       });
     } catch (error) {
       return res.status(500).json({
-        status: "error",
-        message: "Failed to delete invoice",
-        details: error.message,
+        status: 'error',
+        message: 'Failed to delete invoice',
+        details: error.message
       });
     }
-  },
+  }
 };
 
 module.exports = invoiceController;
