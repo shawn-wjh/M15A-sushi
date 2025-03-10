@@ -1,6 +1,5 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const convert = require('xml-js');
-const config = require('../config');
+const { uploadToS3 } = require('./s3-helpers');
 
 /**
  * Example invoice data in js format
@@ -110,46 +109,6 @@ function convertToUBL(invoice) {
 }
 
 /**
- * Upload UBL XML to S3 bucket
- */
-
-// Initialize S3 client
-const s3Client = new S3Client({
-  region: config.aws.region,
-  credentials: {
-    accessKeyId: config.aws.credentials.accessKeyId,
-    secretAccessKey: config.aws.credentials.secretAccessKey
-  },
-  endpoint: `https://s3.${config.aws.region}.amazonaws.com`
-});
-
-async function uploadToS3(xml, invoiceId) {
-  if (!xml || !invoiceId) {
-    throw new Error('Empty XML or invoiceId');
-  }
-
-  const params = {
-    Bucket: config.s3.bucketName || 'sushi-invoice-storage',
-    Key: `invoices/${invoiceId}.xml`,
-    Body: xml,
-    ContentType: 'application/xml'
-  };
-
-  try {
-    const command = new PutObjectCommand(params);
-    const response = await s3Client.send(command);
-
-    return {
-      success: true,
-      location: `s3://sushi-invoice-storage/invoices/${invoiceId}.xml`,
-      response
-    };
-  } catch (error) {
-    throw new Error(`Failed to upload to S3: ${error.message}`);
-  }
-}
-
-/**
  * Generate and upload UBL invoice given invoice data as js object
  */
 async function generateAndUploadUBLInvoice(invoiceData, invoiceId) {
@@ -164,6 +123,5 @@ async function generateAndUploadUBLInvoice(invoiceData, invoiceId) {
 
 module.exports = {
   convertToUBL,
-  uploadToS3,
   generateAndUploadUBLInvoice
 };

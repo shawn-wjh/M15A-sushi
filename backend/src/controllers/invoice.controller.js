@@ -4,8 +4,13 @@ const fs = require('fs').promises;
 const path = require('path');
 const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 const {
-  generateAndUploadUBLInvoice
+  // generateAndUploadUBLInvoice,
+  convertToUBL
 } = require('../middleware/invoice-generation');
+const { QueryCommand } = require('@aws-sdk/client-dynamodb');
+const { getInvoiceFromS3 } = require('../middleware/invoice-retrieval');
+const { items } = require('../middleware/mockInvoice');
+const { error } = require('console');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -34,8 +39,10 @@ const invoiceController = {
       const invoiceId = uuidv4();
 
       // Generate and store UBL invoice in S3
-      const status = await generateAndUploadUBLInvoice(data, invoiceId);
-      console.log('generateAndUploadUBLInvoice status: ', status);
+      // const status = await generateAndUploadUBLInvoice(data, invoiceId);
+
+      // convert invoice to UBL XML
+      const ublXml = convertToUBL(data);
 
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
@@ -44,17 +51,18 @@ const invoiceController = {
           InvoiceID: invoiceId,
           timestamp,
           UserID: '123', // TODO: Get UserID from request
-          s3Url: status.location
+          // s3Url: status.location
+          invoice: ublXml
         }
       };
 
       // Store in DynamoDB
-      console.log(await dbClient.send(new PutCommand(invoiceItem)));
+      await dbClient.send(new PutCommand(invoiceItem));
 
       return res.status(200).json({
         status: 'success',
         message: 'Invoice created successfully',
-        invoiceId
+        invoiceId: invoiceId
       });
     } catch (error) {
       return res.status(500).json({
@@ -99,21 +107,41 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res) => {
-    try {
-      // TODO:
-      // 1. Get invoiceId from request parameters
-      // 2. Query DynamoDB for the invoice
-      // 3. Check if invoice exists
-      // 4. Return invoice details
+    // TODO:
+    // 1. Get invoiceId from request parameters
+    // 2. Query DynamoDB for the invoice
+    // 3. Check if invoice exists
+    // 4. Return invoice details in UBL XML format
+    
+    const invoiceId = req.params.invoiceid;
 
-      return res.status(200).json({
-        status: 'success',
-        data: {
-          // Invoice details will go here
-        }
-      });
+    // check if invoiceId is empty
+    if (!invoiceId) {
+      throw error('Missing invoice ID');
+    }
+
+    // Query DynamoDB for the invoice
+    const queryParams = {
+      TableName: Tables.INVOICES,
+      KeyConditionExpression: 'InvoiceID = :InvoiceID',
+      ExpressionAttributeValues: {
+        ':InvoiceID': { S: invoiceId }
+      }
+    };
+    
+    try {
+      const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+      if (!Items || Items.length === 0) {
+        throw Error('Invoice not found');
+      }
+
+      // access the invoice from the dynamoDB response
+      const xml = Items[0].invoice.S;  
+
+      return res.status(200).set('Content-Type', 'application/xml').send(xml);
     } catch (error) {
-      return res.status(500).json({
+      return res.status(400).json({
         status: 'error',
         message: 'Failed to get invoice',
         details: error.message
