@@ -2,8 +2,8 @@
  * Authentication Controller
  * Handles user authentication, token generation, and verification
  */
-const { createDynamoDBClient, Tables } = require('../config/database');
-const config = require('../config/auth');
+const { createDynamoDBClient, Tables } = require("../config/database");
+const config = require("../config/auth");
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -16,28 +16,72 @@ const authController = {
    */
   login: async (req, res) => {
     try {
-      // TODO:
-      // 1. Extract email and password from request body
-      // 2. Find user in database
-      // 3. Check if user exists
-      // 4. Check if user is verified (if applicable)
-      // 5. Verify password
-      // 6. Generate JWT token
-      // 7. Return success response with token
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({
+          status: "error",
+          message: "Email and password are required",
+        });
+      }
+
+      // 1. Find user in database
+      const queryParams = {
+        TableName: Tables.USERS,
+        FilterExpression: "email = :email",
+        ExpressionAttributeValues: {
+          ":email": email.toLowerCase().trim(),
+        },
+      };
+
+      const queryResult = await dbClient.send(new QueryCommand(queryParams));
+
+      // 2. Check if user exists
+      if (!queryResult.Items?.length) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid credentials",
+        });
+      }
+
+      const user = queryResult.Items[0];
+
+      // 3. Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid password",
+        });
+      }
+
+      // 4. Generate JWT token
+      const tokenPayload = {
+        userId: user.UserID,
+        email: user.email,
+        role: user.role,
+      };
+
+      const token = jwt.sign(tokenPayload, config.jwt.secret, {
+        expiresIn: config.jwt.expiresIn,
+      });
 
       return res.status(200).json({
-        status: 'success',
-        message: 'Login successful',
+        status: "success",
+        message: "Login successful",
         data: {
-          // Token and user data will go here
-        }
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          token,
+        },
       });
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       return res.status(500).json({
-        status: 'error',
-        message: 'Login failed',
-        details: error.message
+        status: "error",
+        message: "Login failed",
+        details: error.message,
       });
     }
   },
@@ -57,17 +101,17 @@ const authController = {
       // 5. Return new token
 
       return res.status(200).json({
-        status: 'success',
-        message: 'Token refreshed successfully',
+        status: "success",
+        message: "Token refreshed successfully",
         data: {
           // New token will go here
-        }
+        },
       });
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error("Token refresh error:", error);
       return res.status(401).json({
-        status: 'error',
-        message: 'Invalid or expired refresh token'
+        status: "error",
+        message: "Invalid or expired refresh token",
       });
     }
   },
@@ -85,15 +129,15 @@ const authController = {
       // 3. Return success response
 
       return res.status(200).json({
-        status: 'success',
-        message: 'Logout successful'
+        status: "success",
+        message: "Logout successful",
       });
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       return res.status(500).json({
-        status: 'error',
-        message: 'Logout failed',
-        details: error.message
+        status: "error",
+        message: "Logout failed",
+        details: error.message,
       });
     }
   },
@@ -111,17 +155,17 @@ const authController = {
       // 3. Return user information
 
       return res.status(200).json({
-        status: 'success',
+        status: "success",
         data: {
           // User data will go here
-        }
+        },
       });
     } catch (error) {
-      console.error('Get current user error:', error);
+      console.error("Get current user error:", error);
       return res.status(500).json({
-        status: 'error',
-        message: 'Failed to retrieve user information',
-        details: error.message
+        status: "error",
+        message: "Failed to retrieve user information",
+        details: error.message,
       });
     }
   },
@@ -142,18 +186,18 @@ const authController = {
       // 6. Return success response
 
       return res.status(200).json({
-        status: 'success',
-        message: 'Password changed successfully'
+        status: "success",
+        message: "Password changed successfully",
       });
     } catch (error) {
-      console.error('Change password error:', error);
+      console.error("Change password error:", error);
       return res.status(500).json({
-        status: 'error',
-        message: 'Failed to change password',
-        details: error.message
+        status: "error",
+        message: "Failed to change password",
+        details: error.message,
       });
     }
-  }
+  },
 };
 
 module.exports = authController;
