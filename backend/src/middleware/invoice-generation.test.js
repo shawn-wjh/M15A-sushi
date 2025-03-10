@@ -1,4 +1,5 @@
-const { convertToUBL, generateAndUploadUBLInvoice, uploadToS3 } = require('./invoice-generation');
+const { convertToUBL, generateAndUploadUBLInvoice } = require('./invoice-generation');
+const { uploadToS3 } = require('./s3-helpers');
 const mockInvoice = require('./mockInvoice');
 
 jest.mock('@aws-sdk/client-s3');
