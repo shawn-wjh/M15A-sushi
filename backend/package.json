@@ -8,8 +8,8 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "local-db": "USE_LOCAL_DYNAMODB=true nodemon server.js",
+    "dev": "npx nodemon server.js",
+    "local-db": "cross-env USE_LOCAL_DYNAMODB=true npx nodemon server.js",
     "setup-local-db": "node scripts/setup-local-db.js",
     "dev-with-db": "npm run setup-local-db && npm run local-db",
     "test": "jest"
@@ -39,8 +39,10 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.31.0"
+    "eslint-plugin-import": "^2.31.0",
+    "nodemon": "^3.1.9"
   }
 }

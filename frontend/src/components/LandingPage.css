@@ -33,6 +33,19 @@ button {
   font-family: inherit;
 }
 
+/* Fade-in section animation */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  will-change: opacity, transform;
+}
+
+.fade-in-section.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Navigation */
 .navbar {
   display: flex;

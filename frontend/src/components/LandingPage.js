@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import './LandingPage.css';
 
@@ -6,8 +6,42 @@ const LandingPage = () => {
   const history = useHistory();
   const [isVisible, setIsVisible] = useState(false);
   
+  // References for sections that will fade in
+  const featuresRef = useRef(null);
+  const pricingRef = useRef(null);
+  const aboutRef = useRef(null);
+  
   useEffect(() => {
     setIsVisible(true);
+    
+    // Create intersection observer to detect when sections are visible
+    const observerOptions = {
+      root: null, // Use viewport as root
+      rootMargin: '0px',
+      threshold: 0.25 // Trigger when 25% of the element is visible
+    };
+    
+    const handleIntersect = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('section-visible');
+          // Once the animation is applied, we can stop observing this element
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+    
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    
+    // Observe all sections
+    if (featuresRef.current) observer.observe(featuresRef.current);
+    if (pricingRef.current) observer.observe(pricingRef.current);
+    if (aboutRef.current) observer.observe(aboutRef.current);
+    
+    return () => {
+      // Clean up the observer when component unmounts
+      observer.disconnect();
+    };
   }, []);
 
   const handleSignUp = () => {
@@ -55,7 +89,7 @@ const LandingPage = () => {
         </div>
       </header>
 
-      <section id="features" className="features-section">
+      <section id="features" ref={featuresRef} className="features-section fade-in-section">
         <h2 className="section-title">Crafted to Perfection</h2>
         <div className="features-grid">
           <div className="feature-card">
@@ -81,7 +115,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="pricing" className="pricing-section">
+      <section id="pricing" ref={pricingRef} className="pricing-section fade-in-section">
         <h2 className="section-title">Select Your Roll</h2>
         <div className="pricing-grid">
           <div className="pricing-card">
@@ -129,7 +163,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="about" className="about-section">
+      <section id="about" ref={aboutRef} className="about-section fade-in-section">
         <h2 className="section-title">The Sushi Difference</h2>
         <div className="about-content">
           <div className="about-image"></div>
