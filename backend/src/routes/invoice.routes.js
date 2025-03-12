@@ -35,7 +35,7 @@ router.post(
  * @returns {object} 200 - Array of invocies
  */
 router.get(
-  '/',
+  '/list',
   listInvoices
 );
 
@@ -46,7 +46,7 @@ router.get(
  * @returns {object} 200 - Invoice details
  */
 router.get(
-  '/:invoiceId',
+  '/:invoiceid',
   getInvoice
 );
 
