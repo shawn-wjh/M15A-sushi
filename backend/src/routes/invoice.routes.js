@@ -52,12 +52,12 @@ router.get(
 
 /**
  * update specific invoice
- * @route PUT /v1/invoices/:invoiceId
- * @param {string} invoiceId.path.required - Invoice ID
+ * @route PUT /v1/invoices/:invoiceid
+ * @param {string} invoiceid.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
 router.put(
-  '/:invoiceId',
+  '/:invoiceid',
   updateInvoice
 );
 
