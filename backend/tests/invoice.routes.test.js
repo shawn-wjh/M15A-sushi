@@ -296,12 +296,14 @@ describe('GET /v1/invoices/:invoiceid', () => {
     const res = await request(app).get(`/v1/invoices/${undefined}`).send();
 
     expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error');
   });
 
   it('should return 400 when given an invalid invoiceId', async () => {
     const res = await request(app).get(`/v1/invoices/${'invalid'}`).send();
 
     expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error');
   });
 });
 
@@ -385,7 +387,7 @@ describe('PUT /v1/invoices/:invoiceid', () => {
 
   it('should return 400 when invoice ID is not provided', async () => {
     const res = await request(app)
-      .put('/v1/invoices/${undefined}')
+      .put(`/v1/invoices/${undefined}`)
       .send(mockInvoice);
 
     expect(res.status).toBe(400);
