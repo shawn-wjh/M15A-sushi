@@ -397,3 +397,28 @@ describe('PUT /v1/invoices/:invoiceid', () => {
     expect(res.body).toHaveProperty('error');
   });
 });
+
+describe('DELETE /v1/invoices/:invoiceid', () => {
+  it('should delete an existing invoice', async () => {
+    // First create an invoice
+    const createRes = await request(app)
+      .post(`/v1/invoices`)
+      .send(mockInvoice);
+
+    // Delete the invoice
+    const deleteRes = await request(app)
+      .delete(`/v1/invoices/${createRes.body.invoiceId}`)
+      .send();
+
+    expect(deleteRes.status).toBe(200);
+  });
+
+  it('should return 400 when deleting non-existent invoice', async () => {
+    const res = await request(app)
+      .delete('/v1/invoices/invalid-id2')
+      .send();
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+});
