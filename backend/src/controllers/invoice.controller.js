@@ -107,11 +107,7 @@ const invoiceController = {
 
     // check if invoiceId is empty
     if (!invoiceId) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Failed to get invoice',
-        details: 'Missing invoice ID'
-      });
+      throw new Error('Missing invoice ID');
     }
 
     try {
@@ -127,11 +123,7 @@ const invoiceController = {
       const { Items } = await dbClient.send(new QueryCommand(queryParams));
 
       if (!Items || Items.length === 0) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Failed to get invoice',
-          details: 'Invoice not found'
-        });
+        throw new Error('Invoice not found');
       }
 
       // access the invoice from the dynamoDB response
@@ -143,8 +135,7 @@ const invoiceController = {
     } catch (error) {
       return res.status(400).json({
         status: 'error',
-        message: 'Failed to get invoice',
-        details: error.message
+        error: error.message
       });
     }
   },
