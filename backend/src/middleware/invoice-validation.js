@@ -11,15 +11,15 @@ const validateInvoiceInput = (req, res, next) => {
   try {
     const data = req.body;
 
-    // Check if all required fields exist
-    const requiredFields = ['invoiceId', 'total', 'buyer', 'supplier', 'issueDate', 'dueDate', 'currency', 'buyerAddress', 'buyerPhone', 'items'];
+    // Check required fields present
+    const requiredFields = ['invoiceId', 'issueDate', 'buyer', 'supplier', 'total', 'items'];
     const missingFields = requiredFields.filter((field) => !(field in data));
 
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
 
-    // Check if all fields are of the correct type
+    // List of all fields and their expected types
     const typeChecks = {
       invoiceId: 'string',
       total: 'number',
@@ -32,15 +32,11 @@ const validateInvoiceInput = (req, res, next) => {
     };
 
     Object.entries(typeChecks).forEach(([field, expectedType]) => {
-      if (typeof data[field] !== expectedType) {
+      // Only check type if the field exists in the data
+      if (data[field] !== undefined && typeof data[field] !== expectedType) {
         throw new Error(`${field} must be a ${expectedType}`);
       }
     });
-
-    // Check address fields
-    if (!data.buyerAddress.street || !data.buyerAddress.country) {
-      throw new Error('Buyer address must include street and country');
-    }
 
     // Check items array
     if (!Array.isArray(data.items) || data.items.length === 0) {
@@ -56,32 +52,31 @@ const validateInvoiceInput = (req, res, next) => {
       }
     });
 
-    // Check all fileds are valid
-
     // Check if issue date and due date are in proper date format (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    
+    // Validate required issueDate
     if (!dateRegex.test(data.issueDate)) {
       throw new Error('Issue date must be in YYYY-MM-DD format');
     }
-    if (!dateRegex.test(data.dueDate)) {
-      throw new Error('Due date must be in YYYY-MM-DD format');
-    }
-
-    // Check if issue date is a valid date
     const issueDate = new Date(data.issueDate);
     if (isNaN(issueDate.getTime())) {
       throw new Error('Issue date is not a valid date');
     }
 
-    // Check if due date is a valid date
-    const dueDate = new Date(data.dueDate);
-    if (isNaN(dueDate.getTime())) {
-      throw new Error('Due date is not a valid date');
-    }
-
-    // Check if issue date is before due date
-    if (issueDate >= dueDate) {
-      throw new Error('Issue date must be before due date');
+    // Validate optional dueDate if present
+    if (data.dueDate !== undefined) {
+      if (!dateRegex.test(data.dueDate)) {
+        throw new Error('Due date must be in YYYY-MM-DD format');
+      }
+      const dueDate = new Date(data.dueDate);
+      if (isNaN(dueDate.getTime())) {
+        throw new Error('Due date is not a valid date');
+      }
+      // Only check date order if dueDate is provided
+      if (issueDate >= dueDate) {
+        throw new Error('Issue date must be before due date');
+      }
     }
 
     // Check item count and cost
@@ -101,12 +96,13 @@ const validateInvoiceInput = (req, res, next) => {
       throw new Error('Invoice total does not match item costs');
     }
 
-    // check valid currency code
-    if (!checkCurrencyCode(data.currency)) {
+    // Check valid currency code if provided
+    if (data.currency !== undefined && !checkCurrencyCode(data.currency)) {
       throw new Error('Invalid currency code');
     }
 
-    if (!checkCountryCode(data.buyerAddress.country)) {
+    // Check valid country code if buyer address and country are provided
+    if (data.buyerAddress?.country !== undefined && !checkCountryCode(data.buyerAddress.country)) {
       throw new Error('Invalid country code');
     }
 
@@ -114,7 +110,6 @@ const validateInvoiceInput = (req, res, next) => {
   } catch (error) {
     return res.status(400).json({
       status: 'error',
-      message: error.message,
       error: error.message
     });
   }

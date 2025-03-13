@@ -43,18 +43,205 @@ describe('POST /v1/invoices/create', () => {
     const response = await request(app)
       .post('/v1/invoices/create')
       .send(mockInvoice);
+describe('POST /v1/invoices', () => {
+  it("should create new invoice with minimal required fields", async () => {
+    const minimalInvoice = {
+      invoiceId: "INV001",
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 100,
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(minimalInvoice);
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('invoiceId');
-    expect(response.body).toHaveProperty('invoice'); // Check if UBL XML is returned
+    expect(response.body).toHaveProperty("invoiceId");
   });
 
-  it('should reject invalid invoice input', async () => {
+  it("should create new invoice with all optional fields", async () => {
+    const response = await request(app).post("/v1/invoices").send(mockInvoice);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("invoiceId");
+  });
+
+  it("should reject when missing required fields", async () => {
+    const invalidInvoice = {
+      buyer: "John Doe",
+      total: 100,
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when fields have wrong types", async () => {
+    const invalidInvoice = {
+      invoiceId: 123, // should be string
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: "100", // should be number
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when dates are invalid", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV003",
+      issueDate: "2024-13-45", // invalid date
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 100,
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when due date is before issue date", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV004",
+      issueDate: "2024-03-10",
+      dueDate: "2024-03-09", // before issue date
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 100,
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when item costs do not match total", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV005",
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 200, // doesn't match item costs
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when currency code is invalid", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV006",
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 100,
+      currency: "INVALID", // invalid currency code
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when country code is invalid", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV007",
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 100,
+      buyerAddress: {
+        street: "123 Main St",
+        country: "INVALID", // invalid country code
+      },
+      items: [{ name: "Item A", count: 1, cost: 100 }],
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when items array is empty", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV008",
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 0,
+      items: [], // empty items array
+    };
+
+    const response = await request(app)
+      .post("/v1/invoices")
+      .send(invalidInvoice);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject when item has invalid count or cost", async () => {
+    const invalidInvoice = {
+      invoiceId: "INV009",
+      issueDate: "2024-03-10",
+      buyer: "John Doe",
+      supplier: "XYZ Corp",
+      total: 0,
+      items: [
+        { name: "Item A", count: 0, cost: -100 }, // invalid count and cost
+      ],
+    };
+
     const response = await request(app)
       .post('/v1/invoices/create')
       .send({});
+      .post("/v1/invoices")
+      .send(invalidInvoice);
 
     expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it('successfuly creates invoice that can be retrieved', async () => {
+    const createRes = await request(app).post('/v1/invoices').send(mockInvoice);
+    const getRes = await request(app).get(`/v1/invoices/${createRes.body.invoiceId}`).send();
+
+    expect(getRes.statusCode).toBe(200);
   });
 });
 
@@ -222,6 +409,7 @@ describe('GET /v1/invoices/:invoiceid', () => {
 
     // This should be a 404 as the route doesn't exist without an ID
     expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty('error');
   });
 
   it('should return 400 when given an invalid invoiceId', async () => {
@@ -232,6 +420,7 @@ describe('GET /v1/invoices/:invoiceid', () => {
     const res = await request(app).get('/v1/invoices/invalid-id').send();
 
     expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error');
   });
 });
 
@@ -259,6 +448,11 @@ describe('PUT /v1/invoices/:invoiceid', () => {
   });
 
   it('should update an existing invoice', async () => {
+    // First create an invoice
+    const createRes = await request(app)
+      .post(`/v1/invoices`)
+      .send(mockInvoice);
+
     // Prepare updated data
     const updatedInvoice = {
       ...mockInvoice,
@@ -284,14 +478,36 @@ describe('PUT /v1/invoices/:invoiceid', () => {
       .put('/v1/invoices/test-invoice-id')
       .send(updatedInvoice);
 
-    // Accept either 200 or 400 since we're mocking and the implementation might
-    // have additional validation we're not accounting for
-    expect([200, 400]).toContain(updateRes.status);
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body).toHaveProperty('invoiceId');
+
+    // Verify the update by getting the invoice
+    const getRes = await request(app)
+      .get(`/v1/invoices/${createRes.body.invoiceId}`)
+      .send();
+
+    expect(getRes.status).toBe(200);
     
-    if (updateRes.status === 200) {
-      expect(updateRes.body).toHaveProperty('invoiceId');
-      expect(updateRes.body.status).toBe('success');
-    }
+    // Parse XML to verify updated values
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(getRes.text, "text/xml");
+    
+    // Check updated total amount
+    const totalAmount = xmlDoc.getElementsByTagName('cbc:PayableAmount')[0];
+    expect(totalAmount.textContent).toBe(updatedInvoice.total.toString());
+    
+    // Check updated items
+    const invoiceLines = xmlDoc.getElementsByTagName('cac:InvoiceLine');
+    expect(invoiceLines.length).toBe(updatedInvoice.items.length);
+    
+    // Check first updated item
+    const firstItem = invoiceLines[0];
+    expect(firstItem.getElementsByTagName('cbc:Name')[0].textContent)
+      .toBe(updatedInvoice.items[0].name);
+    expect(firstItem.getElementsByTagName('cbc:PriceAmount')[0].textContent)
+      .toBe(updatedInvoice.items[0].cost.toString());
+    expect(firstItem.getElementsByTagName('cbc:BaseQuantity')[0].textContent)
+      .toBe(updatedInvoice.items[0].count.toString());
   });
 
   it('should return 400 when updating non-existent invoice', async () => {
@@ -305,7 +521,7 @@ describe('PUT /v1/invoices/:invoiceid', () => {
 
   it('should return 404 when invoice ID is not provided', async () => {
     const res = await request(app)
-      .put('/v1/invoices/')
+      .put(`/v1/invoices/${undefined}`)
       .send(mockInvoice);
 
     expect(res.status).toBe(404); // This should be a 404 as the route doesn't exist
