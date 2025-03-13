@@ -30,82 +30,108 @@ const exampleInvoice = {
  * @returns {string} UBL XML string
  */
 function convertToUBL(invoice) {
-  const ublXML = {
-    Invoice: {
-      _attributes: {
-        xmlns: 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
-        'xmlns:cac':
-          'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
-        'xmlns:cbc':
-          'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
-      },
-      'cbc:ID': invoice.invoiceId,
-      'cbc:IssueDate': invoice.issueDate,
-      'cbc:DueDate': invoice.dueDate,
-      'cbc:InvoiceTypeCode': '380', // Example code for invoice
-
-      // Supplier Party
-      'cac:AccountingSupplierParty': {
-        'cac:Party': {
-          'cac:PartyName': { 'cbc:Name': invoice.supplier },
-          'cac:PostalAddress': {
-            'cbc:StreetName': invoice.buyerAddress.street,
-            'cac:Country': {
-              'cbc:IdentificationCode': invoice.buyerAddress.country
-            }
-          },
-          'cac:Contact': { 'cbc:Telephone': invoice.buyerPhone }
+  try {
+    // Create base XML structure with required fields
+    const ublXML = {
+      _declaration: {
+        _attributes: {
+          version: '1.0',
+          encoding: 'UTF-8'
         }
       },
+      Invoice: {
+        _attributes: {
+          xmlns: 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
+          'xmlns:cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
+          'xmlns:cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
+          'xmlns:ext': 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2'
+        },
+        'cbc:ID': { _text: invoice.invoiceId },
+        'cbc:IssueDate': { _text: invoice.issueDate },
+        ...(invoice.dueDate && { 'cbc:DueDate': { _text: invoice.dueDate } }),
+        'cbc:InvoiceTypeCode': { _text: '380' },
 
-      // Buyer Party
-      'cac:AccountingCustomerParty': {
-        'cac:Party': {
-          'cac:PartyName': { 'cbc:Name': invoice.buyer },
-          'cac:PostalAddress': {
-            'cbc:StreetName': invoice.buyerAddress.street,
-            'cac:Country': {
-              'cbc:IdentificationCode': invoice.buyerAddress.country
-            }
-          },
-          'cac:Contact': { 'cbc:Telephone': invoice.buyerPhone }
-        }
-      },
-
-      // Total Amount
-      'cac:LegalMonetaryTotal': {
-        'cbc:PayableAmount': {
-          _attributes: { currencyID: invoice.currency },
-          _text: invoice.total
-        }
-      },
-
-      // Invoice Line Items
-      'cac:InvoiceLine': invoice.items.map((item, index) => ({
-        'cbc:ID': index + 1,
-        'cac:Item': { 'cbc:Name': item.name },
-        'cac:Price': {
-          'cbc:PriceAmount': {
-            _attributes: { currencyID: item.currency },
-            _text: item.cost
-          },
-          'cbc:BaseQuantity': {
-            _attributes: { unitCode: 'EA' }, // defualt unit code 'each'
-            _text: item.count
+        // Required Supplier Party with optional fields
+        'cac:AccountingSupplierParty': {
+          'cac:Party': {
+            'cac:PartyName': { 'cbc:Name': { _text: invoice.supplier } },
+            ...(invoice.buyerAddress && {
+              'cac:PostalAddress': {
+                ...(invoice.buyerAddress.street && { 'cbc:StreetName': { _text: invoice.buyerAddress.street } }),
+                ...(invoice.buyerAddress.country && {
+                  'cac:Country': {
+                    'cbc:IdentificationCode': { _text: invoice.buyerAddress.country }
+                  }
+                })
+              }
+            }),
+            ...(invoice.buyerPhone && {
+              'cac:Contact': {
+                'cbc:Telephone': { _text: invoice.buyerPhone }
+              }
+            })
           }
-        }
-      }))
-    }
-  };
+        },
 
-  // Convert JSON to XML
-  const xmlBody = convert.js2xml(ublXML, {
-    compact: true,
-    spaces: 4
-  });
+        // Required Buyer Party with optional fields
+        'cac:AccountingCustomerParty': {
+          'cac:Party': {
+            'cac:PartyName': { 'cbc:Name': { _text: invoice.buyer } },
+            ...(invoice.buyerAddress && {
+              'cac:PostalAddress': {
+                ...(invoice.buyerAddress.street && { 'cbc:StreetName': { _text: invoice.buyerAddress.street } }),
+                ...(invoice.buyerAddress.country && {
+                  'cac:Country': {
+                    'cbc:IdentificationCode': { _text: invoice.buyerAddress.country }
+                  }
+                })
+              }
+            }),
+            ...(invoice.buyerPhone && {
+              'cac:Contact': {
+                'cbc:Telephone': { _text: invoice.buyerPhone }
+              }
+            })
+          }
+        },
 
-  // Prepend the XML declaration
-  return `<?xml version="1.0" encoding="UTF-8"?>\n${xmlBody}`;
+        // Required Total Amount
+        'cac:LegalMonetaryTotal': {
+          'cbc:PayableAmount': {
+            _attributes: { currencyID: invoice.currency || 'AUD' },
+            _text: invoice.total.toString()
+          }
+        },
+
+        // Required Invoice Line Items
+        'cac:InvoiceLine': invoice.items.map((item, index) => ({
+          'cbc:ID': { _text: (index + 1).toString() },
+          'cac:Item': { 'cbc:Name': { _text: item.name } },
+          'cac:Price': {
+            'cbc:PriceAmount': {
+              _attributes: { currencyID: item.currency || invoice.currency || 'AUD' },
+              _text: item.cost.toString()
+            },
+            'cbc:BaseQuantity': {
+              _attributes: { unitCode: 'EA' },
+              _text: item.count.toString()
+            }
+          }
+        }))
+      }
+    };
+
+    // Convert JSON to XML
+    const xmlBody = convert.js2xml(ublXML, {
+      compact: true,
+      spaces: 2,
+      fullTagEmptyElement: true
+    });
+
+    return xmlBody;
+  } catch (error) {
+    throw new Error(`Failed to convert to UBL invoice: ${error.message}`);
+  }
 }
 
 /**
