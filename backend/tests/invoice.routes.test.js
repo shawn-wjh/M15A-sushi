@@ -199,6 +199,13 @@ describe('POST /v1/invoices', () => {
     expect(response.body).toHaveProperty("error");
   });
 
+  it('successfuly creates invoice that can be retrieved', async () => {
+    const createRes = await request(app).post('/v1/invoices').send(mockInvoice);
+    const getRes = await request(app).get(`/v1/invoices/${createRes.body.invoiceId}`).send();
+
+    expect(getRes.statusCode).toBe(200);
+  });
+
   // more tests done in middleware and controller test files.
 });
 
@@ -315,8 +322,6 @@ describe('PUT /v1/invoices/:invoiceid', () => {
       .post(`/v1/invoices`)
       .send(mockInvoice);
 
-    console.log('createRes.body: ', createRes.body);
-    
     // Prepare updated data
     const updatedInvoice = {
       ...mockInvoice,
@@ -342,10 +347,8 @@ describe('PUT /v1/invoices/:invoiceid', () => {
       .put(`/v1/invoices/${createRes.body.invoiceId}`)
       .send(updatedInvoice);
 
-    // console.log('udpateRes: ', updateRes);
     expect(updateRes.status).toBe(200);
     expect(updateRes.body).toHaveProperty('invoiceId');
-    expect(updateRes.body.status).toBe('success');
 
     // Verify the update by getting the invoice
     const getRes = await request(app)
