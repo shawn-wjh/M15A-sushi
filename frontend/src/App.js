@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
+import LandingPage from './components/LandingPage';
+import Auth from './components/Auth';
+import './App.css';
 
-export default function App() {
-  const [message, setMessage] = useState('Loading...');
-
-  useEffect(() => {
-    axios.get(process.env.REACT_APP_API_URL)
-      .then(response => setMessage(response.data))
-      .catch(error => setMessage('Error fetching data'));
-  }, []);
-
-  return <h1>{message}</h1>;
+function App() {
+  return (
+    <BrowserRouter>
+      <div className="App">
+        <Switch>
+          <Route exact path="/" component={LandingPage} />
+          <Route path="/auth" component={Auth} />
+          <Route path="*">
+            <Redirect to="/" />
+          </Route>
+        </Switch>
+      </div>
+    </BrowserRouter>
+  );
 }
+
+export default App;

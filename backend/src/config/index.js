@@ -4,27 +4,31 @@ const dotenv = require('dotenv');
 // creates process.env object, which contains all the environment variables
 dotenv.config();
 
+// Check if using local DynamoDB
+const isLocalDb = process.env.USE_LOCAL_DYNAMODB === 'true';
+
 // Simplified configuration without environments or prefixes
 const config = {
   server: {
     port: parseInt(process.env.PORT, 10) || 3000
   },
   aws: {
-    region: process.env.AWS_REGION || 'ap-southeast-2',
+    region: isLocalDb ? 'localhost' : (process.env.AWS_REGION || 'ap-southeast-2'),
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      accessKeyId: isLocalDb ? 'fakeAccessKeyId' : process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: isLocalDb ? 'fakeSecretAccessKey' : process.env.AWS_SECRET_ACCESS_KEY
     }
   },
   dynamodb: {
-    usersTable: process.env.DYNAMODB_USERS_TABLE,
-    invoicesTable: process.env.DYNAMODB_INVOICES_TABLE
+    usersTable: isLocalDb ? 'users' : process.env.DYNAMODB_USERS_TABLE,
+    invoicesTable: isLocalDb ? 'invoices' : process.env.DYNAMODB_INVOICES_TABLE,
+    endpoint: isLocalDb ? 'http://localhost:8000' : undefined
   },
   s3: {
     bucket: process.env.S3_BUCKET_NAME
   },
   jwt: {
-    secret: process.env.JWT_SECRET,
+    secret: process.env.JWT_SECRET || 'sushi-invoice-secret-key-for-development-only',
     expiresIn: process.env.JWT_EXPIRE || '24h'
   },
   cors: {
