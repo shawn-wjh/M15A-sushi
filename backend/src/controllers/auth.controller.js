@@ -4,6 +4,9 @@
  */
 const { createDynamoDBClient, Tables } = require("../config/database");
 const config = require("../config/auth");
+const { QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -34,7 +37,8 @@ const authController = {
         },
       };
 
-      const queryResult = await dbClient.send(new QueryCommand(queryParams));
+      // Use ScanCommand instead of QueryCommand for simple email filtering
+      const queryResult = await dbClient.send(new ScanCommand(queryParams));
 
       // 2. Check if user exists
       if (!queryResult.Items?.length) {
@@ -70,11 +74,14 @@ const authController = {
         status: "success",
         message: "Login successful",
         data: {
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          token,
-        },
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            UserID: user.UserID
+          },
+          token
+        }
       });
     } catch (error) {
       console.error("Login error:", error);

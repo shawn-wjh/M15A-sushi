@@ -8,21 +8,11 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "lint:report": "eslint . --format html --output-file ./eslint-report.html"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "testMatch": [
-      "**/tests/**/*.test.js"
-    ]
+    "dev": "npx nodemon server.js",
+    "local-db": "cross-env USE_LOCAL_DYNAMODB=true npx nodemon server.js",
+    "setup-local-db": "node scripts/setup-local-db.js",
+    "dev-with-db": "npm run setup-local-db && npm run local-db",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -45,12 +35,10 @@
     "xmldom": "^0.6.0"
   },
   "devDependencies": {
-    "aws-sdk-mock": "^5.8.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
-    "jest": "^29.7.0",
-    "supertest": "^6.3.4",
-    "xml-js": "^1.6.11"
+    "nodemon": "^3.1.9"
   }
 }
