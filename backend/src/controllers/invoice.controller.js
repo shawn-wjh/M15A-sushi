@@ -58,7 +58,8 @@ const invoiceController = {
       return res.status(200).json({
         status: 'success',
         message: 'Invoice created successfully',
-        invoiceId: invoiceId
+        invoiceId: invoiceId,
+        invoice: ublXml
       });
     } catch (error) {
       return res.status(500).json({

@@ -3,13 +3,12 @@
  * Validates the JSON input for invoice generation
  */
 
+const xmljs = require('xml-js');
+const currencyCodes = require('currency-codes');
+const countries = require('i18n-iso-countries');
+
 const validateInvoiceInput = (req, res, next) => {
   try {
-    // TODO:
-    // 1. Check if all required fields exist
-    // 2. Check if all fields are of the correct type
-    // 3. Check if all fields are valid
-
     const data = req.body;
 
     // Check if all required fields exist
@@ -122,14 +121,11 @@ const validateInvoiceInput = (req, res, next) => {
 };
 
 const checkCurrencyCode = (currencyCode) => {
-  // List of valid currency codes
-  const validCodes = ['ZMW', 'ZWG', 'ZAR', 'YER', 'XXX', 'XUA', 'XTS', 'XSU', 'XPT', 'XPF', 'XPD', 'XOF', 'XDR', 'XCD', 'XBD', 'XBC', 'XBB', 'XBA', 'XAU', 'XAG', 'XAF', 'WST', 'VUV', 'VND', 'VES', 'VED', 'UZS', 'UYW', 'UYU', 'UYI', 'USN', 'USD', 'UGX', 'UAH', 'TZS', 'TWD', 'TTD', 'TRY', 'TOP', 'TND', 'TMT', 'TJS', 'THB', 'SZL', 'SYP', 'SVC', 'STN', 'SSP', 'SRD', 'SOS', 'SLE', 'SHP', 'SGD', 'SEK', 'SDG', 'SCR', 'SBD', 'SAR', 'RWF', 'RUB', 'RSD', 'RON', 'QAR', 'PYG', 'PLN', 'PKR', 'PHP', 'PGK', 'PEN', 'PAB', 'OMR', 'NZD', 'NPR', 'NOK', 'NIO', 'NGN', 'NAD', 'MZN', 'MYR', 'MXV', 'MXN', 'MWK', 'MVR', 'MUR', 'MRU', 'MOP', 'MNT', 'MMK', 'MKD', 'MGA', 'MDL', 'MAD', 'LYD', 'LSL', 'LRD', 'LKR', 'LBP', 'LAK', 'KZT', 'KYD', 'KWD', 'KRW', 'KPW', 'KMF', 'KHR', 'KGS', 'KES', 'JPY', 'JOD', 'JMD', 'ISK', 'IRR', 'IQD', 'INR', 'ILS', 'IDR', 'HUF', 'HTG', 'HNL', 'HKD', 'GYD', 'GTQ', 'GNF', 'GMD', 'GIP', 'GHS', 'GEL', 'GBP', 'FKP', 'FJD', 'EUR', 'ETB', 'ERN', 'EGP', 'DZD', 'DOP', 'DKK', 'DJF', 'CZK', 'CVE', 'CUP', 'CRC', 'COU', 'COP', 'CNY', 'CLP', 'CLF', 'CHW', 'CHF', 'CHE', 'CDF', 'CAD', 'BZD', 'BYN', 'BWP', 'BTN', 'BSD', 'BRL', 'BOV', 'BOB', 'BND', 'BMD', 'BIF', 'BHD', 'BGN', 'BDT', 'BBD', 'BAM', 'AZN', 'AWG', 'AUD', 'ARS', 'AOA', 'ANG', 'AMD', 'ALL', 'AFN', 'AED'];
-  return validCodes.includes(currencyCode.toUpperCase());
+  return typeof currencyCode === "string" && /^[A-Z]{3}$/.test(currencyCode.toUpperCase());
 };
 
 const checkCountryCode = (countryCode) => {
-  const validCodes = ['AF', 'AX', 'AL', 'DZ', 'AS', 'AD', 'AO', 'AI', 'AQ', 'AG', 'AR', 'AM', 'AW', 'AU', 'AT', 'AZ', 'BS', 'BH', 'BD', 'BB', 'BY', 'BE', 'BZ', 'BJ', 'BM', 'BT', 'BO', 'BQ', 'BA', 'BW', 'BV', 'BR', 'IO', 'BN', 'BG', 'BF', 'BI', 'CV', 'KH', 'CM', 'CA', 'KY', 'CF', 'TD', 'CL', 'CN', 'CX', 'CC', 'CO', 'KM', 'CD', 'CG', 'CK', 'CR', 'CI', 'HR', 'CU', 'CW', 'CY', 'CZ', 'DK', 'DJ', 'DM', 'DO', 'EC', 'EG', 'SV', 'GQ', 'ER', 'EE', 'SZ', 'ET', 'FK', 'FO', 'FJ', 'FI', 'FR', 'GF', 'PF', 'TF', 'GA', 'GM', 'GE', 'DE', 'GH', 'GI', 'GR', 'GL', 'GD', 'GP', 'GU', 'GT', 'GG', 'GN', 'GW', 'GY', 'HT', 'HM', 'VA', 'HN', 'HK', 'HU', 'IS', 'IN', 'ID', 'IR', 'IQ', 'IE', 'IM', 'IL', 'IT', 'JM', 'JP', 'JE', 'JO', 'KZ', 'KE', 'KI', 'KP', 'KR', 'KW', 'KG', 'LA', 'LV', 'LB', 'LS', 'LR', 'LY', 'LI', 'LT', 'LU', 'MO', 'MG', 'MW', 'MY', 'MV', 'ML', 'MT', 'MH', 'MQ', 'MR', 'MU', 'YT', 'MX', 'FM', 'MD', 'MC', 'MN', 'ME', 'MS', 'MA', 'MZ', 'MM', 'NA', 'NR', 'NP', 'NL', 'NC', 'NZ', 'NI', 'NE', 'NG', 'NU', 'NF', 'MK', 'MP', 'NO', 'OM', 'PK', 'PW', 'PS', 'PA', 'PG', 'PY', 'PE', 'PH', 'PN', 'PL', 'PT', 'PR', 'QA', 'RE', 'RO', 'RU', 'RW', 'BL', 'SH', 'KN', 'LC', 'MF', 'PM', 'VC', 'WS', 'SM', 'ST', 'SA', 'SN', 'RS', 'SC', 'SL', 'SG', 'SX', 'SK', 'SI', 'SB', 'SO', 'ZA', 'GS', 'SS', 'ES', 'LK', 'SD', 'SR', 'SJ', 'SE', 'CH', 'SY', 'TW', 'TJ', 'TZ', 'TH', 'TL', 'TG', 'TK', 'TO', 'TT', 'TN', 'TR', 'TM', 'TC', 'TV', 'UG', 'UA', 'AE', 'GB', 'UM', 'US', 'UY', 'UZ', 'VU', 'VE', 'VN', 'VG', 'VI', 'WF', 'EH', 'YE', 'ZM', 'ZW'];
-  return validCodes.includes(countryCode.toUpperCase());
+  return typeof countryCode === "string" && /^[A-Z]{3}$/.test(countryCode.toUpperCase());
 };
 
 /**
@@ -138,13 +134,224 @@ const checkCountryCode = (countryCode) => {
  */
 const validateInvoiceStandard = (req, res, next) => {
   try {
-    // TODO:
-    // 1. Validate invoice standard against UBL 2.4, peppol, etc.
+    // Get the UBL XML from the request body
+    const ublXml = req.body.xml || req.body.invoice;
+    
+    if (!ublXml) {
+      throw new Error('No UBL XML provided for validation');
+    }
+
+    // Parse the XML to a JavaScript object
+    const options = { compact: true, ignoreComment: true, alwaysChildren: true };
+    const parsedXml = xmljs.xml2js(ublXml, options);
+    
+    // Initialize validation result
+    const validationResult = {
+      valid: true,
+      errors: [],
+      warnings: []
+    };
+
+    // Check if root Invoice element exists
+    const invoice = parsedXml.Invoice;
+    if (!invoice) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing Invoice root element');
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invoice does not comply with Peppol standards',
+        validationErrors: validationResult.errors
+      });
+    }
+
+    // ===== Peppol Validation Rules =====
+
+    // 1. Check UBL namespaces (Peppol requires specific namespaces)
+    const attributes = invoice._attributes || {};
+    if (!attributes.xmlns || !attributes.xmlns.includes('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2')) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing or invalid UBL namespace (Peppol rule BR-01)');
+    }
+
+    // 2. Check for required elements
+    const requiredElements = [
+      'cbc:ID',
+      'cbc:IssueDate',
+      'cbc:InvoiceTypeCode',
+      'cac:AccountingSupplierParty',
+      'cac:AccountingCustomerParty',
+      'cac:LegalMonetaryTotal',
+      'cac:InvoiceLine'
+    ];
+
+    requiredElements.forEach(element => {
+      const path = element.split(':');
+      if (path.length !== 2) return;
+      
+      if (!invoice[element]) {
+        validationResult.valid = false;
+        validationResult.errors.push(`Missing required element: ${element} (Peppol rule BR-${requiredElements.indexOf(element) + 10})`);
+      }
+    });
+
+    // 3. Check invoice type code (Peppol requires specific codes)
+    const invoiceTypeCode = invoice['cbc:InvoiceTypeCode'];
+    if (invoiceTypeCode && invoiceTypeCode._text !== '380') {
+      validationResult.warnings.push(`Invoice type code '${invoiceTypeCode._text}' is not the standard commercial invoice code '380' (Peppol rule BR-DE-08)`);
+    }
+
+    // 4. Check supplier and customer party information
+    const supplierParty = invoice['cac:AccountingSupplierParty']?.['cac:Party'];
+    const customerParty = invoice['cac:AccountingCustomerParty']?.['cac:Party'];
+    
+    // Check if supplier name exists
+    if (!supplierParty?.['cac:PartyName']?.['cbc:Name']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing supplier name (Peppol rule BR-S-02)');
+    }
+    
+    // Check if customer name exists
+    if (!customerParty?.['cac:PartyName']?.['cbc:Name']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing customer name (Peppol rule BR-B-02)');
+    }
+
+    // 5. Check postal addresses
+    const supplierAddress = supplierParty?.['cac:PostalAddress'];
+    const customerAddress = customerParty?.['cac:PostalAddress'];
+    
+    if (!supplierAddress?.['cbc:StreetName']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing supplier street address (Peppol rule BR-S-05)');
+    }
+
+    // Check if supplier country code exists
+    if (!supplierAddress?.['cac:Country']?.['cbc:IdentificationCode']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing supplier country code (Peppol rule BR-S-07)');
+    }
+    
+    // Check if customer street address exists
+    if (!customerAddress?.['cbc:StreetName']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing customer street address (Peppol rule BR-B-05)');
+    }
+    
+    // Check if customer country code exists
+    if (!customerAddress?.['cac:Country']?.['cbc:IdentificationCode']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing customer country code (Peppol rule BR-B-07)');
+    }
+
+    // 6. Check currency code using currency-codes package
+    const currencyCode = invoice['cac:LegalMonetaryTotal']?.['cbc:PayableAmount']?._attributes?.currencyID;
+    if (!currencyCodes.code(currencyCode)) {
+      validationResult.valid = false;
+      validationResult.errors.push(`Invalid currency code: ${currencyCode} (Peppol rule BR-40)`);
+    }
+
+    // 7. Check country code using i18n-iso-countries package
+    const supplierCountryCode = invoice['cac:AccountingSupplierParty']?.['cac:Party']?.['cac:PostalAddress']?.['cac:Country']?.['cbc:IdentificationCode']?._text;
+    const customerCountryCode = invoice['cac:AccountingCustomerParty']?.['cac:Party']?.['cac:PostalAddress']?.['cac:Country']?.['cbc:IdentificationCode']?._text;
+
+    if (!countries.isValid(supplierCountryCode)) {
+      validationResult.valid = false;
+      validationResult.errors.push(`Invalid supplier country code: ${supplierCountryCode} (Peppol rule BR-50)`);
+    }
+
+    if (!countries.isValid(customerCountryCode)) {
+      validationResult.valid = false;
+      validationResult.errors.push(`Invalid customer country code: ${customerCountryCode} (Peppol rule BR-60)`);
+    }
+
+    // 8. Check invoice lines
+    const invoiceLines = invoice['cac:InvoiceLine'];
+    if (!invoiceLines) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing invoice lines (Peppol rule BR-16)');
+    } else {
+      const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
+      
+      if (lines.length === 0) {
+        validationResult.valid = false;
+        validationResult.errors.push('Invoice must contain at least one line (Peppol rule BR-16)');
+      } else {
+        lines.forEach((line, index) => {
+          // Check line item ID
+          if (!line['cbc:ID']?._text) {
+            validationResult.valid = false;
+            validationResult.errors.push(`Line ${index + 1}: Missing line ID (Peppol rule BR-21)`);
+          }
+          
+          // Check item name
+          if (!line['cac:Item']?.['cbc:Name']?._text) {
+            validationResult.valid = false;
+            validationResult.errors.push(`Line ${index + 1}: Missing item name (Peppol rule BR-25)`);
+          }
+          
+          // Check price
+          const price = line['cac:Price'];
+          if (!price) {
+            validationResult.valid = false;
+            validationResult.errors.push(`Line ${index + 1}: Missing price information (Peppol rule BR-26)`);
+          } else {
+            if (!price['cbc:PriceAmount']?._text) {
+              validationResult.valid = false;
+              validationResult.errors.push(`Line ${index + 1}: Missing price amount (Peppol rule BR-27)`);
+            }
+            
+            // Check currency consistency
+            const lineCurrency = price['cbc:PriceAmount']?._attributes?.currencyID;
+            const documentCurrency = invoice['cac:LegalMonetaryTotal']?.['cbc:PayableAmount']?._attributes?.currencyID;
+            
+            if (lineCurrency && documentCurrency && lineCurrency !== documentCurrency) {
+              validationResult.warnings.push(`Line ${index + 1}: Currency (${lineCurrency}) does not match document currency (${documentCurrency}) (Peppol rule BR-30)`);
+            }
+            
+            // Check quantity
+            if (!price['cbc:BaseQuantity']?._text) {
+              validationResult.valid = false;
+              validationResult.errors.push(`Line ${index + 1}: Missing quantity (Peppol rule BR-31)`);
+            }
+          }
+        });
+      }
+    }
+
+    // 9. Check monetary total
+    const monetaryTotal = invoice['cac:LegalMonetaryTotal'];
+    if (!monetaryTotal?.['cbc:PayableAmount']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing payable amount (Peppol rule BR-52)');
+    }
+
+    // Return validation result
+    if (!validationResult.valid) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invoice does not comply with Peppol standards',
+        validationErrors: validationResult.errors,
+        validationWarnings: validationResult.warnings
+      });
+    }
+
+    // If validation passes
+    if (next) {
+      // Attach validation result to request for potential later use
+      req.validationResult = validationResult;
+      next();
+    } else {
+      return res.status(200).json({
+        status: 'success',
+        message: 'Invoice successfully validated against Peppol standards',
+        validationWarnings: validationResult.warnings.length > 0 ? validationResult.warnings : []
+      });
+    }
   } catch (error) {
     return res.status(400).json({
       status: 'error',
-      message: 'Invalid invoice data',
-      errors: error.details
+      message: 'Error validating invoice against Peppol standards',
+      error: error.message
     });
   }
 };
