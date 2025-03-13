@@ -68,7 +68,7 @@ router.put(
  * @returns {object} 200 - Success message
  */
 router.delete(
-  '/:invoiceId',
+  '/:invoiceid',
   deleteInvoice
 );
 

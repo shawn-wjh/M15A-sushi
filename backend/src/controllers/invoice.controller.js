@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
 const fs = require('fs').promises;
 const path = require('path');
-const { PutCommand, ScanCommand, UpdateCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+const { PutCommand, ScanCommand, UpdateCommand, QueryCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const {
   // generateAndUploadUBLInvoice,
   convertToUBL
@@ -241,22 +241,56 @@ const invoiceController = {
    */
   deleteInvoice: async (req, res) => {
     try {
-      // TODO:
-      // 1. Get invoiceId from request parameters
-      // 2. Check if invoice exists
-      // 3. Delete from DynamoDB
-      // 4. Delete from local file system if it exists
-      // 5. Return success message
+      const invoiceId = req.params.invoiceid;
+
+      if (!invoiceId) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Missing invoice ID'
+        });
+      }
+
+      // check if invoice exists
+      const queryParams = {
+        TableName: Tables.INVOICES,
+        KeyConditionExpression: 'InvoiceID = :InvoiceID',
+        ExpressionAttributeValues: {
+          ':InvoiceID': invoiceId
+        }
+      };
+
+      const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+      if (!Items || Items.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invoice not found'
+        });
+      }
+
+      // Get the UserID from the found item
+      const userID = Items[0].UserID;
+
+      // delete from DynamoDB
+      const deleteParams = {
+        TableName: Tables.INVOICES,
+        Key: {
+          InvoiceID: invoiceId,
+          UserID: userID
+        }
+      };
+
+      await dbClient.send(new DeleteCommand(deleteParams));
 
       return res.status(200).json({
         status: 'success',
         message: 'Invoice deleted successfully'
       });
     } catch (error) {
+      console.log('error: ', error);
       return res.status(500).json({
         status: 'error',
-        message: 'Failed to delete invoice',
-        details: error.message
+        error: error.message
       });
     }
   }
