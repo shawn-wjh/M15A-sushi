@@ -81,6 +81,7 @@ const validateInvoiceInput = (req, res, next) => {
 
     // Check item count and cost
     let sum = 0;
+    
     for (const item of data.items) {
       if (item.count <= 0) {
         throw new Error('Item count must be greater than 0');
@@ -88,9 +89,11 @@ const validateInvoiceInput = (req, res, next) => {
       if (item.cost <= 0) {
         throw new Error('Item cost must be greater than 0');
       }
-      sum += item.cost;
+      const itemTotal = item.count * item.cost;
+      sum += itemTotal;
+      console.log(`- ${item.name}: ${item.count} x ${item.cost} = ${itemTotal}`);
     }
-
+    
     // Check invoice total against item costs
     if (data.total !== sum) {
       throw new Error('Invoice total does not match item costs');

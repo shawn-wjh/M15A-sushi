@@ -50,23 +50,45 @@ const Auth = () => {
         
       const response = await axios.post(endpoint, payload);
       
+      console.log('Login response:', response.data);
+      
       setMessage({
         type: 'success',
         text: response.data.message || 'Operation successful'
       });
       
-      if (response.data.token) {
+      // Check for token in the correct location in the response
+      const token = response.data.data?.token || response.data.token;
+      const userData = response.data.data?.user || response.data.user;
+      
+      console.log('Extracted token:', !!token);
+      console.log('Extracted user data:', userData);
+      
+      if (token && userData) {
         // Store token and user data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        setUser(response.data.user);
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        
+        console.log('User data stored, redirecting to dashboard...');
+        
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          history.push('/dashboard');
+          console.log('Redirect called with timeout');
+        }, 100);
+      } else {
+        console.warn('No token or user data received in response');
+        console.warn('Response structure:', response.data);
       }
     } catch (err) {
+      console.error('Login error:', err);
+      console.error('Error response:', err.response?.data);
+      
       setMessage({
         type: 'error',
         text: err.response?.data?.message || 'An error occurred'
       });
-      console.error('Auth error:', err.response?.data || err);
     } finally {
       setIsLoading(false);
     }

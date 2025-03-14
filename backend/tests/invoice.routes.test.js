@@ -40,12 +40,12 @@ jest.mock('../src/config/database', () => {
 
 describe('POST /v1/invoices/create', () => {
   it('should create new invoice', async () => {
-    const response = await request(app)
+      const response = await request(app)
       .post('/v1/invoices/create')
-      .send(mockInvoice);
+          .send(mockInvoice);
 
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('invoiceId');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('invoiceId');
     expect(response.body).toHaveProperty('invoice');
   });
 
@@ -282,7 +282,7 @@ describe('POST /v1/invoices/create', () => {
     
     // If we got a 200 response, verify the content
     if (getRes.statusCode === 200) {
-      expect(getRes.text).toBeTruthy();
+    expect(getRes.text).toBeTruthy();
       if (getRes.headers['content-type'].includes('application/json')) {
         expect(getRes.body).toBeTruthy();
       } else if (getRes.headers['content-type'].includes('application/xml')) {
@@ -679,8 +679,8 @@ describe('PUT /v1/invoices/:invoiceid', () => {
     expect([200, 400]).toContain(updateRes.status);
     
     if (updateRes.status === 200) {
-      expect(updateRes.body).toHaveProperty('invoiceId');
-      expect(updateRes.body.status).toBe('success');
+    expect(updateRes.body).toHaveProperty('invoiceId');
+    expect(updateRes.body.status).toBe('success');
     }
   });
 
