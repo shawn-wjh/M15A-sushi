@@ -15,7 +15,11 @@ const validateInvoiceInput = (req, res, next) => {
     const requiredFields = ['invoiceId', 'issueDate', 'buyer', 'supplier', 'total', 'items'];
     const missingFields = requiredFields.filter((field) => !(field in data) || data[field] === undefined);
 
+    // Add logging to identify missing fields
+    console.log('Validating invoice input:', data);
+
     if (missingFields.length > 0) {
+      console.log('Missing required fields:', missingFields);
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
 
@@ -31,15 +35,17 @@ const validateInvoiceInput = (req, res, next) => {
       buyerPhone: 'string'
     };
 
+    // Add logging for type checks
     Object.entries(typeChecks).forEach(([field, expectedType]) => {
-      // Only check type if the field exists in the data
       if (data[field] !== undefined && typeof data[field] !== expectedType) {
+        console.log(`Field ${field} has incorrect type. Expected ${expectedType}, got ${typeof data[field]}`);
         throw new Error(`${field} must be a ${expectedType}`);
       }
     });
 
     // Check items array
     if (!Array.isArray(data.items) || data.items.length === 0) {
+      console.log('Items array is invalid or empty');
       throw new Error('Items must be a non-empty array');
     }
 
@@ -89,9 +95,7 @@ const validateInvoiceInput = (req, res, next) => {
       if (item.cost <= 0) {
         throw new Error('Item cost must be greater than 0');
       }
-      const itemTotal = item.count * item.cost;
-      sum += itemTotal;
-      console.log(`- ${item.name}: ${item.count} x ${item.cost} = ${itemTotal}`);
+      sum += item.cost;
     }
     
     // Check invoice total against item costs
@@ -131,6 +135,11 @@ const checkCountryCode = (countryCode) => {
  * Validates the invoice standard against UBL 2.4, peppol, etc.
  */
 const validateInvoiceStandard = (req, res, next) => {
+  let validationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
   try {
     // Get the UBL XML from the request body
     const ublXml = req.body.xml || req.body.invoice;
@@ -143,13 +152,6 @@ const validateInvoiceStandard = (req, res, next) => {
     const options = { compact: true, ignoreComment: true, alwaysChildren: true };
     const parsedXml = xmljs.xml2js(ublXml, options);
     
-    // Initialize validation result
-    const validationResult = {
-      valid: true,
-      errors: [],
-      warnings: []
-    };
-
     // Check if root Invoice element exists
     const invoice = parsedXml.Invoice;
     if (!invoice) {
@@ -179,7 +181,11 @@ const validateInvoiceStandard = (req, res, next) => {
       'cac:AccountingSupplierParty',
       'cac:AccountingCustomerParty',
       'cac:LegalMonetaryTotal',
-      'cac:InvoiceLine'
+      'cac:InvoiceLine',
+      'cbc:CustomizationID',
+      'cbc:ProfileID',
+      'cac:OrderReference',
+      'cac:InvoiceDocumentReference'
     ];
 
     requiredElements.forEach(element => {
@@ -323,6 +329,30 @@ const validateInvoiceStandard = (req, res, next) => {
       validationResult.errors.push('Missing payable amount (Peppol rule BR-52)');
     }
 
+    // Check for CustomizationID
+    if (!invoice['cbc:CustomizationID']) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing CustomizationID (Peppol rule BR-XX)');
+    }
+
+    // Check for ProfileID
+    if (!invoice['cbc:ProfileID']) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing ProfileID (Peppol rule BR-XX)');
+    }
+
+    // Check for OrderReference
+    if (!invoice['cac:OrderReference']?.['cbc:ID']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing OrderReference ID (Peppol rule BR-XX)');
+    }
+
+    // Check for InvoiceDocumentReference
+    if (!invoice['cac:InvoiceDocumentReference']?.['cbc:ID']?._text) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing InvoiceDocumentReference ID (Peppol rule BR-XX)');
+    }
+
     // Return validation result
     if (!validationResult.valid) {
       return res.status(400).json({
@@ -349,7 +379,7 @@ const validateInvoiceStandard = (req, res, next) => {
     return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
-      error: errors
+      error: validationResult.errors
     });
   }
 };
