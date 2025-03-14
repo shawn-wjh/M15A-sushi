@@ -35,7 +35,17 @@ router.post(
  */
 router.post(
   '/validate',
-  validateInvoiceStandard // Validate invoice standard
+  (req, res, next) => {
+    // Ensure we have XML to validate
+    if (!req.body.xml) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No XML provided for validation'
+      });
+    }
+    next();
+  },
+  validateInvoiceStandard
 );
 
 /**
@@ -169,17 +179,6 @@ router.delete(
 //  */
 // router.get('/:invoiceId/download',
 //     downloadInvoice
-// );
-
-/**
- * Validate UBL invoice format
- * @route POST /v1/invoices/validate
- * @param {string} req.body.xml - UBL XML content to validate
- * @returns {object} 200 - Validation report
- */
-// router.post('/validate',
-//     validateUBLFormat,
-//     validateInvoice
 // );
 
 module.exports = router;

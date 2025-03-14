@@ -13,16 +13,15 @@ describe('Invoice Validation Middleware', () => {
     expect(next).toHaveBeenCalled();
   });
 
+  // Test required fields
   it.each([
-    [{ ...mockInvoice, invoiceId: undefined }],
-    [{ ...mockInvoice, total: undefined }],
-    [{ ...mockInvoice, buyer: undefined }],
-    [{ ...mockInvoice, supplier: undefined }],
-    [{ ...mockInvoice, issueDate: undefined }],
-    [{ ...mockInvoice, dueDate: undefined }],
-    [{ ...mockInvoice, currency: undefined }],
-    [{ ...mockInvoice, items: undefined }]
-  ])('should fail validation when %s is missing', (invalidInvoice) => {
+    [{ ...mockInvoice, invoiceId: undefined }, 'invoiceId'],
+    [{ ...mockInvoice, buyer: undefined }, 'buyer'],
+    [{ ...mockInvoice, supplier: undefined }, 'supplier'],
+    [{ ...mockInvoice, issueDate: undefined }, 'issueDate'],
+    [{ ...mockInvoice, total: undefined }, 'total'],
+    [{ ...mockInvoice, items: undefined }, 'items']
+  ])('should fail validation when %s is missing', (invalidInvoice, fieldName) => {
     const req = httpMocks.createRequest({ body: invalidInvoice });
     const res = httpMocks.createResponse();
     const next = jest.fn();
@@ -31,6 +30,24 @@ describe('Invoice Validation Middleware', () => {
 
     expect(res.statusCode).toBe(400);
     expect(res._getData()).toContain('error');
+    expect(res._getData()).toContain(fieldName);
+  });
+
+  // Test optional fields - these should not cause validation failures
+  it.each([
+    [{ ...mockInvoice, dueDate: undefined }, 'dueDate'],
+    [{ ...mockInvoice, currency: undefined }, 'currency'],
+    [{ ...mockInvoice, buyerAddress: undefined }, 'buyerAddress'],
+    [{ ...mockInvoice, supplierAddress: undefined }, 'supplierAddress'],
+    [{ ...mockInvoice, buyerPhone: undefined }, 'buyerPhone']
+  ])('should pass validation when optional field %s is missing', (validInvoice, fieldName) => {
+    const req = httpMocks.createRequest({ body: validInvoice });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    validateInvoiceInput(req, res, next);
+
+    expect(next).toHaveBeenCalled();
   });
 
   it.each([
@@ -38,10 +55,7 @@ describe('Invoice Validation Middleware', () => {
     [{ ...mockInvoice, total: 'string' }],
     [{ ...mockInvoice, buyer: 123 }],
     [{ ...mockInvoice, supplier: 123 }],
-    [{ ...mockInvoice, issueDate: 123 }],
-    [{ ...mockInvoice, dueDate: 123 }],
-    [{ ...mockInvoice, currency: 123 }],
-    [{ ...mockInvoice, items: 123 }]
+    [{ ...mockInvoice, issueDate: 123 }]
   ])('should fail validation if fields are of incorrect type', (invalidInvoice) => {
     const req = httpMocks.createRequest({ body: invalidInvoice });
     const res = httpMocks.createResponse();
@@ -106,7 +120,11 @@ describe('Invoice Validation Middleware', () => {
   });
 
   it('should fail validation if item count is less than or equal to 0', () => {
-    const invalidInvoice = { ...mockInvoice, items: [{ ...mockInvoice.items[0], count: 0 }] };
+    const invalidInvoice = { 
+      ...mockInvoice, 
+      items: [{ ...mockInvoice.items[0], count: 0 }],
+      total: 0 
+    };
 
     const req = httpMocks.createRequest({ body: invalidInvoice });
     const res = httpMocks.createResponse();
@@ -145,7 +163,13 @@ describe('Invoice Validation Middleware', () => {
   });
 
   it('should fail validation if country code is invalid', () => {
-    const invalidInvoice = { ...mockInvoice, buyerAddress: { ...mockInvoice.buyerAddress, country: 'INVALID' } };
+    const invalidInvoice = { 
+      ...mockInvoice, 
+      buyerAddress: { 
+        ...mockInvoice.buyerAddress, 
+        country: 'INVALID' 
+      } 
+    };
 
     const req = httpMocks.createRequest({ body: invalidInvoice });
     const res = httpMocks.createResponse();

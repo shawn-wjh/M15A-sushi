@@ -13,7 +13,7 @@ const validateInvoiceInput = (req, res, next) => {
 
     // Check required fields present
     const requiredFields = ['invoiceId', 'issueDate', 'buyer', 'supplier', 'total', 'items'];
-    const missingFields = requiredFields.filter((field) => !(field in data));
+    const missingFields = requiredFields.filter((field) => !(field in data) || data[field] === undefined);
 
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
