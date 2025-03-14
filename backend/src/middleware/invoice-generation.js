@@ -1,5 +1,6 @@
 const convert = require('xml-js');
 const { uploadToS3 } = require('./s3-helpers');
+const { invoiceId } = require('./mockInvoice');
 
 /**
  * Example invoice data in js format
@@ -15,6 +16,9 @@ const exampleInvoice = {
  currency: "AUD",
  buyerAddress: { street: "123 Main St", country: "AU" },
  buyerPhone: "+1234567890",
+ paymentAccountId: "DK1212341234123412",
+ paymentAccountName: "payment account name",
+ financialInstitutionBranchId: "DKDKABCD",
  items: [
    { name: "Item A", count: 2, cost: 100 },
    { name: "Item B", count: 3, cost: 50 },
@@ -65,11 +69,11 @@ function convertToUBL(invoice) {
                 })
               }
             }),
-            ...(invoice.buyerPhone && {
-              'cac:Contact': {
-                'cbc:Telephone': { _text: invoice.buyerPhone }
-              }
-            })
+            'cac:Contact': {
+              'cbc:Telephone': { _text: invoice.supplierPhone },
+              'cbc:ElectronicMail': { _text: invoice.supplierEmail },
+              'cbc:Name': { _text: invoice.supplier }
+            }
           }
         },
 
@@ -87,11 +91,22 @@ function convertToUBL(invoice) {
                 })
               }
             }),
-            ...(invoice.buyerPhone && {
-              'cac:Contact': {
-                'cbc:Telephone': { _text: invoice.buyerPhone }
-              }
-            })
+            'cac:Contact': {
+              ...(invoice.buyerPhone && { 'cbc:Telephone': { _text: invoice.buyerPhone } }),
+              'cbc:ElectronicMail': { _text: invoice.buyerEmail },
+              'cbc:Name': { _text: invoice.buyer }
+            }
+          }
+        },
+
+        // Required Payment Means
+        'cac:PaymentMeans': {
+          'cac:PayeeFinancialAccount': {
+            'cbc:ID': { _text: invoice.paymentAccountId },
+            'cbc:Name': { _text: invoice.paymentAccountName },
+            'cac:FinancialInstitutionBranch': {
+              'cbc:ID': { _text: invoice.financialInstitutionBranchId }
+            }
           }
         },
 
