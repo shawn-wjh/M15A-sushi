@@ -56,243 +56,7 @@ describe('POST /v1/invoices/create', () => {
     // 400 status code is expected because the invoice input is invalid, from validateInvoiceInput middleware
     expect(response.status).toBe(400);
   });
-});
 
-describe('POST /v1/invoices/validate', () => {
-  it('should validate a valid invoice XML', async () => {
-    // Create a valid XML for testing that meets Peppol standards
-    const validXml = `
-      <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
-               xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
-               xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-        <cbc:ID>TEST-002</cbc:ID>
-        <cbc:IssueDate>2025-03-05</cbc:IssueDate>
-        <cbc:DueDate>2025-03-10</cbc:DueDate>
-        <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
-        <cbc:DocumentCurrencyCode>AUD</cbc:DocumentCurrencyCode>
-        
-        <cac:AccountingSupplierParty>
-          <cac:Party>
-            <cac:PartyName>
-              <cbc:Name>Test Supplier</cbc:Name>
-            </cac:PartyName>
-            <cac:PostalAddress>
-              <cbc:StreetName>123 Test St</cbc:StreetName>
-              <cbc:CityName>Test City</cbc:CityName>
-              <cbc:PostalZone>2000</cbc:PostalZone>
-              <cac:Country>
-                <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
-              </cac:Country>
-            </cac:PostalAddress>
-            <cac:PartyTaxScheme>
-              <cbc:CompanyID>AU123456789</cbc:CompanyID>
-              <cac:TaxScheme>
-                <cbc:ID>GST</cbc:ID>
-              </cac:TaxScheme>
-            </cac:PartyTaxScheme>
-            <cac:PartyLegalEntity>
-              <cbc:RegistrationName>Test Supplier Pty Ltd</cbc:RegistrationName>
-              <cbc:CompanyID>123456789</cbc:CompanyID>
-            </cac:PartyLegalEntity>
-            <cac:Contact>
-              <cbc:ElectronicMail>supplier@example.com</cbc:ElectronicMail>
-            </cac:Contact>
-          </cac:Party>
-        </cac:AccountingSupplierParty>
-        
-        <cac:AccountingCustomerParty>
-          <cac:Party>
-            <cac:PartyName>
-              <cbc:Name>Test Buyer</cbc:Name>
-            </cac:PartyName>
-            <cac:PostalAddress>
-              <cbc:StreetName>123 Test St</cbc:StreetName>
-              <cbc:CityName>Test City</cbc:CityName>
-              <cbc:PostalZone>2000</cbc:PostalZone>
-              <cac:Country>
-                <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
-              </cac:Country>
-            </cac:PostalAddress>
-            <cac:Contact>
-              <cbc:Telephone>+61234567890</cbc:Telephone>
-              <cbc:ElectronicMail>buyer@example.com</cbc:ElectronicMail>
-            </cac:Contact>
-          </cac:Party>
-        </cac:AccountingCustomerParty>
-        
-        <cac:PaymentMeans>
-          <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
-          <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
-        </cac:PaymentMeans>
-        
-        <cac:TaxTotal>
-          <cbc:TaxAmount currencyID="AUD">15.00</cbc:TaxAmount>
-          <cac:TaxSubtotal>
-            <cbc:TaxableAmount currencyID="AUD">150.00</cbc:TaxableAmount>
-            <cbc:TaxAmount currencyID="AUD">15.00</cbc:TaxAmount>
-            <cac:TaxCategory>
-              <cbc:ID>S</cbc:ID>
-              <cbc:Percent>10</cbc:Percent>
-              <cac:TaxScheme>
-                <cbc:ID>GST</cbc:ID>
-              </cac:TaxScheme>
-            </cac:TaxCategory>
-          </cac:TaxSubtotal>
-        </cac:TaxTotal>
-        
-        <cac:LegalMonetaryTotal>
-          <cbc:LineExtensionAmount currencyID="AUD">150.00</cbc:LineExtensionAmount>
-          <cbc:TaxExclusiveAmount currencyID="AUD">150.00</cbc:TaxExclusiveAmount>
-          <cbc:TaxInclusiveAmount currencyID="AUD">165.00</cbc:TaxInclusiveAmount>
-          <cbc:PayableAmount currencyID="AUD">150.00</cbc:PayableAmount>
-        </cac:LegalMonetaryTotal>
-        
-        <cac:InvoiceLine>
-          <cbc:ID>1</cbc:ID>
-          <cbc:InvoicedQuantity unitCode="EA">2</cbc:InvoicedQuantity>
-          <cbc:LineExtensionAmount currencyID="AUD">100.00</cbc:LineExtensionAmount>
-          <cac:Item>
-            <cbc:Name>Test Item A</cbc:Name>
-            <cac:ClassifiedTaxCategory>
-              <cbc:ID>S</cbc:ID>
-              <cbc:Percent>10</cbc:Percent>
-              <cac:TaxScheme>
-                <cbc:ID>GST</cbc:ID>
-              </cac:TaxScheme>
-            </cac:ClassifiedTaxCategory>
-          </cac:Item>
-          <cac:Price>
-            <cbc:PriceAmount currencyID="AUD">50.00</cbc:PriceAmount>
-            <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
-          </cac:Price>
-        </cac:InvoiceLine>
-        
-        <cac:InvoiceLine>
-          <cbc:ID>2</cbc:ID>
-          <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
-          <cbc:LineExtensionAmount currencyID="AUD">50.00</cbc:LineExtensionAmount>
-          <cac:Item>
-            <cbc:Name>Test Item B</cbc:Name>
-            <cac:ClassifiedTaxCategory>
-              <cbc:ID>S</cbc:ID>
-              <cbc:Percent>10</cbc:Percent>
-              <cac:TaxScheme>
-                <cbc:ID>GST</cbc:ID>
-              </cac:TaxScheme>
-            </cac:ClassifiedTaxCategory>
-          </cac:Item>
-          <cac:Price>
-            <cbc:PriceAmount currencyID="AUD">50.00</cbc:PriceAmount>
-            <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
-          </cac:Price>
-        </cac:InvoiceLine>
-      </Invoice>
-    `;
-
-    console.log('Sending request to /v1/invoices/validate');
-    
-    // Let's try a different approach - directly call the validateInvoiceStandard middleware
-    const { validateInvoiceStandard } = require('../src/middleware/invoice-validation');
-    
-    // Create a mock request and response
-    const req = {
-      body: { xml: validXml }
-    };
-    
-    let responseData = null;
-    let responseStatus = 200;
-    
-    const res = {
-      status: function(code) {
-        responseStatus = code;
-        return this;
-      },
-      json: function(data) {
-        responseData = data;
-        return this;
-      }
-    };
-    
-    // Call the middleware directly
-    await validateInvoiceStandard(req, res);
-    
-    console.log('Direct middleware call response status:', responseStatus);
-    console.log('Direct middleware call response data:', responseData);
-    
-    // Check the response
-    expect(responseStatus).toBe(200);
-    expect(responseData).toHaveProperty('status', 'success');
-    expect(responseData).toHaveProperty('message');
-    expect(responseData.message).toContain('successfully validated');
-  });
-
-  it('should reject invalid invoice XML', async () => {
-    const invalidXml = '<Invoice></Invoice>'; // Missing required elements
-
-    // Let's try a different approach - directly call the validateInvoiceStandard middleware
-    const { validateInvoiceStandard } = require('../src/middleware/invoice-validation');
-    
-    // Create a mock request and response
-    const req = {
-      body: { xml: invalidXml }
-    };
-    
-    let responseData = null;
-    let responseStatus = 200;
-    
-    const res = {
-      status: function(code) {
-        responseStatus = code;
-        return this;
-      },
-      json: function(data) {
-        responseData = data;
-        return this;
-      }
-    };
-    
-    // Call the middleware directly
-    await validateInvoiceStandard(req, res);
-    
-    // Check the response
-    expect(responseStatus).toBe(400);
-    expect(responseData).toHaveProperty('status', 'error');
-  });
-});
-
-describe('POST /v1/invoices/create-and-validate', () => {
-  it('should create and validate a new invoice', async () => {
-    const response = await request(app)
-      .post('/v1/invoices/create-and-validate')
-      .send(mockInvoice);
-
-    expect(response.status).toBe(200);
-    
-    // With our new implementation, we should get both invoice data and validation results
-    expect(response.body).toHaveProperty('status', 'success');
-    expect(response.body).toHaveProperty('invoiceId');
-    expect(response.body).toHaveProperty('invoice');
-    expect(response.body).toHaveProperty('validation');
-    
-    // Check validation results
-    expect(response.body.validation).toHaveProperty('status', 'success');
-    expect(response.body.validation).toHaveProperty('message');
-    expect(response.body.validation.message).toContain('validated');
-    expect(response.body.validation).toHaveProperty('warnings');
-  });
-
-  it('should reject invalid invoice input during create-and-validate', async () => {
-    const response = await request(app)
-      .post('/v1/invoices/create-and-validate')
-      .send({});
-
-    expect(response.status).toBe(400);
-  });
-});
-
-// Tests for the old /v1/invoices route that no longer exists
-// These tests should be updated or removed
-describe('POST /v1/invoices', () => {
   it("should create new invoice with minimal required fields", async () => {
     const minimalInvoice = {
       invoiceId: "INV001",
@@ -525,6 +289,238 @@ describe('POST /v1/invoices', () => {
         expect(getRes.text).toContain('Invoice');
       }
     }
+  });
+});
+
+describe('POST /v1/invoices/validate', () => {
+  it('should validate a valid invoice XML', async () => {
+    // Create a valid XML for testing that meets Peppol standards
+    const validXml = `
+      <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+               xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+               xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+        <cbc:ID>TEST-002</cbc:ID>
+        <cbc:IssueDate>2025-03-05</cbc:IssueDate>
+        <cbc:DueDate>2025-03-10</cbc:DueDate>
+        <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+        <cbc:DocumentCurrencyCode>AUD</cbc:DocumentCurrencyCode>
+        
+        <cac:AccountingSupplierParty>
+          <cac:Party>
+            <cac:PartyName>
+              <cbc:Name>Test Supplier</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+              <cbc:StreetName>123 Test St</cbc:StreetName>
+              <cbc:CityName>Test City</cbc:CityName>
+              <cbc:PostalZone>2000</cbc:PostalZone>
+              <cac:Country>
+                <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
+              </cac:Country>
+            </cac:PostalAddress>
+            <cac:PartyTaxScheme>
+              <cbc:CompanyID>AU123456789</cbc:CompanyID>
+              <cac:TaxScheme>
+                <cbc:ID>GST</cbc:ID>
+              </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+              <cbc:RegistrationName>Test Supplier Pty Ltd</cbc:RegistrationName>
+              <cbc:CompanyID>123456789</cbc:CompanyID>
+            </cac:PartyLegalEntity>
+            <cac:Contact>
+              <cbc:ElectronicMail>supplier@example.com</cbc:ElectronicMail>
+            </cac:Contact>
+          </cac:Party>
+        </cac:AccountingSupplierParty>
+        
+        <cac:AccountingCustomerParty>
+          <cac:Party>
+            <cac:PartyName>
+              <cbc:Name>Test Buyer</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+              <cbc:StreetName>123 Test St</cbc:StreetName>
+              <cbc:CityName>Test City</cbc:CityName>
+              <cbc:PostalZone>2000</cbc:PostalZone>
+              <cac:Country>
+                <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
+              </cac:Country>
+            </cac:PostalAddress>
+            <cac:Contact>
+              <cbc:Telephone>+61234567890</cbc:Telephone>
+              <cbc:ElectronicMail>buyer@example.com</cbc:ElectronicMail>
+            </cac:Contact>
+          </cac:Party>
+        </cac:AccountingCustomerParty>
+        
+        <cac:PaymentMeans>
+          <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
+          <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
+        </cac:PaymentMeans>
+        
+        <cac:TaxTotal>
+          <cbc:TaxAmount currencyID="AUD">15.00</cbc:TaxAmount>
+          <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="AUD">150.00</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="AUD">15.00</cbc:TaxAmount>
+            <cac:TaxCategory>
+              <cbc:ID>S</cbc:ID>
+              <cbc:Percent>10</cbc:Percent>
+              <cac:TaxScheme>
+                <cbc:ID>GST</cbc:ID>
+              </cac:TaxScheme>
+            </cac:TaxCategory>
+          </cac:TaxSubtotal>
+        </cac:TaxTotal>
+        
+        <cac:LegalMonetaryTotal>
+          <cbc:LineExtensionAmount currencyID="AUD">150.00</cbc:LineExtensionAmount>
+          <cbc:TaxExclusiveAmount currencyID="AUD">150.00</cbc:TaxExclusiveAmount>
+          <cbc:TaxInclusiveAmount currencyID="AUD">165.00</cbc:TaxInclusiveAmount>
+          <cbc:PayableAmount currencyID="AUD">150.00</cbc:PayableAmount>
+        </cac:LegalMonetaryTotal>
+        
+        <cac:InvoiceLine>
+          <cbc:ID>1</cbc:ID>
+          <cbc:InvoicedQuantity unitCode="EA">2</cbc:InvoicedQuantity>
+          <cbc:LineExtensionAmount currencyID="AUD">100.00</cbc:LineExtensionAmount>
+          <cac:Item>
+            <cbc:Name>Test Item A</cbc:Name>
+            <cac:ClassifiedTaxCategory>
+              <cbc:ID>S</cbc:ID>
+              <cbc:Percent>10</cbc:Percent>
+              <cac:TaxScheme>
+                <cbc:ID>GST</cbc:ID>
+              </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+          </cac:Item>
+          <cac:Price>
+            <cbc:PriceAmount currencyID="AUD">50.00</cbc:PriceAmount>
+            <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+          </cac:Price>
+        </cac:InvoiceLine>
+        
+        <cac:InvoiceLine>
+          <cbc:ID>2</cbc:ID>
+          <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
+          <cbc:LineExtensionAmount currencyID="AUD">50.00</cbc:LineExtensionAmount>
+          <cac:Item>
+            <cbc:Name>Test Item B</cbc:Name>
+            <cac:ClassifiedTaxCategory>
+              <cbc:ID>S</cbc:ID>
+              <cbc:Percent>10</cbc:Percent>
+              <cac:TaxScheme>
+                <cbc:ID>GST</cbc:ID>
+              </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+          </cac:Item>
+          <cac:Price>
+            <cbc:PriceAmount currencyID="AUD">50.00</cbc:PriceAmount>
+            <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+          </cac:Price>
+        </cac:InvoiceLine>
+      </Invoice>
+    `;
+
+    console.log('Sending request to /v1/invoices/validate');
+    
+    // Let's try a different approach - directly call the validateInvoiceStandard middleware
+    const { validateInvoiceStandard } = require('../src/middleware/invoice-validation');
+    
+    // Create a mock request and response
+    const req = {
+      body: { xml: validXml }
+    };
+    
+    let responseData = null;
+    let responseStatus = 200;
+    
+    const res = {
+      status: function(code) {
+        responseStatus = code;
+        return this;
+      },
+      json: function(data) {
+        responseData = data;
+        return this;
+      }
+    };
+    
+    // Call the middleware directly
+    await validateInvoiceStandard(req, res);
+    
+    console.log('Direct middleware call response status:', responseStatus);
+    console.log('Direct middleware call response data:', responseData);
+    
+    // Check the response
+    expect(responseStatus).toBe(200);
+    expect(responseData).toHaveProperty('status', 'success');
+    expect(responseData).toHaveProperty('message');
+    expect(responseData.message).toContain('successfully validated');
+  });
+
+  it('should reject invalid invoice XML', async () => {
+    const invalidXml = '<Invoice></Invoice>'; // Missing required elements
+
+    // Let's try a different approach - directly call the validateInvoiceStandard middleware
+    const { validateInvoiceStandard } = require('../src/middleware/invoice-validation');
+    
+    // Create a mock request and response
+    const req = {
+      body: { xml: invalidXml }
+    };
+    
+    let responseData = null;
+    let responseStatus = 200;
+    
+    const res = {
+      status: function(code) {
+        responseStatus = code;
+        return this;
+      },
+      json: function(data) {
+        responseData = data;
+        return this;
+      }
+    };
+    
+    // Call the middleware directly
+    await validateInvoiceStandard(req, res);
+    
+    // Check the response
+    expect(responseStatus).toBe(400);
+    expect(responseData).toHaveProperty('status', 'error');
+  });
+});
+
+describe('POST /v1/invoices/create-and-validate', () => {
+  it('should create and validate a new invoice', async () => {
+    const response = await request(app)
+      .post('/v1/invoices/create-and-validate')
+      .send(mockInvoice);
+
+    expect(response.status).toBe(200);
+    
+    // With our new implementation, we should get both invoice data and validation results
+    expect(response.body).toHaveProperty('status', 'success');
+    expect(response.body).toHaveProperty('invoiceId');
+    expect(response.body).toHaveProperty('invoice');
+    expect(response.body).toHaveProperty('validation');
+    
+    // Check validation results
+    expect(response.body.validation).toHaveProperty('status', 'success');
+    expect(response.body.validation).toHaveProperty('message');
+    expect(response.body.validation.message).toContain('validated');
+    expect(response.body.validation).toHaveProperty('warnings');
+  });
+
+  it('should reject invalid invoice input during create-and-validate', async () => {
+    const response = await request(app)
+      .post('/v1/invoices/create-and-validate')
+      .send({});
+
+    expect(response.status).toBe(400);
   });
 });
 
