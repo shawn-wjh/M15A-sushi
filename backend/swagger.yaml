@@ -282,6 +282,47 @@ paths:
                       type: number
                       format: double
                       example: 9.99
+                buyerAddress:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the buyer
+                    country:
+                      type: string
+                      description: Country code of the buyer
+                buyerEmail:
+                  type: string
+                  format: email
+                  description: Email address of the buyer
+                buyerPhone:
+                  type: string
+                  description: Phone number of the buyer
+                supplierAddress:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the supplier
+                    country:
+                      type: string
+                      description: Country code of the supplier
+                supplierEmail:
+                  type: string
+                  format: email
+                  description: Email address of the supplier
+                supplierPhone:
+                  type: string
+                  description: Phone number of the supplier
+                paymentAccountId:
+                  type: string
+                  description: Bank account number
+                paymentAccountName:
+                  type: string
+                  description: Account name
+                financialInstitutionBranchId:
+                  type: string
+                  description: Branch identifier such as BSB
       responses:
         "200":
           description: Invoice created successfully
@@ -387,6 +428,47 @@ paths:
                       format: date
                       xml:
                         name: cbc:IssueDate
+                    DueDate:
+                      type: string
+                      format: date
+                      xml:
+                        name: cbc:DueDate
+                    InvoiceTypeCode:
+                      type: string
+                      example: 380
+                      xml:
+                        name: cbc:InvoiceTypeCode
+                    DocumentCurrencyCode:
+                      type: string
+                      example: AUD
+                      xml:
+                        name: cbc:DocumentCurrencyCode
+                    CustomizationID:
+                      type: string
+                      xml:
+                        name: cbc:CustomizationID
+                    ProfileID:
+                      type: string
+                      xml:
+                        name: cbc:ProfileID
+                    OrderReference:
+                      type: object
+                      xml:
+                        name: cac:OrderReference
+                      properties:
+                        ID:
+                          type: string
+                          xml:
+                            name: cbc:ID
+                    InvoiceDocumentReference:
+                      type: object
+                      xml:
+                        name: cac:InvoiceDocumentReference
+                      properties:
+                        ID:
+                          type: string
+                          xml:
+                            name: cbc:ID
                     AccountingSupplierParty:
                       type: object
                       xml:
@@ -397,10 +479,46 @@ paths:
                           xml:
                             name: cac:Party
                           properties:
-                            Name:
-                              type: string
+                            PartyName:
+                              type: object
                               xml:
-                                name: cbc:Name
+                                name: cac:PartyName
+                              properties:
+                                Name:
+                                  type: string
+                                  xml:
+                                    name: cbc:Name
+                            PostalAddress:
+                              type: object
+                              xml:
+                                name: cac:PostalAddress
+                              properties:
+                                StreetName:
+                                  type: string
+                                  xml:
+                                    name: cbc:StreetName
+                                Country:
+                                  type: object
+                                  xml:
+                                    name: cac:Country
+                                  properties:
+                                    IdentificationCode:
+                                      type: string
+                                      xml:
+                                        name: cbc:IdentificationCode
+                            Contact:
+                              type: object
+                              xml:
+                                name: cac:Contact
+                              properties:
+                                Telephone:
+                                  type: string
+                                  xml:
+                                    name: cbc:Telephone
+                                ElectronicMail:
+                                  type: string
+                                  xml:
+                                    name: cbc:ElectronicMail
                     AccountingCustomerParty:
                       type: object
                       xml:
@@ -411,10 +529,73 @@ paths:
                           xml:
                             name: cac:Party
                           properties:
+                            PartyName:
+                              type: object
+                              xml:
+                                name: cac:PartyName
+                              properties:
+                                Name:
+                                  type: string
+                                  xml:
+                                    name: cbc:Name
+                            PostalAddress:
+                              type: object
+                              xml:
+                                name: cac:PostalAddress
+                              properties:
+                                StreetName:
+                                  type: string
+                                  xml:
+                                    name: cbc:StreetName
+                                Country:
+                                  type: object
+                                  xml:
+                                    name: cac:Country
+                                  properties:
+                                    IdentificationCode:
+                                      type: string
+                                      xml:
+                                        name: cbc:IdentificationCode
+                            Contact:
+                              type: object
+                              xml:
+                                name: cac:Contact
+                              properties:
+                                Telephone:
+                                  type: string
+                                  xml:
+                                    name: cbc:Telephone
+                                ElectronicMail:
+                                  type: string
+                                  xml:
+                                    name: cbc:ElectronicMail
+                    PaymentMeans:
+                      type: object
+                      xml:
+                        name: cac:PaymentMeans
+                      properties:
+                        PayeeFinancialAccount:
+                          type: object
+                          xml:
+                            name: cac:PayeeFinancialAccount
+                          properties:
+                            ID:
+                              type: string
+                              xml:
+                                name: cbc:ID
                             Name:
                               type: string
                               xml:
                                 name: cbc:Name
+                            FinancialInstitutionBranch:
+                              type: object
+                              xml:
+                                name: cac:FinancialInstitutionBranch
+                              properties:
+                                ID:
+                                  type: string
+                                  xml:
+                                    name: cbc:ID
                     LegalMonetaryTotal:
                       type: object
                       xml:
@@ -446,29 +627,68 @@ paths:
                           xml:
                             name: cbc:PaymentDueDate
                     InvoiceLine:
-                      type: object
+                      type: array
                       xml:
                         name: cac:InvoiceLine
-                      properties:
-                        InvoicedQuantity:
-                          type: number
-                          format: integer
-                          xml:
-                            name: cbc:InvoicedQuantity
-                        LineExtensionAmount:
-                          type: number
-                          format: double
-                          xml:
-                            name: LineExtensionAmount
-                        Item:
-                          type: object
-                          xml: 
-                            name: cac:Item
-                          properties:
-                            Name:
-                              type: string
-                              xml:
-                                name: cbc:Name
+                      items:
+                        type: object
+                        properties:
+                          ID:
+                            type: string
+                            xml:
+                              name: cbc:ID
+                          InvoicedQuantity:
+                            type: number
+                            format: integer
+                            xml:
+                              name: cbc:InvoicedQuantity
+                          LineExtensionAmount:
+                            type: number
+                            format: double
+                            xml:
+                              name: cbc:LineExtensionAmount
+                          Item:
+                            type: object
+                            xml: 
+                              name: cac:Item
+                            properties:
+                              Name:
+                                type: string
+                                xml:
+                                  name: cbc:Name
+                              ClassifiedTaxCategory:
+                                type: object
+                                xml:
+                                  name: cac:ClassifiedTaxCategory
+                                properties:
+                                  ID:
+                                    type: string
+                                    xml:
+                                      name: cbc:ID
+                                  TaxScheme:
+                                    type: object
+                                    xml:
+                                      name: cac:TaxScheme
+                                    properties:
+                                      ID:
+                                        type: string
+                                        xml:
+                                          name: cbc:ID
+                          Price:
+                            type: object
+                            xml:
+                              name: cac:Price
+                            properties:
+                              PriceAmount:
+                                type: number
+                                format: double
+                                xml:
+                                  name: cbc:PriceAmount
+                              BaseQuantity:
+                                type: number
+                                format: integer
+                                xml:
+                                  name: cbc:BaseQuantity
                 description: Array of UBL-compliant XML invoices
         "400":
           description: |
@@ -526,6 +746,47 @@ paths:
                     format: date
                     xml:
                       name: cbc:IssueDate
+                  DueDate:
+                    type: string
+                    format: date
+                    xml:
+                      name: cbc:DueDate
+                  InvoiceTypeCode:
+                    type: string
+                    example: 380
+                    xml:
+                      name: cbc:InvoiceTypeCode
+                  DocumentCurrencyCode:
+                    type: string
+                    example: AUD
+                    xml:
+                      name: cbc:DocumentCurrencyCode
+                  CustomizationID:
+                    type: string
+                    xml:
+                      name: cbc:CustomizationID
+                  ProfileID:
+                    type: string
+                    xml:
+                      name: cbc:ProfileID
+                  OrderReference:
+                    type: object
+                    xml:
+                      name: cac:OrderReference
+                    properties:
+                      ID:
+                        type: string
+                        xml:
+                          name: cbc:ID
+                  InvoiceDocumentReference:
+                    type: object
+                    xml:
+                      name: cac:InvoiceDocumentReference
+                    properties:
+                      ID:
+                        type: string
+                        xml:
+                          name: cbc:ID
                   AccountingSupplierParty:
                     type: object
                     xml:
@@ -536,10 +797,46 @@ paths:
                         xml:
                           name: cac:Party
                         properties:
-                          Name:
-                            type: string
+                          PartyName:
+                            type: object
                             xml:
-                              name: cbc:Name
+                              name: cac:PartyName
+                            properties:
+                              Name:
+                                type: string
+                                xml:
+                                  name: cbc:Name
+                          PostalAddress:
+                            type: object
+                            xml:
+                              name: cac:PostalAddress
+                            properties:
+                              StreetName:
+                                type: string
+                                xml:
+                                  name: cbc:StreetName
+                              Country:
+                                type: object
+                                xml:
+                                  name: cac:Country
+                                properties:
+                                  IdentificationCode:
+                                    type: string
+                                    xml:
+                                      name: cbc:IdentificationCode
+                          Contact:
+                            type: object
+                            xml:
+                              name: cac:Contact
+                            properties:
+                              Telephone:
+                                type: string
+                                xml:
+                                  name: cbc:Telephone
+                              ElectronicMail:
+                                type: string
+                                xml:
+                                  name: cbc:ElectronicMail
                   AccountingCustomerParty:
                     type: object
                     xml:
@@ -550,20 +847,73 @@ paths:
                         xml:
                           name: cac:Party
                         properties:
+                          PartyName:
+                            type: object
+                            xml:
+                              name: cac:PartyName
+                            properties:
+                              Name:
+                                type: string
+                                xml:
+                                  name: cbc:Name
+                          PostalAddress:
+                            type: object
+                            xml:
+                              name: cac:PostalAddress
+                            properties:
+                              StreetName:
+                                type: string
+                                xml:
+                                  name: cbc:StreetName
+                              Country:
+                                type: object
+                                xml:
+                                  name: cac:Country
+                                properties:
+                                  IdentificationCode:
+                                    type: string
+                                    xml:
+                                      name: cbc:IdentificationCode
+                          Contact:
+                            type: object
+                            xml:
+                              name: cac:Contact
+                            properties:
+                              Telephone:
+                                type: string
+                                xml:
+                                  name: cbc:Telephone
+                              ElectronicMail:
+                                type: string
+                                xml:
+                                  name: cbc:ElectronicMail
+                  PaymentMeans:
+                    type: object
+                    xml:
+                      name: cac:PaymentMeans
+                    properties:
+                      PayeeFinancialAccount:
+                        type: object
+                        xml:
+                          name: cac:PayeeFinancialAccount
+                        properties:
+                          ID:
+                            type: string
+                            xml:
+                              name: cbc:ID
                           Name:
                             type: string
                             xml:
                               name: cbc:Name
-                  PaymentTerms:
-                    type: object
-                    xml:
-                      name: cac:PaymentTerms
-                    properties:
-                      PaymentDueDate:
-                        type: string
-                        format: date
-                        xml:
-                          name: cbc:PaymentDueDate
+                          FinancialInstitutionBranch:
+                            type: object
+                            xml:
+                              name: cac:FinancialInstitutionBranch
+                            properties:
+                              ID:
+                                type: string
+                                xml:
+                                  name: cbc:ID
                   LegalMonetaryTotal:
                     type: object
                     xml:
@@ -585,29 +935,68 @@ paths:
                             description: Total amount payable
                             example: "0.00"
                   InvoiceLine:
-                    type: object
+                    type: array
                     xml:
                       name: cac:InvoiceLine
-                    properties:
-                      InvoicedQuantity:
-                        type: number
-                        format: integer
-                        xml:
-                          name: cbc:InvoicedQuantity
-                      LineExtensionAmount:
-                        type: number
-                        format: double
-                        xml:
-                          name: LineExtensionAmount
-                      Item:
-                        type: object
-                        xml: 
-                          name: cac:Item
-                        properties:
-                          Name:
-                            type: string
-                            xml:
-                              name: cbc:Name
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          xml:
+                            name: cbc:ID
+                        InvoicedQuantity:
+                          type: number
+                          format: integer
+                          xml:
+                            name: cbc:InvoicedQuantity
+                        LineExtensionAmount:
+                          type: number
+                          format: double
+                          xml:
+                            name: cbc:LineExtensionAmount
+                        Item:
+                          type: object
+                          xml: 
+                            name: cac:Item
+                          properties:
+                            Name:
+                              type: string
+                              xml:
+                                name: cbc:Name
+                            ClassifiedTaxCategory:
+                              type: object
+                              xml:
+                                name: cac:ClassifiedTaxCategory
+                              properties:
+                                ID:
+                                  type: string
+                                  xml:
+                                    name: cbc:ID
+                                TaxScheme:
+                                  type: object
+                                  xml:
+                                    name: cac:TaxScheme
+                                  properties:
+                                    ID:
+                                      type: string
+                                      xml:
+                                        name: cbc:ID
+                        Price:
+                          type: object
+                          xml:
+                            name: cac:Price
+                          properties:
+                            PriceAmount:
+                              type: number
+                              format: double
+                              xml:
+                                name: cbc:PriceAmount
+                            BaseQuantity:
+                              type: number
+                              format: integer
+                              xml:
+                                name: cbc:BaseQuantity
         "400":
           description: Invalid invoiceid
           content: 
@@ -693,6 +1082,47 @@ paths:
                       type: number
                       format: double
                       example: 9.99
+                buyerAddress:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the buyer
+                    country:
+                      type: string
+                      description: Country code of the buyer
+                buyerEmail:
+                  type: string
+                  format: email
+                  description: Email address of the buyer
+                buyerPhone:
+                  type: string
+                  description: Phone number of the buyer
+                supplierAddress:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the supplier
+                    country:
+                      type: string
+                      description: Country code of the supplier
+                supplierEmail:
+                  type: string
+                  format: email
+                  description: Email address of the supplier
+                supplierPhone:
+                  type: string
+                  description: Phone number of the supplier
+                paymentAccountId:
+                  type: string
+                  description: Bank account number
+                paymentAccountName:
+                  type: string
+                  description: Account name
+                financialInstitutionBranchId:
+                  type: string
+                  description: Branch identifier such as BSB
                 
       responses:
         "200":
@@ -1009,7 +1439,7 @@ paths:
 
   /v1/health:
     get:
-      summary: Check API’s status
+      summary: Check API's status
       operationId: checkAPIStatus
       tags:
         - System
