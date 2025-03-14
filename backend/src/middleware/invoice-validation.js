@@ -349,7 +349,7 @@ const validateInvoiceStandard = (req, res, next) => {
     return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
-      error: error.message
+      error: errors
     });
   }
 };
