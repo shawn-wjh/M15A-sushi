@@ -44,7 +44,6 @@ describe('POST /v1/invoices/create', () => {
     .post('/v1/invoices/create')
       .send(mockInvoice);
 
-    console.log('response.body', response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('invoiceId');
     expect(response.body).toHaveProperty('invoice');
@@ -270,7 +269,6 @@ describe('POST /v1/invoices/create', () => {
     
     // Skip this test if the invoice wasn't created successfully
     if (createRes.status !== 200 || !createRes.body.invoiceId) {
-      console.log('Skipping test: Invoice creation failed with status', createRes.status);
       return;
     }
     
@@ -431,8 +429,6 @@ describe('POST /v1/invoices/validate', () => {
       </Invoice>
     `;
 
-    console.log('Sending request to /v1/invoices/validate');
-    
     // Let's try a different approach - directly call the validateInvoiceStandard middleware
     const { validateInvoiceStandard } = require('../src/middleware/invoice-validation');
     
@@ -457,9 +453,6 @@ describe('POST /v1/invoices/validate', () => {
     
     // Call the middleware directly
     await validateInvoiceStandard(req, res);
-    
-    console.log('Direct middleware call response status:', responseStatus);
-    console.log('Direct middleware call response data:', responseData);
     
     // Check the response
     expect(responseStatus).toBe(200);

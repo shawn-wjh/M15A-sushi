@@ -7,7 +7,6 @@ const {
   // generateAndUploadUBLInvoice,
   convertToUBL
 } = require('../middleware/invoice-generation');
-const { getInvoiceFromS3 } = require('../middleware/invoice-retrieval');
 const { items } = require('../middleware/mockInvoice');
 const { error } = require('console');
 
@@ -176,9 +175,6 @@ const invoiceController = {
       const invoiceId = req.params.invoiceid;
       const updateData = req.body;
 
-      console.log('invoiceId: ', invoiceId);
-      console.log('updateData: ', updateData);
-
       // Check if invoiceId is provided
       if (!invoiceId) {
         return res.status(400).json({
@@ -251,8 +247,6 @@ const invoiceController = {
         });
       }
 
-      console.log('invoiceId: ', invoiceId);
-
       // check if invoice exists
       const queryParams = {
         TableName: Tables.INVOICES,
@@ -270,8 +264,6 @@ const invoiceController = {
           error: 'Invoice not found'
         });
       }
-
-      console.log('Items: ', Items);
 
       // Get the UserID from the found item
       const userID = Items[0].UserID;
@@ -292,7 +284,6 @@ const invoiceController = {
         message: 'Invoice deleted successfully'
       });
     } catch (error) {
-      console.log('error: ', error);
       return res.status(500).json({
         status: 'error',
         error: error.message
