@@ -41,9 +41,10 @@ jest.mock('../src/config/database', () => {
 describe('POST /v1/invoices/create', () => {
   it('should create new invoice', async () => {
     const response = await request(app)
-      .post('/v1/invoices/create')
+    .post('/v1/invoices/create')
       .send(mockInvoice);
 
+    console.log('response.body', response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('invoiceId');
     expect(response.body).toHaveProperty('invoice');
@@ -282,7 +283,7 @@ describe('POST /v1/invoices/create', () => {
     
     // If we got a 200 response, verify the content
     if (getRes.statusCode === 200) {
-      expect(getRes.text).toBeTruthy();
+    expect(getRes.text).toBeTruthy();
       if (getRes.headers['content-type'].includes('application/json')) {
         expect(getRes.body).toBeTruthy();
       } else if (getRes.headers['content-type'].includes('application/xml')) {
@@ -304,7 +305,14 @@ describe('POST /v1/invoices/validate', () => {
         <cbc:DueDate>2025-03-10</cbc:DueDate>
         <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
         <cbc:DocumentCurrencyCode>AUD</cbc:DocumentCurrencyCode>
-        
+        <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>
+        <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
+        <cac:OrderReference>
+          <cbc:ID>N/A</cbc:ID>
+        </cac:OrderReference>
+        <cac:InvoiceDocumentReference>
+          <cbc:ID>N/A</cbc:ID>
+        </cac:InvoiceDocumentReference>
         <cac:AccountingSupplierParty>
           <cac:Party>
             <cac:PartyName>
@@ -679,8 +687,8 @@ describe('PUT /v1/invoices/:invoiceid', () => {
     expect([200, 400]).toContain(updateRes.status);
     
     if (updateRes.status === 200) {
-      expect(updateRes.body).toHaveProperty('invoiceId');
-      expect(updateRes.body.status).toBe('success');
+    expect(updateRes.body).toHaveProperty('invoiceId');
+    expect(updateRes.body.status).toBe('success');
     }
   });
 
