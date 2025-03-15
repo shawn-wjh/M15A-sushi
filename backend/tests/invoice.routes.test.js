@@ -429,7 +429,6 @@ describe('POST /v1/invoices/validate', () => {
       </Invoice>
     `;
 
-    // Let's try a different approach - directly call the validateInvoiceStandard middleware
     const { validateInvoiceStandard } = require('../src/middleware/invoice-validation');
     
     // Create a mock request and response
