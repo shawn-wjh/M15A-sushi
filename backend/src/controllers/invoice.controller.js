@@ -251,6 +251,8 @@ const invoiceController = {
         });
       }
 
+      console.log('invoiceId: ', invoiceId);
+
       // check if invoice exists
       const queryParams = {
         TableName: Tables.INVOICES,
@@ -268,6 +270,8 @@ const invoiceController = {
           error: 'Invoice not found'
         });
       }
+
+      console.log('Items: ', Items);
 
       // Get the UserID from the found item
       const userID = Items[0].UserID;

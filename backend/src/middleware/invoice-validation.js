@@ -95,7 +95,7 @@ const validateInvoiceInput = (req, res, next) => {
       if (item.cost <= 0) {
         throw new Error('Item cost must be greater than 0');
       }
-      sum += item.cost;
+      sum += item.cost * item.count;
     }
     
     // Check invoice total against item costs
