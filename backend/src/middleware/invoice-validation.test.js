@@ -379,5 +379,63 @@ describe('POST /v1/invoices/validate', () => {
     expect(responseData.error).toBeTruthy();
   });
 
-  // check supplier and customer
+  // check supplier and customer // name, address, country code
+  it.each([
+    ["cac:PartyName", validXml.replace("<cac:PartyName>", "")],
+    ["cac:PostalAddress", validXml.replace("<cac:PostalAddress>", "")],
+    ["cbc:StreetName", validXml.replace("<cbc:StreetName>", "")],
+    ["cac:Country", validXml.replace("<cac:Country>", "")],
+    ["cbc:IdentificationCode", validXml.replace("<cbc:IdentificationCode>", "")],
+    ["invalid cbc:IdentificationCode", validXml.replace("<cbc:IdentificationCode>AU", "<cbc:IdentificationCode>INVALID")],
+  ])('Should return 400 when missing supplier/customer detail: %s', async (missing, invalidXml) => {
+    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    await validateInvoiceStandard(req, res, next);
+
+    expect(res.statusCode).toBe(400);
+    const responseData = JSON.parse(res._getData());
+    expect(responseData).toHaveProperty('error');
+    expect(responseData.error).toBeTruthy();
+  });
+
+  // check currency code
+  // check total
+  it.each([
+    ["PayableAmount", validXml.replace(/<cbc:PayableAmount[^>]*>.*?<\/cbc:PayableAmount>/g, "")],
+    ["invalid currency", validXml.replace(/currencyID="AUD"/g, 'currencyID="INVALID"')],
+    ["missing currency", validXml.replace(/currencyID="AUD"/g, '')]
+  ])('should return 400 when %s in LegalMonetaryTotal is invalid', async (missing, invalidXml) => {
+    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    await validateInvoiceStandard(req, res, next);
+    
+    expect(res.statusCode).toBe(400);
+    const responseData = JSON.parse(res._getData());
+    expect(responseData).toHaveProperty('error');
+    expect(responseData.error).toBeTruthy();
+  });
+
+  // check invoice lines
+  it.each([
+    ["empty InvoiceLine", validXml.replace(/<cac:InvoiceLine>.*?<\/cac:InvoiceLine>/gs, "<cac:InvoiceLine></cac:InvoiceLine>")],
+    ["missing line ID", validXml.replace(/<cbc:ID>1<\/cbc:ID>/, "")],
+    ["missing item name", validXml.replace(/<cbc:Name>Test Item A<\/cbc:Name>/, "")],
+    ["missing price", validXml.replace(/<cac:Price>.*?<\/cac:Price>/gs, "")],
+    ["missing quantity", validXml.replace(/<cbc:BaseQuantity.*?>.*?<\/cbc:BaseQuantity>/gs, "")]
+  ])('should return 400 when invoice line is %s', async (missing, invalidXml) => {
+    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    await validateInvoiceStandard(req, res, next);
+    
+    expect(res.statusCode).toBe(400);
+    const responseData = JSON.parse(res._getData());
+    expect(responseData).toHaveProperty('error');
+    expect(responseData.error).toBeTruthy();
+  });
 });
