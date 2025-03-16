@@ -4,18 +4,18 @@
 dummy:
   script:
     - echo "Pipeline is passing"
-# stages:
-#   - lint
-#   - test
-#   - build
+stages:
+  - lint
+  - test
+  - build
 
-# # Cache node_modules to speed up builds
-# cache:
-#   key: ${CI_COMMIT_REF_SLUG}
-#   paths:
-#     - backend/node_modules/
+# Cache node_modules to speed up builds
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - backend/node_modules/
 
-# # Lint stage: Check code quality
+# Lint stage: Check code quality
 # lint-backend:
 #   stage: lint
 #   image: node:16
@@ -28,20 +28,20 @@ dummy:
 #     - merge_requests
 #     - /^feature\/.*$/
 
-# # Test stage: Run tests
-# test-backend:
-#   stage: test
-#   image: node:16
-#   script:
-#     - cd backend
-#     - npm install
-#     - npm test
-#   only:
-#     - main
-#     - merge_requests
-#     - /^feature\/.*$/
+# Test stage: Run tests
+test-backend:
+  stage: test
+  image: node:16
+  script:
+    - cd backend
+    - npm install
+    - npx jest
+  only:
+    - main
+    - merge_requests
+    - /^feature\/.*$/
 
-# # Build stage: Ensure the application can be built
+# Build stage: Ensure the application can be built
 # build-backend:
 #   stage: build
 #   image: node:16
