@@ -77,16 +77,84 @@ const invoiceController = {
    */
   listInvoices: async (req, res) => {
     try {
-      // TODO:
-      // 1. Get invoices from DynamoDB
-      // 2. Map to return only necessary fields
-      // 3. Return formatted response
+      let { limit, offset, sort, order } = req.query;
+      limit = parseInt(limit, 10);
+      offset = parseInt(offset, 10) || 0;
+  
+      if (limit < 1) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'limit must be greater than 0'
+        });
+      }
+      if (offset < 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'offset must be at least 0'
+        });
+      }
+      
+      // Validate sort and order if provided
+      const validSortFields = ['issuedate', 'duedate', 'total'];
+      const validOrders = ['asc', 'desc'];
+      if (sort && !validSortFields.includes(sort.toLowerCase())) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'invalid sort query'
+        });
+      }
+      if (order && !validOrders.includes(order.toLowerCase())) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'invalid order query'
+        });
+      }
+      
+      // leaving userId as 123 as thats what has been done on previous codes
+      const userId = '123';
+  
 
+      const scanParams = {
+        TableName: Tables.INVOICES,
+        FilterExpression: 'UserID = :userId',
+        ExpressionAttributeValues: {
+          ':userId': userId
+        }
+      };
+  
+      const { Items } = await dbClient.send(new ScanCommand(scanParams));
+      const allInvoices = Items || [];
+  
+     
+      if (sort) {
+        switch (sort.toLowerCase()) {
+          case 'issuedate':
+            allInvoices.sort((a, b) => {
+           
+              return new Date(a.timestamp) - new Date(b.timestamp);
+            });
+            break;
+          default:
+            break;
+        }
+        if (order && order.toLowerCase() === 'desc') {
+          allInvoices.reverse();
+        }
+      }
+  
+      const totalInvoices = allInvoices.length;
+      const maxOffset = totalInvoices - limit;
+      if (offset > maxOffset) {
+        offset = maxOffset < 0 ? 0 : maxOffset;
+      }
+
+      const paginatedInvoices = allInvoices.slice(offset, offset + limit);
+  
       return res.status(200).json({
         status: 'success',
         data: {
-          count: 0,
-          invoices: []
+          count: totalInvoices,
+          invoices: paginatedInvoices
         }
       });
     } catch (error) {
