@@ -15,11 +15,7 @@ const validateInvoiceInput = (req, res, next) => {
     const requiredFields = ['invoiceId', 'issueDate', 'buyer', 'supplier', 'total', 'items'];
     const missingFields = requiredFields.filter((field) => !(field in data) || data[field] === undefined);
 
-    // Add logging to identify missing fields
-    console.log('Validating invoice input:', data);
-
     if (missingFields.length > 0) {
-      console.log('Missing required fields:', missingFields);
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
 
@@ -38,14 +34,12 @@ const validateInvoiceInput = (req, res, next) => {
     // Add logging for type checks
     Object.entries(typeChecks).forEach(([field, expectedType]) => {
       if (data[field] !== undefined && typeof data[field] !== expectedType) {
-        console.log(`Field ${field} has incorrect type. Expected ${expectedType}, got ${typeof data[field]}`);
         throw new Error(`${field} must be a ${expectedType}`);
       }
     });
 
     // Check items array
     if (!Array.isArray(data.items) || data.items.length === 0) {
-      console.log('Items array is invalid or empty');
       throw new Error('Items must be a non-empty array');
     }
 
@@ -358,7 +352,7 @@ const validateInvoiceStandard = (req, res, next) => {
       return res.status(400).json({
         status: 'error',
         message: 'Invoice does not comply with Peppol standards',
-        validationErrors: validationResult.errors,
+        error: validationResult.errors,
         validationWarnings: validationResult.warnings
       });
     }
