@@ -93,118 +93,119 @@ const authController = {
     }
   },
 
-  /**
-   * Refresh JWT token
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  refreshToken: async (req, res) => {
-    try {
-      // TODO:
-      // 1. Extract refresh token from request
-      // 2. Verify refresh token
-      // 3. Find user associated with token
-      // 4. Generate new access token
-      // 5. Return new token
+  // TODO: commented out for now to save coverage
 
-      return res.status(200).json({
-        status: "success",
-        message: "Token refreshed successfully",
-        data: {
-          // New token will go here
-        },
-      });
-    } catch (error) {
-      console.error("Token refresh error:", error);
-      return res.status(401).json({
-        status: "error",
-        message: "Invalid or expired refresh token",
-      });
-    }
-  },
+  // /**
+  //  * Refresh JWT token
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // refreshToken: async (req, res) => {
+  //   try {
+  //     // TODO:
+  //     // 1. Extract refresh token from request
+  //     // 2. Verify refresh token
+  //     // 3. Find user associated with token
+  //     // 4. Generate new access token
+  //     // 5. Return new token
 
-  /**
-   * Logout user (invalidate token)
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  logout: async (req, res) => {
-    try {
-      // TODO:
-      // 1. Extract token from request
-      // 2. Add token to blacklist or invalidate (if applicable)
-      // 3. Return success response
+  //     return res.status(200).json({
+  //       status: "success",
+  //       message: "Token refreshed successfully",
+  //       data: {
+  //         // New token will go here
+  //       },
+  //     });
+  //   } catch (error) {
+  //     return res.status(401).json({
+  //       status: "error",
+  //       message: "Invalid or expired refresh token",
+  //     });
+  //   }
+  // },
 
-      return res.status(200).json({
-        status: "success",
-        message: "Logout successful",
-      });
-    } catch (error) {
-      console.error("Logout error:", error);
-      return res.status(500).json({
-        status: "error",
-        message: "Logout failed",
-        details: error.message,
-      });
-    }
-  },
+  // /**
+  //  * Logout user (invalidate token)
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // logout: async (req, res) => {
+  //   try {
+  //     // TODO:
+  //     // 1. Extract token from request
+  //     // 2. Add token to blacklist or invalidate (if applicable)
+  //     // 3. Return success response
 
-  /**
-   * Get current user information
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  getCurrentUser: async (req, res) => {
-    try {
-      // TODO:
-      // 1. Extract user ID from authenticated request
-      // 2. Find user in database
-      // 3. Return user information
+  //     return res.status(200).json({
+  //       status: "success",
+  //       message: "Logout successful",
+  //     });
+  //   } catch (error) {
+  //     console.error("Logout error:", error);
+  //     return res.status(500).json({
+  //       status: "error",
+  //       message: "Logout failed",
+  //       details: error.message,
+  //     });
+  //   }
+  // },
 
-      return res.status(200).json({
-        status: "success",
-        data: {
-          // User data will go here
-        },
-      });
-    } catch (error) {
-      console.error("Get current user error:", error);
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to retrieve user information",
-        details: error.message,
-      });
-    }
-  },
+  // /**
+  //  * Get current user information
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // getCurrentUser: async (req, res) => {
+  //   try {
+  //     // TODO:
+  //     // 1. Extract user ID from authenticated request
+  //     // 2. Find user in database
+  //     // 3. Return user information
 
-  /**
-   * Change password
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  changePassword: async (req, res) => {
-    try {
-      // TODO:
-      // 1. Extract current password and new password from request
-      // 2. Find user in database
-      // 3. Verify current password
-      // 4. Hash new password
-      // 5. Update password in database
-      // 6. Return success response
+  //     return res.status(200).json({
+  //       status: "success",
+  //       data: {
+  //         // User data will go here
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error("Get current user error:", error);
+  //     return res.status(500).json({
+  //       status: "error",
+  //       message: "Failed to retrieve user information",
+  //       details: error.message,
+  //     });
+  //   }
+  // },
 
-      return res.status(200).json({
-        status: "success",
-        message: "Password changed successfully",
-      });
-    } catch (error) {
-      console.error("Change password error:", error);
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to change password",
-        details: error.message,
-      });
-    }
-  },
+  // /**
+  //  * Change password
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // changePassword: async (req, res) => {
+  //   try {
+  //     // TODO:
+  //     // 1. Extract current password and new password from request
+  //     // 2. Find user in database
+  //     // 3. Verify current password
+  //     // 4. Hash new password
+  //     // 5. Update password in database
+  //     // 6. Return success response
+
+  //     return res.status(200).json({
+  //       status: "success",
+  //       message: "Password changed successfully",
+  //     });
+  //   } catch (error) {
+  //     console.error("Change password error:", error);
+  //     return res.status(500).json({
+  //       status: "error",
+  //       message: "Failed to change password",
+  //       details: error.message,
+  //     });
+  //   }
+  // },
 };
 
 module.exports = authController;

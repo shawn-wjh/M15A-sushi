@@ -35,6 +35,7 @@ const exampleInvoice = {
  */
 function convertToUBL(invoice) {
   try {
+    console.log(invoice.invoiceId);
     // Create base XML structure with required fields
     const ublXML = {
       _declaration: {
@@ -165,18 +166,19 @@ function convertToUBL(invoice) {
 
 /**
  * Generate and upload UBL invoice given invoice data as js object
+ * Currently not used; for the upload of invoices to S3
  */
-async function generateAndUploadUBLInvoice(invoiceData, invoiceId) {
-  try {
-    const ublXml = convertToUBL(invoiceData);
-    const uploadResult = await uploadToS3(ublXml, invoiceId);
-    return uploadResult;
-  } catch (error) {
-    throw new Error(`Failed to generate and upload UBL invoice: ${error.message}`);
-  }
-}
+// async function generateAndUploadUBLInvoice(invoiceData, invoiceId) {
+//   try {
+//     const ublXml = convertToUBL(invoiceData);
+//     const uploadResult = await uploadToS3(ublXml, invoiceId);
+//     return uploadResult;
+//   } catch (error) {
+//     throw new Error(`Failed to generate and upload UBL invoice: ${error.message}`);
+//   }
+// }
 
 module.exports = {
   convertToUBL,
-  generateAndUploadUBLInvoice
+  // generateAndUploadUBLInvoice
 };

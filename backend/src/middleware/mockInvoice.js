@@ -1,6 +1,6 @@
 const mockInvoice = {
   invoiceId: "TEST-002",
-  total: 150,
+  total: 250,
   buyer: "Test Buyer",
   supplier: "Test Supplier",
   issueDate: "2025-03-05",
