@@ -12,6 +12,9 @@ const userRoutes = require('./routes/user.routes');
 // Create Express app
 const app = express();
 
+// supply swagger file
+app.use('/swagger', express.static(path.join(__dirname, 'swagger.yaml')));
+
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 // when user sends a JSON request, express.json() will parse the JSON body and attach it to the request object (req.body)
