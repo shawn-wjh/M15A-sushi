@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const { fileURLToPath } = require('url');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -14,11 +15,11 @@ const userRoutes = require('./routes/user.routes');
 // Create Express app
 const app = express();
 
-// supply swagger file
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Load Swagger YAML
+const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
 
-app.use('/swagger', express.static(path.join(__dirname, '../swagger.yaml')));
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Middleware
 app.use(cors()); // Enable CORS for all routes
