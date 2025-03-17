@@ -13,7 +13,7 @@ const userRoutes = require('./routes/user.routes');
 const app = express();
 
 // supply swagger file
-app.use('/swagger', express.static(path.join(__dirname, 'swagger.yaml')));
+app.use('/swagger', express.static(path('../swagger.yaml')));
 
 // Middleware
 app.use(cors()); // Enable CORS for all routes
