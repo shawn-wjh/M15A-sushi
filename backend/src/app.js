@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
+const { fileURLToPath } = require('url');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -13,6 +15,9 @@ const userRoutes = require('./routes/user.routes');
 const app = express();
 
 // supply swagger file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use('/swagger', express.static(path.join(__dirname, '../swagger.yaml')));
 
 // Middleware
