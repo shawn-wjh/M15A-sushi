@@ -3,7 +3,10 @@ const express = require('express');
 const router = express.Router();
 
 // Import middleware (more needs to be added)
-const { validateInvoiceInput, validateInvoiceStandard } = require('../middleware/invoice-validation');
+const {
+  validateInvoiceInput,
+  validateInvoiceStandard
+} = require('../middleware/invoice-validation');
 
 // Import controllers (more needs to be added)
 const {
@@ -61,22 +64,22 @@ router.post(
     try {
       // Store the original json method
       const originalJson = res.json;
-      
+
       // Override the json method to capture the invoice data
-      res.json = function(data) {
+      res.json = function (data) {
         // Store the invoice data in the request
         req.invoiceData = data;
-        
+
         // Restore the original json method
         res.json = originalJson;
-        
+
         // Continue to validation
         next();
-        
+
         // Return res to allow chaining
         return res;
       };
-      
+
       // Call the createInvoice controller
       await createInvoice(req, res, next);
     } catch (error) {
@@ -101,25 +104,31 @@ router.post(
         validation: {
           status: 'success',
           message: 'Invoice successfully validated against Peppol standards',
-          warnings: req.validationResult.warnings.length > 0 ? req.validationResult.warnings : []
+          warnings:
+            req.validationResult.warnings.length > 0
+              ? req.validationResult.warnings
+              : []
         }
       });
     }
-    
+
     // If we only have validation results (fallback)
     if (req.validationResult) {
       return res.status(200).json({
         status: 'success',
         message: 'Invoice successfully validated against Peppol standards',
-        validationWarnings: req.validationResult.warnings.length > 0 ? req.validationResult.warnings : []
+        validationWarnings:
+          req.validationResult.warnings.length > 0
+            ? req.validationResult.warnings
+            : []
       });
     }
-    
+
     // If we only have invoice data (fallback)
     if (req.invoiceData) {
       return res.status(200).json(req.invoiceData);
     }
-    
+
     // If something went wrong
     return res.status(500).json({
       status: 'error',
@@ -133,10 +142,7 @@ router.post(
  * @route GET /v1/invoices
  * @returns {object} 200 - Array of invocies
  */
-router.get(
-  '/list',
-  listInvoices
-);
+router.get('/list', listInvoices);
 
 /**
  * Get specific invoice
@@ -144,10 +150,7 @@ router.get(
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.get(
-  '/:invoiceid',
-  getInvoice
-);
+router.get('/:invoiceid', getInvoice);
 
 /**
  * update specific invoice
@@ -155,10 +158,7 @@ router.get(
  * @param {string} invoiceid.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.put(
-  '/:invoiceid',
-  updateInvoice
-);
+router.put('/:invoiceid', updateInvoice);
 
 /**
  * Delete invoice
@@ -166,10 +166,7 @@ router.put(
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Success message
  */
-router.delete(
-  '/:invoiceid',
-  deleteInvoice
-);
+router.delete('/:invoiceid', deleteInvoice);
 
 // /**
 //  * Download invoice as UBL XML

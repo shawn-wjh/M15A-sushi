@@ -5,9 +5,9 @@ const authConfig = require('../config/auth');
  */
 const validation = {
   /**
-     * Validate email format
-     * Checks if email is in valid format
-     */
+   * Validate email format
+   * Checks if email is in valid format
+   */
   validateEmail: (req, res, next) => {
     try {
       const { email } = req.body;
@@ -40,9 +40,9 @@ const validation = {
   },
 
   /**
-     * Validate password meets requirements
-     * Used for password changes and registration
-     */
+   * Validate password meets requirements
+   * Used for password changes and registration
+   */
   validatePassword: (req, res, next) => {
     try {
       const { password } = req.body;

@@ -4,7 +4,7 @@ const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 // Mock AWS SDK
 jest.mock('@aws-sdk/lib-dynamodb', () => ({
-  ScanCommand: jest.fn(params => params)
+  ScanCommand: jest.fn((params) => params)
 }));
 
 // Mock bcrypt and jwt
@@ -38,12 +38,12 @@ const authController = require('./auth.controller');
 describe('Auth Controller', () => {
   let mockReq;
   let mockRes;
-  
+
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
     mockSend.mockReset();
-    
+
     // Mock request object
     mockReq = {
       body: {
@@ -51,7 +51,7 @@ describe('Auth Controller', () => {
         password: 'password123'
       }
     };
-    
+
     // Mock response object
     mockRes = {
       status: jest.fn().mockReturnThis(),
@@ -62,9 +62,9 @@ describe('Auth Controller', () => {
   describe('login', () => {
     it('should return 400 if email is missing', async () => {
       mockReq.body = { password: 'password123' };
-      
+
       await authController.login(mockReq, mockRes);
-      
+
       expect(mockRes.status).toHaveBeenCalledWith(400);
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',
@@ -74,9 +74,9 @@ describe('Auth Controller', () => {
 
     it('should return 400 if password is missing', async () => {
       mockReq.body = { email: 'test@example.com' };
-      
+
       await authController.login(mockReq, mockRes);
-      
+
       expect(mockRes.status).toHaveBeenCalledWith(400);
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',
@@ -86,15 +86,15 @@ describe('Auth Controller', () => {
 
     it('should return 400 if user not found', async () => {
       mockSend.mockResolvedValueOnce({ Items: [] });
-      
+
       await authController.login(mockReq, mockRes);
-      
+
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           TableName: 'Sushi-Users',
-          FilterExpression: "email = :email",
+          FilterExpression: 'email = :email',
           ExpressionAttributeValues: {
-            ":email": "test@example.com"
+            ':email': 'test@example.com'
           }
         })
       );
@@ -110,19 +110,22 @@ describe('Auth Controller', () => {
         email: 'test@example.com',
         password: 'hashedPassword'
       };
-      
+
       mockSend.mockResolvedValueOnce({ Items: [mockUser] });
       bcrypt.compare.mockResolvedValueOnce(false);
-      
+
       await authController.login(mockReq, mockRes);
-      
+
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           TableName: 'Sushi-Users',
-          FilterExpression: "email = :email"
+          FilterExpression: 'email = :email'
         })
       );
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'password123',
+        'hashedPassword'
+      );
       expect(mockRes.status).toHaveBeenCalledWith(400);
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',
@@ -138,25 +141,28 @@ describe('Auth Controller', () => {
         role: 'user',
         password: 'hashedPassword'
       };
-      
+
       mockSend.mockResolvedValueOnce({ Items: [mockUser] });
       bcrypt.compare.mockResolvedValueOnce(true);
       jwt.sign.mockReturnValueOnce('mockToken');
-      
+
       await authController.login(mockReq, mockRes);
-      
+
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           TableName: 'Sushi-Users',
-          FilterExpression: "email = :email"
+          FilterExpression: 'email = :email'
         })
       );
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'password123',
+        'hashedPassword'
+      );
       expect(jwt.sign).toHaveBeenCalledWith(
         {
           userId: mockUser.UserID,
           email: mockUser.email,
-          role: mockUser.role,
+          role: mockUser.role
         },
         'test-secret',
         { expiresIn: '1h' }
@@ -179,9 +185,9 @@ describe('Auth Controller', () => {
 
     it('should return 500 on server error', async () => {
       mockSend.mockRejectedValueOnce(new Error('Database error'));
-      
+
       await authController.login(mockReq, mockRes);
-      
+
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',

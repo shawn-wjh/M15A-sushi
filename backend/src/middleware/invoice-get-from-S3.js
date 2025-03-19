@@ -12,10 +12,10 @@
 //         Bucket: config.s3.bucketName || 'sushi-invoice-storage',
 //         Key: objectKey,
 //       };
-  
+
 //       // Retrieve the file
 //       const { Body } = await S3Client.send(new GetObjectCommand(params));
-  
+
 //     //   // Convert the response to a string if it's a text-based file (XML in this case)
 //     //   const streamToString = (stream) => {
 //     //     return new Promise((resolve, reject) => {
@@ -25,10 +25,10 @@
 //     //       stream.on('error', reject);
 //     //     });
 //     //   };
-  
+
 //     //   const fileContent = await streamToString(Body);  // Convert the stream to string (XML content)
 //       console.log('Body retrieved', Body);
-  
+
 //       return;  // This is the XML string content of the invoice
 //     } catch (error) {
 //       console.error('Error retrieving invoice:', error);

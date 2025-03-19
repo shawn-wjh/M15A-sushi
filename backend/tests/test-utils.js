@@ -13,7 +13,13 @@
  * @returns {Object} Mock request object
  */
 const mockRequest = (options = {}) => {
-  const { body = {}, params = {}, query = {}, headers = {}, user = null } = options;
+  const {
+    body = {},
+    params = {},
+    query = {},
+    headers = {},
+    user = null
+  } = options;
   return {
     body,
     params,
@@ -61,7 +67,7 @@ const createMockToken = (payload = {}) => {
     email: 'test@example.com',
     role: 'user'
   };
-  
+
   return `mock-token-${JSON.stringify({ ...defaultPayload, ...payload })}`;
 };
 
@@ -70,4 +76,4 @@ module.exports = {
   mockResponse,
   createTestUser,
   createMockToken
-}; 
+};

@@ -13,10 +13,16 @@ const config = {
     port: parseInt(process.env.PORT, 10) || 3000
   },
   aws: {
-    region: isLocalDb ? 'localhost' : (process.env.AWS_REGION || 'ap-southeast-2'),
+    region: isLocalDb
+      ? 'localhost'
+      : process.env.AWS_REGION || 'ap-southeast-2',
     credentials: {
-      accessKeyId: isLocalDb ? 'fakeAccessKeyId' : process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: isLocalDb ? 'fakeSecretAccessKey' : process.env.AWS_SECRET_ACCESS_KEY
+      accessKeyId: isLocalDb
+        ? 'fakeAccessKeyId'
+        : process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: isLocalDb
+        ? 'fakeSecretAccessKey'
+        : process.env.AWS_SECRET_ACCESS_KEY
     }
   },
   dynamodb: {
@@ -28,11 +34,14 @@ const config = {
     bucket: process.env.S3_BUCKET_NAME
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'sushi-invoice-secret-key-for-development-only',
+    secret:
+      process.env.JWT_SECRET || 'sushi-invoice-secret-key-for-development-only',
     expiresIn: process.env.JWT_EXPIRE || '24h'
   },
   cors: {
-    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173']
+    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:5173'
+    ]
   },
   storage: {
     uploadDir: process.env.UPLOAD_DIR || './uploads',
