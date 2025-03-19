@@ -2,7 +2,13 @@ const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
 const fs = require('fs').promises;
 const path = require('path');
-const { PutCommand, ScanCommand, UpdateCommand, QueryCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+const {
+  PutCommand,
+  ScanCommand,
+  UpdateCommand,
+  QueryCommand,
+  DeleteCommand
+} = require('@aws-sdk/lib-dynamodb');
 const {
   // generateAndUploadUBLInvoice,
   convertToUBL
@@ -35,7 +41,7 @@ const invoiceController = {
       const data = req.body;
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
-      
+
       // convert invoice to UBL XML
       const ublXml = convertToUBL(data);
 
@@ -79,7 +85,7 @@ const invoiceController = {
       let { limit, offset, sort, order } = req.query;
       limit = parseInt(limit, 10);
       offset = parseInt(offset, 10) || 0;
-  
+
       if (limit < 1) {
         return res.status(400).json({
           status: 'error',
@@ -92,7 +98,7 @@ const invoiceController = {
           error: 'offset must be at least 0'
         });
       }
-      
+
       // Validate sort and order if provided
       const validSortFields = ['issuedate', 'duedate', 'total'];
       const validOrders = ['asc', 'desc'];
@@ -108,10 +114,9 @@ const invoiceController = {
           error: 'invalid order query'
         });
       }
-      
+
       // leaving userId as 123 as thats what has been done on previous codes
       const userId = '123';
-  
 
       const scanParams = {
         TableName: Tables.INVOICES,
@@ -120,16 +125,14 @@ const invoiceController = {
           ':userId': userId
         }
       };
-  
+
       const { Items } = await dbClient.send(new ScanCommand(scanParams));
       const allInvoices = Items || [];
-  
-     
+
       if (sort) {
         switch (sort.toLowerCase()) {
           case 'issuedate':
             allInvoices.sort((a, b) => {
-           
               return new Date(a.timestamp) - new Date(b.timestamp);
             });
             break;
@@ -140,7 +143,7 @@ const invoiceController = {
           allInvoices.reverse();
         }
       }
-  
+
       const totalInvoices = allInvoices.length;
       const maxOffset = totalInvoices - limit;
       if (offset > maxOffset) {
@@ -148,7 +151,7 @@ const invoiceController = {
       }
 
       const paginatedInvoices = allInvoices.slice(offset, offset + limit);
-  
+
       return res.status(200).json({
         status: 'success',
         data: {
@@ -197,9 +200,7 @@ const invoiceController = {
       // access the invoice from the dynamoDB response
       const xml = Items[0].invoice;
 
-      return res.status(200)
-        .set('Content-Type', 'application/xml')
-        .send(xml);
+      return res.status(200).set('Content-Type', 'application/xml').send(xml);
     } catch (error) {
       return res.status(400).json({
         status: 'error',

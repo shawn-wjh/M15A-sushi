@@ -1,7 +1,10 @@
 const httpMocks = require('node-mocks-http');
 const fs = require('fs');
 const path = require('path');
-const { validateInvoiceInput, validateInvoiceStandard } = require('./invoice-validation');
+const {
+  validateInvoiceInput,
+  validateInvoiceStandard
+} = require('./invoice-validation');
 const mockInvoice = require('./mockInvoice');
 const { error } = require('console');
 
@@ -28,17 +31,20 @@ describe('Invoice Validation Middleware', () => {
     [{ ...mockInvoice, issueDate: undefined }, 'issueDate'],
     [{ ...mockInvoice, total: undefined }, 'total'],
     [{ ...mockInvoice, items: undefined }, 'items']
-  ])('should fail validation when %s is missing', (invalidInvoice, fieldName) => {
-    const req = httpMocks.createRequest({ body: invalidInvoice });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+  ])(
+    'should fail validation when %s is missing',
+    (invalidInvoice, fieldName) => {
+      const req = httpMocks.createRequest({ body: invalidInvoice });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    validateInvoiceInput(req, res, next);
+      validateInvoiceInput(req, res, next);
 
-    expect(res.statusCode).toBe(400);
-    expect(res._getData()).toContain('error');
-    expect(res._getData()).toContain(fieldName);
-  });
+      expect(res.statusCode).toBe(400);
+      expect(res._getData()).toContain('error');
+      expect(res._getData()).toContain(fieldName);
+    }
+  );
 
   // Test optional fields - these should not cause validation failures
   it.each([
@@ -47,15 +53,18 @@ describe('Invoice Validation Middleware', () => {
     [{ ...mockInvoice, buyerAddress: undefined }, 'buyerAddress'],
     [{ ...mockInvoice, supplierAddress: undefined }, 'supplierAddress'],
     [{ ...mockInvoice, buyerPhone: undefined }, 'buyerPhone']
-  ])('should pass validation when optional field %s is missing', (validInvoice, fieldName) => {
-    const req = httpMocks.createRequest({ body: validInvoice });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+  ])(
+    'should pass validation when optional field %s is missing',
+    (validInvoice, fieldName) => {
+      const req = httpMocks.createRequest({ body: validInvoice });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    validateInvoiceInput(req, res, next);
+      validateInvoiceInput(req, res, next);
 
-    expect(next).toHaveBeenCalled();
-  });
+      expect(next).toHaveBeenCalled();
+    }
+  );
 
   it.each([
     [{ ...mockInvoice, invoiceId: 123 }],
@@ -63,16 +72,19 @@ describe('Invoice Validation Middleware', () => {
     [{ ...mockInvoice, buyer: 123 }],
     [{ ...mockInvoice, supplier: 123 }],
     [{ ...mockInvoice, issueDate: 123 }]
-  ])('should fail validation if fields are of incorrect type', (invalidInvoice) => {
-    const req = httpMocks.createRequest({ body: invalidInvoice });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+  ])(
+    'should fail validation if fields are of incorrect type',
+    (invalidInvoice) => {
+      const req = httpMocks.createRequest({ body: invalidInvoice });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    validateInvoiceInput(req, res, next);
+      validateInvoiceInput(req, res, next);
 
-    expect(res.statusCode).toBe(400);
-    expect(res._getData()).toContain('error');
-  });
+      expect(res.statusCode).toBe(400);
+      expect(res._getData()).toContain('error');
+    }
+  );
 
   it('should fail validation if issue date is not in YYYY-MM-DD format', () => {
     const invalidInvoice = { ...mockInvoice, issueDate: '05-03-2025' };
@@ -127,10 +139,10 @@ describe('Invoice Validation Middleware', () => {
   });
 
   it('should fail validation if item count is less than or equal to 0', () => {
-    const invalidInvoice = { 
-      ...mockInvoice, 
+    const invalidInvoice = {
+      ...mockInvoice,
       items: [{ ...mockInvoice.items[0], count: 0 }],
-      total: 0 
+      total: 0
     };
 
     const req = httpMocks.createRequest({ body: invalidInvoice });
@@ -170,12 +182,12 @@ describe('Invoice Validation Middleware', () => {
   });
 
   it('should fail validation if country code is invalid', () => {
-    const invalidInvoice = { 
-      ...mockInvoice, 
-      buyerAddress: { 
-        ...mockInvoice.buyerAddress, 
-        country: 'INVALID' 
-      } 
+    const invalidInvoice = {
+      ...mockInvoice,
+      buyerAddress: {
+        ...mockInvoice.buyerAddress,
+        country: 'INVALID'
+      }
     };
 
     const req = httpMocks.createRequest({ body: invalidInvoice });
@@ -234,7 +246,7 @@ const validXml = `
             </cac:Contact>
           </cac:Party>
         </cac:AccountingSupplierParty>
-        
+
         <cac:AccountingCustomerParty>
           <cac:Party>
             <cac:PartyName>
@@ -254,12 +266,12 @@ const validXml = `
             </cac:Contact>
           </cac:Party>
         </cac:AccountingCustomerParty>
-        
+
         <cac:PaymentMeans>
           <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
           <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
         </cac:PaymentMeans>
-        
+
         <cac:TaxTotal>
           <cbc:TaxAmount currencyID="AUD">15.00</cbc:TaxAmount>
           <cac:TaxSubtotal>
@@ -274,14 +286,14 @@ const validXml = `
             </cac:TaxCategory>
           </cac:TaxSubtotal>
         </cac:TaxTotal>
-        
+
         <cac:LegalMonetaryTotal>
           <cbc:LineExtensionAmount currencyID="AUD">250.00</cbc:LineExtensionAmount>
           <cbc:TaxExclusiveAmount currencyID="AUD">250.00</cbc:TaxExclusiveAmount>
           <cbc:TaxInclusiveAmount currencyID="AUD">275.00</cbc:TaxInclusiveAmount>
           <cbc:PayableAmount currencyID="AUD">250.00</cbc:PayableAmount>
         </cac:LegalMonetaryTotal>
-        
+
         <cac:InvoiceLine>
           <cbc:ID>1</cbc:ID>
           <cbc:InvoicedQuantity unitCode="EA">2</cbc:InvoicedQuantity>
@@ -301,7 +313,7 @@ const validXml = `
             <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
           </cac:Price>
         </cac:InvoiceLine>
-        
+
         <cac:InvoiceLine>
           <cbc:ID>2</cbc:ID>
           <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
@@ -338,7 +350,7 @@ describe('POST /v1/invoices/validate', () => {
 
   it('should return 400 if no XML is provided', async () => {
     const req = httpMocks.createRequest({
-      params: {} 
+      params: {}
     });
     const res = httpMocks.createResponse();
     const next = jest.fn();
@@ -352,90 +364,156 @@ describe('POST /v1/invoices/validate', () => {
   });
 
   it.each([
-    ["ID", validXml.replace("<cbc:ID>TEST-002</cbc:ID>", "")],
-    ["IssueDate", validXml.replace("<cbc:IssueDate>2025-03-05</cbc:IssueDate>", "")],
-    ["InvoiceTypeCode", validXml.replace("<cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>", "")],
-    ["AccountingSupplierParty", validXml.replace("<cac:AccountingSupplierParty>", "")],
-    ["AccountingCustomerParty", validXml.replace("<cac:AccountingCustomerParty>", "")],
-    ["LegalMonetaryTotal", validXml.replace("<cac:LegalMonetaryTotal>", "")],
-    ["InvoiceLine", validXml.replace("<cac:InvoiceLine>", "")],
-    ["CustomizationID", validXml.replace("<cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>", "")],
-    ["ProfileID", validXml.replace("<cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>", "")],
-    ["OrderReference", validXml.replace("<cac:OrderReference>", "")],
-    ["InvoiceDocumentReference", validXml.replace("<cac:InvoiceDocumentReference>", "")]
-  ])('should return 400 if XML is missing required element: %s', async (missing, invalidXml) => {
-    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+    ['ID', validXml.replace('<cbc:ID>TEST-002</cbc:ID>', '')],
+    [
+      'IssueDate',
+      validXml.replace('<cbc:IssueDate>2025-03-05</cbc:IssueDate>', '')
+    ],
+    [
+      'InvoiceTypeCode',
+      validXml.replace('<cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>', '')
+    ],
+    [
+      'AccountingSupplierParty',
+      validXml.replace('<cac:AccountingSupplierParty>', '')
+    ],
+    [
+      'AccountingCustomerParty',
+      validXml.replace('<cac:AccountingCustomerParty>', '')
+    ],
+    ['LegalMonetaryTotal', validXml.replace('<cac:LegalMonetaryTotal>', '')],
+    ['InvoiceLine', validXml.replace('<cac:InvoiceLine>', '')],
+    [
+      'CustomizationID',
+      validXml.replace(
+        '<cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>',
+        ''
+      )
+    ],
+    [
+      'ProfileID',
+      validXml.replace(
+        '<cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>',
+        ''
+      )
+    ],
+    ['OrderReference', validXml.replace('<cac:OrderReference>', '')],
+    [
+      'InvoiceDocumentReference',
+      validXml.replace('<cac:InvoiceDocumentReference>', '')
+    ]
+  ])(
+    'should return 400 if XML is missing required element: %s',
+    async (missing, invalidXml) => {
+      const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    await validateInvoiceStandard(req, res, next);
+      await validateInvoiceStandard(req, res, next);
 
-    console.log('res.body: ', res.body);
-    console.log('res._getData: ', res._getData());
+      console.log('res.body: ', res.body);
+      console.log('res._getData: ', res._getData());
 
-    expect(res.statusCode).toBe(400);
-    const responseData = JSON.parse(res._getData());
-    expect(responseData).toHaveProperty('error');
-    expect(responseData.error).toBeTruthy();
-  });
+      expect(res.statusCode).toBe(400);
+      const responseData = JSON.parse(res._getData());
+      expect(responseData).toHaveProperty('error');
+      expect(responseData.error).toBeTruthy();
+    }
+  );
 
   // check supplier and customer // name, address, country code
   it.each([
-    ["cac:PartyName", validXml.replace("<cac:PartyName>", "")],
-    ["cac:PostalAddress", validXml.replace("<cac:PostalAddress>", "")],
-    ["cbc:StreetName", validXml.replace("<cbc:StreetName>", "")],
-    ["cac:Country", validXml.replace("<cac:Country>", "")],
-    ["cbc:IdentificationCode", validXml.replace("<cbc:IdentificationCode>", "")],
-    ["invalid cbc:IdentificationCode", validXml.replace("<cbc:IdentificationCode>AU", "<cbc:IdentificationCode>INVALID")],
-  ])('Should return 400 when missing supplier/customer detail: %s', async (missing, invalidXml) => {
-    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+    ['cac:PartyName', validXml.replace('<cac:PartyName>', '')],
+    ['cac:PostalAddress', validXml.replace('<cac:PostalAddress>', '')],
+    ['cbc:StreetName', validXml.replace('<cbc:StreetName>', '')],
+    ['cac:Country', validXml.replace('<cac:Country>', '')],
+    [
+      'cbc:IdentificationCode',
+      validXml.replace('<cbc:IdentificationCode>', '')
+    ],
+    [
+      'invalid cbc:IdentificationCode',
+      validXml.replace(
+        '<cbc:IdentificationCode>AU',
+        '<cbc:IdentificationCode>INVALID'
+      )
+    ]
+  ])(
+    'Should return 400 when missing supplier/customer detail: %s',
+    async (missing, invalidXml) => {
+      const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    await validateInvoiceStandard(req, res, next);
+      await validateInvoiceStandard(req, res, next);
 
-    expect(res.statusCode).toBe(400);
-    const responseData = JSON.parse(res._getData());
-    expect(responseData).toHaveProperty('error');
-    expect(responseData.error).toBeTruthy();
-  });
+      expect(res.statusCode).toBe(400);
+      const responseData = JSON.parse(res._getData());
+      expect(responseData).toHaveProperty('error');
+      expect(responseData.error).toBeTruthy();
+    }
+  );
 
   // check currency code
   // check total
   it.each([
-    ["PayableAmount", validXml.replace(/<cbc:PayableAmount[^>]*>.*?<\/cbc:PayableAmount>/g, "")],
-    ["invalid currency", validXml.replace(/currencyID="AUD"/g, 'currencyID="INVALID"')],
-    ["missing currency", validXml.replace(/currencyID="AUD"/g, '')]
-  ])('should return 400 when %s in LegalMonetaryTotal is invalid', async (missing, invalidXml) => {
-    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+    [
+      'PayableAmount',
+      validXml.replace(/<cbc:PayableAmount[^>]*>.*?<\/cbc:PayableAmount>/g, '')
+    ],
+    [
+      'invalid currency',
+      validXml.replace(/currencyID="AUD"/g, 'currencyID="INVALID"')
+    ],
+    ['missing currency', validXml.replace(/currencyID="AUD"/g, '')]
+  ])(
+    'should return 400 when %s in LegalMonetaryTotal is invalid',
+    async (missing, invalidXml) => {
+      const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    await validateInvoiceStandard(req, res, next);
-    
-    expect(res.statusCode).toBe(400);
-    const responseData = JSON.parse(res._getData());
-    expect(responseData).toHaveProperty('error');
-    expect(responseData.error).toBeTruthy();
-  });
+      await validateInvoiceStandard(req, res, next);
+
+      expect(res.statusCode).toBe(400);
+      const responseData = JSON.parse(res._getData());
+      expect(responseData).toHaveProperty('error');
+      expect(responseData.error).toBeTruthy();
+    }
+  );
 
   // check invoice lines
   it.each([
-    ["empty InvoiceLine", validXml.replace(/<cac:InvoiceLine>.*?<\/cac:InvoiceLine>/gs, "<cac:InvoiceLine></cac:InvoiceLine>")],
-    ["missing line ID", validXml.replace(/<cbc:ID>1<\/cbc:ID>/, "")],
-    ["missing item name", validXml.replace(/<cbc:Name>Test Item A<\/cbc:Name>/, "")],
-    ["missing price", validXml.replace(/<cac:Price>.*?<\/cac:Price>/gs, "")],
-    ["missing quantity", validXml.replace(/<cbc:BaseQuantity.*?>.*?<\/cbc:BaseQuantity>/gs, "")]
-  ])('should return 400 when invoice line is %s', async (missing, invalidXml) => {
-    const req = httpMocks.createRequest({ body: { xml: invalidXml } });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+    [
+      'empty InvoiceLine',
+      validXml.replace(
+        /<cac:InvoiceLine>.*?<\/cac:InvoiceLine>/gs,
+        '<cac:InvoiceLine></cac:InvoiceLine>'
+      )
+    ],
+    ['missing line ID', validXml.replace(/<cbc:ID>1<\/cbc:ID>/, '')],
+    [
+      'missing item name',
+      validXml.replace(/<cbc:Name>Test Item A<\/cbc:Name>/, '')
+    ],
+    ['missing price', validXml.replace(/<cac:Price>.*?<\/cac:Price>/gs, '')],
+    [
+      'missing quantity',
+      validXml.replace(/<cbc:BaseQuantity.*?>.*?<\/cbc:BaseQuantity>/gs, '')
+    ]
+  ])(
+    'should return 400 when invoice line is %s',
+    async (missing, invalidXml) => {
+      const req = httpMocks.createRequest({ body: { xml: invalidXml } });
+      const res = httpMocks.createResponse();
+      const next = jest.fn();
 
-    await validateInvoiceStandard(req, res, next);
-    
-    expect(res.statusCode).toBe(400);
-    const responseData = JSON.parse(res._getData());
-    expect(responseData).toHaveProperty('error');
-    expect(responseData.error).toBeTruthy();
-  });
+      await validateInvoiceStandard(req, res, next);
+
+      expect(res.statusCode).toBe(400);
+      const responseData = JSON.parse(res._getData());
+      expect(responseData).toHaveProperty('error');
+      expect(responseData.error).toBeTruthy();
+    }
+  );
 });

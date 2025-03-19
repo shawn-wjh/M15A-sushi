@@ -49,7 +49,10 @@ const registrationController = {
       }
 
       // 3. Hash the password
-      const hashedPassword = await bcrypt.hash(password, config.password.saltRounds);
+      const hashedPassword = await bcrypt.hash(
+        password,
+        config.password.saltRounds
+      );
 
       // 4. Generate user ID
       const UserID = uuidv4();
@@ -82,11 +85,9 @@ const registrationController = {
         role: newUser.role
       };
 
-      const token = jwt.sign(
-        tokenPayload,
-        config.jwt.secret,
-        { expiresIn: config.jwt.expiresIn }
-      );
+      const token = jwt.sign(tokenPayload, config.jwt.secret, {
+        expiresIn: config.jwt.expiresIn
+      });
 
       // 8. Return success response
       return res.status(200).json({

@@ -2,11 +2,11 @@
  * Authentication Controller
  * Handles user authentication, token generation, and verification
  */
-const { createDynamoDBClient, Tables } = require("../config/database");
-const config = require("../config/auth");
-const { QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const { createDynamoDBClient, Tables } = require('../config/database');
+const config = require('../config/auth');
+const { QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -23,18 +23,18 @@ const authController = {
 
       if (!email || !password) {
         return res.status(400).json({
-          status: "error",
-          message: "Email and password are required",
+          status: 'error',
+          message: 'Email and password are required'
         });
       }
 
       // 1. Find user in database
       const queryParams = {
         TableName: Tables.USERS,
-        FilterExpression: "email = :email",
+        FilterExpression: 'email = :email',
         ExpressionAttributeValues: {
-          ":email": email.toLowerCase().trim(),
-        },
+          ':email': email.toLowerCase().trim()
+        }
       };
 
       // Use ScanCommand instead of QueryCommand for simple email filtering
@@ -43,8 +43,8 @@ const authController = {
       // 2. Check if user exists
       if (!queryResult.Items?.length) {
         return res.status(400).json({
-          status: "error",
-          message: "Invalid credentials",
+          status: 'error',
+          message: 'Invalid credentials'
         });
       }
 
@@ -54,8 +54,8 @@ const authController = {
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         return res.status(400).json({
-          status: "error",
-          message: "Invalid password",
+          status: 'error',
+          message: 'Invalid password'
         });
       }
 
@@ -63,16 +63,16 @@ const authController = {
       const tokenPayload = {
         userId: user.UserID,
         email: user.email,
-        role: user.role,
+        role: user.role
       };
 
       const token = jwt.sign(tokenPayload, config.jwt.secret, {
-        expiresIn: config.jwt.expiresIn,
+        expiresIn: config.jwt.expiresIn
       });
 
       return res.status(200).json({
-        status: "success",
-        message: "Login successful",
+        status: 'success',
+        message: 'Login successful',
         data: {
           user: {
             email: user.email,
@@ -84,14 +84,14 @@ const authController = {
         }
       });
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       return res.status(500).json({
-        status: "error",
-        message: "Login failed",
-        details: error.message,
+        status: 'error',
+        message: 'Login failed',
+        details: error.message
       });
     }
-  },
+  }
 
   // TODO: commented out for now to save coverage
 

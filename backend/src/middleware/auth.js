@@ -6,9 +6,9 @@ const authConfig = require('../config/auth');
  */
 const auth = {
   /**
-     * Verify JWT token middleware
-     * Used to protect routes that require authentication
-     */
+   * Verify JWT token middleware
+   * Used to protect routes that require authentication
+   */
   verifyToken: async (req, res, next) => {
     try {
       // TODO:
@@ -25,9 +25,9 @@ const auth = {
   },
 
   /**
-     * Check if user is authenticated
-     * Used as a simpler version of verifyToken when you just need to check auth status
-     */
+   * Check if user is authenticated
+   * Used as a simpler version of verifyToken when you just need to check auth status
+   */
   isAuthenticated: async (req, res, next) => {
     try {
       // TODO:
