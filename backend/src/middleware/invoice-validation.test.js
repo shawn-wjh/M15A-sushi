@@ -411,9 +411,6 @@ describe('POST /v1/invoices/validate', () => {
 
       await validateInvoiceStandard(req, res, next);
 
-      console.log('res.body: ', res.body);
-      console.log('res._getData: ', res._getData());
-
       expect(res.statusCode).toBe(400);
       const responseData = JSON.parse(res._getData());
       expect(responseData).toHaveProperty('error');

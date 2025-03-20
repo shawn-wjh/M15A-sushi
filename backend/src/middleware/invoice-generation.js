@@ -35,7 +35,6 @@ const exampleInvoice = {
  */
 function convertToUBL(invoice) {
   try {
-    console.log(invoice.invoiceId);
     // Create base XML structure with required fields
     const ublXML = {
       _declaration: {
