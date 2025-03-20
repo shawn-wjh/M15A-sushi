@@ -15,7 +15,7 @@ cache:
   paths:
     - backend/node_modules/
 
-Lint stage: Check code quality
+#Lint stage: Check code quality
 lint-backend:
   stage: lint
   image: node:16
