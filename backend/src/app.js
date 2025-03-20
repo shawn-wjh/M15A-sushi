@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -13,8 +14,13 @@ const userRoutes = require('./routes/user.routes');
 const app = express();
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
-// when user sends a JSON request, express.json() will parse the JSON body and attach it to the request object (req.body)
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:5173'],  // Allow frontend origins
+  credentials: true,  // Important for cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(cookieParser()); // Parse cookies
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (for form data)
 

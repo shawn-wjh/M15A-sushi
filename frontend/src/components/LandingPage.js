@@ -45,7 +45,11 @@ const LandingPage = () => {
   }, []);
 
   const handleSignUp = () => {
-    history.push('/auth');
+    history.push('/signup');
+  };
+  
+  const handleLogin = () => {
+    history.push('/login');
   };
 
   return (
@@ -60,6 +64,7 @@ const LandingPage = () => {
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
           <a href="#about">About</a>
+          <button className="cta-button secondary" onClick={handleLogin}>Log In</button>
           <button className="cta-button" onClick={handleSignUp}>Sign Up</button>
         </div>
       </nav>
@@ -76,8 +81,7 @@ const LandingPage = () => {
             Generate beautiful invoices with the precision of sushi craftsmanship.
           </p>
           <div className="hero-cta">
-            <button className="cta-button primary" onClick={handleSignUp}>Get Started</button>
-            <button className="cta-button secondary">Learn More</button>
+            <button className="cta-button primary" onClick={() => history.push('#features')}>Learn More</button>
           </div>
         </div>
         <div className="hero-image-container">

@@ -4,6 +4,13 @@ import './InvoiceForm.css';
 
 const API_URL = 'http://localhost:3000/v1/invoices';
 
+// Helper function to get cookie
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+};
+
 const InvoiceForm = () => {
   const [formData, setFormData] = useState({
     invoiceId: '',
@@ -141,8 +148,8 @@ const InvoiceForm = () => {
     setCreatedInvoice(null);
     
     try {
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
+      // Get token from cookie instead of localStorage
+      const token = getCookie('token');
       
       if (!token) {
         setMessage({
@@ -196,7 +203,7 @@ const InvoiceForm = () => {
         itemTotal: item.count * item.cost
       })));
       
-      // Send data to backend
+      // Send data to backend using axios with withCredentials to include cookies
       const response = await axios.post(
         `${API_URL}/create-and-validate`, 
         submissionData,
@@ -204,7 +211,8 @@ const InvoiceForm = () => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          }
+          },
+          withCredentials: true
         }
       );
       
