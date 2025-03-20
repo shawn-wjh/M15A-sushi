@@ -1,11 +1,11 @@
 const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
-const fs = require('fs').promises;
-const path = require('path');
+// const fs = require('fs').promises;
+// const path = require('path');
 const {
   PutCommand,
   ScanCommand,
-  UpdateCommand,
+  // UpdateCommand,
   QueryCommand,
   DeleteCommand
 } = require('@aws-sdk/lib-dynamodb');
@@ -13,8 +13,8 @@ const {
   // generateAndUploadUBLInvoice,
   convertToUBL
 } = require('../middleware/invoice-generation');
-const { items } = require('../middleware/mockInvoice');
-const { error } = require('console');
+// const { items } = require('../middleware/mockInvoice');
+// const { error } = require('console');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();

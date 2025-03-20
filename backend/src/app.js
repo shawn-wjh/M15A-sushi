@@ -22,17 +22,6 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (fo
 app.use('/v1/invoices', invoiceRoutes);
 app.use('/v1/users', userRoutes);
 
-// Error handling middleware (When our function outputs errors)
-// This is a global error handler that will help us debug errors in development
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    status: 'error',
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : {}
-  });
-});
-
 // Handle 404 routes (when the user sends a request to a route that doesn't exist)
 app.use((req, res) => {
   res.status(404).json({

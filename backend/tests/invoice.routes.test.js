@@ -1,7 +1,6 @@
 const request = require('supertest');
 const mockInvoice = require('../src/middleware/mockInvoice');
 const app = require('../src/app');
-const { DOMParser } = require('xmldom');
 
 // Mock AWS services
 jest.mock('@aws-sdk/client-s3');
@@ -769,8 +768,6 @@ describe('DELETE /v1/invoices/:invoiceid', () => {
         } else {
           return { Items: [] };
         }
-
-        return {}; // Default empty response for other commands
       });
   });
 

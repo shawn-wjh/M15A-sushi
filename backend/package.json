@@ -12,7 +12,8 @@
     "local-db": "cross-env USE_LOCAL_DYNAMODB=true npx nodemon server.js",
     "setup-local-db": "node scripts/setup-local-db.js",
     "dev-with-db": "npm run setup-local-db && npm run local-db",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
@@ -48,6 +49,8 @@
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-react": "^7.37.4",
     "globals": "^16.0.0",
     "i18n-iso-countries": "^7.14.0",
     "node-mocks-http": "^1.16.2",

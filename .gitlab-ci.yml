@@ -15,18 +15,17 @@ cache:
   paths:
     - backend/node_modules/
 
-# Lint stage: Check code quality
-# lint-backend:
-#   stage: lint
-#   image: node:16
-#   script:
-#     - cd backend
-#     - npm install
-#     - npm run lint  # This will fail the pipeline if linting fails
-#   only:
-#     - main
-#     - merge_requests
-#     - /^feature\/.*$/
+Lint stage: Check code quality
+lint-backend:
+  stage: lint
+  image: node:16
+  script:
+    - cd backend
+    - npm install
+    - npm run lint  # This will fail the pipeline if linting fails
+  only:
+    - branches
+    - merge_requests
 
 # Test stage: Run tests
 test-backend:
@@ -37,9 +36,8 @@ test-backend:
     - npm install
     - npx jest
   only:
-    - main
+    - branches
     - merge_requests
-    - /^feature\/.*$/
 
 # Build stage: Ensure the application can be built
 # build-backend:

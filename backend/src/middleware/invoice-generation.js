@@ -1,6 +1,6 @@
 const convert = require('xml-js');
-const { uploadToS3 } = require('./s3-helpers');
-const { invoiceId } = require('./mockInvoice');
+// const { uploadToS3 } = require('./s3-helpers');
+// const { invoiceId } = require('./mockInvoice');
 
 /**
  * Example invoice data in js format

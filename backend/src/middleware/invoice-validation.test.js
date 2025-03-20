@@ -1,12 +1,9 @@
 const httpMocks = require('node-mocks-http');
-const fs = require('fs');
-const path = require('path');
 const {
   validateInvoiceInput,
   validateInvoiceStandard
 } = require('./invoice-validation');
 const mockInvoice = require('./mockInvoice');
-const { error } = require('console');
 
 // Mock dependencies
 jest.mock('fs');
@@ -55,7 +52,7 @@ describe('Invoice Validation Middleware', () => {
     [{ ...mockInvoice, buyerPhone: undefined }, 'buyerPhone']
   ])(
     'should pass validation when optional field %s is missing',
-    (validInvoice, fieldName) => {
+    (validInvoice) => {
       const req = httpMocks.createRequest({ body: validInvoice });
       const res = httpMocks.createResponse();
       const next = jest.fn();

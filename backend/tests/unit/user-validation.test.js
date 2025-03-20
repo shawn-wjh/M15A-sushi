@@ -1,3 +1,4 @@
+/* eslint-env node, jest */
 const validation = require('../../src/middleware/user-validation');
 
 describe('User Validation Middleware', () => {

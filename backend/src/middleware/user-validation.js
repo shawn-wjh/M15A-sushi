@@ -1,4 +1,4 @@
-const authConfig = require('../config/auth');
+// const authConfig = require('../config/auth');
 
 /**
  * Input Validation Middleware
@@ -80,7 +80,7 @@ const validation = {
       }
 
       // 4. Check for special characters
-      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      if (!/[!@#$%^&*()_+\-={};':"\\|,.<>?]/.test(password)) {
         return res.status(400).json({
           status: 'error',
           message: 'Password must contain at least one special character'

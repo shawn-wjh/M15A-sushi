@@ -4,7 +4,7 @@
  */
 const { createDynamoDBClient, Tables } = require('../config/database');
 const config = require('../config/auth');
-const { QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 

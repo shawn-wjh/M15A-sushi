@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
+// const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 // Mock AWS SDK
 jest.mock('@aws-sdk/lib-dynamodb', () => ({
