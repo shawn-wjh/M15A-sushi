@@ -44,6 +44,8 @@ const auth = {
         email: decoded.email,
         role: decoded.role
       };
+
+      console.log('User:', req.user);
       
       // 4. Call next() if successful
       next();

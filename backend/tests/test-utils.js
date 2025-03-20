@@ -10,6 +10,7 @@
  * @param {Object} options.query - Request query
  * @param {Object} options.headers - Request headers
  * @param {Object} options.user - Authenticated user (for protected routes)
+ * @param {Object} options.cookies - Request cookies
  * @returns {Object} Mock request object
  */
 const mockRequest = (options = {}) => {
@@ -18,14 +19,16 @@ const mockRequest = (options = {}) => {
     params = {},
     query = {},
     headers = {},
-    user = null
+    user = null,
+    cookies = {}
   } = options;
   return {
     body,
     params,
     query,
     headers,
-    user
+    user,
+    cookies
   };
 };
 

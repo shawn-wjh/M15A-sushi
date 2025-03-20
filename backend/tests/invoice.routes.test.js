@@ -43,6 +43,19 @@ jest.mock('../src/config/database', () => {
   };
 });
 
+// Mock the auth middleware
+jest.mock('../src/middleware/auth', () => ({
+  verifyToken: (req, res, next) => {
+    // Mock a valid user
+    req.user = {
+      userId: 'test-user',
+      email: 'test@example.com',
+      role: 'user'
+    };
+    next();
+  }
+}));
+
 describe('POST /v1/invoices/create', () => {
   it('should create new invoice', async () => {
     const response = await request(app)
