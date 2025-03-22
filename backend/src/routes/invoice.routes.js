@@ -37,18 +37,11 @@ router.post(
  * @returns {object} 200 - Validation report
  */
 router.post(
-  '/validate',
-  (req, res, next) => {
-    // Ensure we have XML to validate
-    if (!req.body.xml) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'No XML provided for validation'
-      });
-    }
-    next();
+  '/:invoiceid/validate',
+  async (req, res) => {
+    req.body.xml = await getInvoice(req, res, true);
+    validateInvoiceStandard(req, res);
   },
-  validateInvoiceStandard
 );
 
 /**
@@ -150,7 +143,11 @@ router.get('/list', listInvoices);
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.get('/:invoiceid', getInvoice);
+router.get('/:invoiceid', 
+  async (req, res) => {
+    await getInvoice(req, res, false);
+  }
+);
 
 /**
  * update specific invoice

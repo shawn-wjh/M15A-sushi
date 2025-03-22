@@ -173,7 +173,7 @@ const invoiceController = {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  getInvoice: async (req, res) => {
+  getInvoice: async (req, res, next) => {
     const invoiceId = req.params.invoiceid;
 
     // check if invoiceId is empty
@@ -199,6 +199,11 @@ const invoiceController = {
 
       // access the invoice from the dynamoDB response
       const xml = Items[0].invoice;
+
+      if (next) {
+        console.log('next recognised');
+        return xml;
+      }
 
       return res.status(200).set('Content-Type', 'application/xml').send(xml);
     } catch (error) {

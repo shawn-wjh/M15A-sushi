@@ -157,6 +157,8 @@ const validateInvoiceStandard = (req, res, next) => {
     warnings: []
   };
   try {
+    console.log('validateInvoiceStandard req.body: ', req.body);
+    console.log('req.body.xml: ', req.body.xml);
     // Get the UBL XML from the request body
     const ublXml = req.body.xml || req.body.invoice;
 
