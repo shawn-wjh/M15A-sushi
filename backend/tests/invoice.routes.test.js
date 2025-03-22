@@ -418,7 +418,7 @@ describe('GET /v1/invoices/:invoiceid', () => {
       });
   });
 
-  it.only('should return 200 when getting an existing invoice', async () => {
+  it('should return 200 when getting an existing invoice', async () => {
     const getRes = await request(app)
       .get('/v1/invoices/test-invoice-id')
       .send();
@@ -428,7 +428,7 @@ describe('GET /v1/invoices/:invoiceid', () => {
     expect(getRes.text).toBeTruthy();
   });
 
-  it.only('should return 404 when given an empty invoiceId', async () => {
+  it('should return 404 when given an empty invoiceId', async () => {
     // Mock the database to return empty results for this test
     const mockDbModule = require('../src/config/database');
     mockDbModule
@@ -444,7 +444,7 @@ describe('GET /v1/invoices/:invoiceid', () => {
     // The error message format might be different, so we don't check for specific properties
   });
 
-  it.only('should return 400 when given an invalid invoiceId', async () => {
+  it('should return 400 when given an invalid invoiceId', async () => {
     // Mock the database to return empty results for this test
     const mockDbModule = require('../src/config/database');
     mockDbModule
