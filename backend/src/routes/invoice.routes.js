@@ -18,6 +18,9 @@ const {
   deleteInvoice
 } = require('../controllers/invoice.controller');
 
+////////////////////////////////////////////////////////////////////////////////
+// v1 Routes ///////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /**
  * Generate UBL 2.4-compliant invoice
  * @route POST /v1/invoices
@@ -164,15 +167,5 @@ router.put('/:invoiceid', updateInvoice);
  * @returns {object} 200 - Success message
  */
 router.delete('/:invoiceid', deleteInvoice);
-
-// /**
-//  * Download invoice as UBL XML
-//  * @route GET /v1/invoices/:invoiceId/download
-//  * @param {string} invoiceId.path.required - Invoice ID
-//  * @returns {file} 200 - UBL XML file
-//  */
-// router.get('/:invoiceId/download',
-//     downloadInvoice
-// );
 
 module.exports = router;

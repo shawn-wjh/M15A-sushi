@@ -54,25 +54,24 @@ function convertToUBL(invoice) {
             'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2'
         },
         'cbc:CustomizationID': {
-          _text:
-            'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0'
+          _text: invoice.customizationId || 'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0'
         },
         'cbc:ProfileID': {
-          _text: 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0'
+          _text: invoice.profileId || 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0'
         },
         'cbc:DocumentCurrencyCode': { _text: invoice.currency || 'AUD' },
         'cac:OrderReference': {
-          'cbc:ID': { _text: 'N/A' } // An identifier of a referenced purchase order, issued by the Buyer.
+          'cbc:ID': { _text: invoice.orderReferenceId || 'N/A' }
         },
         'cac:InvoiceDocumentReference': {
-          'cbc:ID': { _text: 'N/A' } // Preceding Invoice number -- The identification of an Invoice that was previously sent by the Seller.
+          'cbc:ID': { _text: invoice.invoiceDocumentReferenceId || 'N/A' }
         },
         'cbc:ID': { _text: invoice.invoiceId },
         'cbc:IssueDate': { _text: invoice.issueDate },
         ...(invoice.dueDate && { 'cbc:DueDate': { _text: invoice.dueDate } }),
-        'cbc:InvoiceTypeCode': { _text: '380' },
+        'cbc:InvoiceTypeCode': { _text: invoice.invoiceTypeCode || '380' },
 
-        // Required Supplier Party with optional fields
+        // Optional Supplier Party
         'cac:AccountingSupplierParty': {
           'cac:Party': {
             'cac:PartyName': { 'cbc:Name': { _text: invoice.supplier } },
@@ -91,14 +90,20 @@ function convertToUBL(invoice) {
               }
             }),
             'cac:Contact': {
-              'cbc:Telephone': { _text: invoice.supplierPhone },
-              'cbc:ElectronicMail': { _text: invoice.supplierEmail },
-              'cbc:Name': { _text: invoice.supplier }
+              ...(invoice.supplierPhone && {
+                'cbc:Telephone': { _text: invoice.supplierPhone }
+              }),
+              ...(invoice.supplierEmail && {
+                'cbc:ElectronicMail': { _text: invoice.supplierEmail }
+              }),
+              ...(invoice.supplier && {
+                'cbc:Name': { _text: invoice.supplier }
+              })
             }
           }
         },
 
-        // Required Buyer Party with optional fields
+        // Optional Buyer Party
         'cac:AccountingCustomerParty': {
           'cac:Party': {
             'cac:PartyName': { 'cbc:Name': { _text: invoice.buyer } },
@@ -120,38 +125,48 @@ function convertToUBL(invoice) {
               ...(invoice.buyerPhone && {
                 'cbc:Telephone': { _text: invoice.buyerPhone }
               }),
-              'cbc:ElectronicMail': { _text: invoice.buyerEmail },
-              'cbc:Name': { _text: invoice.buyer }
+              ...(invoice.buyerEmail && {
+                'cbc:ElectronicMail': { _text: invoice.buyerEmail }
+              }),
+              ...(invoice.buyer && {
+                'cbc:Name': { _text: invoice.buyer }
+              })
             }
           }
         },
 
-        // Required Payment Means
+        // Optional Payment Means
         'cac:PaymentMeans': {
           'cac:PayeeFinancialAccount': {
-            'cbc:ID': { _text: invoice.paymentAccountId },
-            'cbc:Name': { _text: invoice.paymentAccountName },
-            'cac:FinancialInstitutionBranch': {
-              'cbc:ID': { _text: invoice.financialInstitutionBranchId }
-            }
+            ...(invoice.paymentAccountId && {
+              'cbc:ID': { _text: invoice.paymentAccountId }
+            }),
+            ...(invoice.paymentAccountName && {
+              'cbc:Name': { _text: invoice.paymentAccountName }
+            }),
+            ...(invoice.financialInstitutionBranchId && {
+              'cac:FinancialInstitutionBranch': {
+                'cbc:ID': { _text: invoice.financialInstitutionBranchId }
+              }
+            })
           }
         },
 
-        // Required Total Amount
+        // Optional Total Amount
         'cac:LegalMonetaryTotal': {
           'cbc:PayableAmount': {
             _attributes: { currencyID: invoice.currency || 'AUD' },
-            _text: invoice.total.toString()
+            _text: invoice.total ? invoice.total.toString() : '0'
           }
         },
 
-        // Required Invoice Line Items
-        'cac:InvoiceLine': invoice.items.map((item, index) => ({
+        // Optional Invoice Line Items
+        'cac:InvoiceLine': invoice.items ? invoice.items.map((item, index) => ({
           'cbc:ID': { _text: (index + 1).toString() },
           'cac:Item': {
             'cbc:Name': { _text: item.name },
             'cac:ClassifiedTaxCategory': {
-              'cbc:ID': { _text: 'S' } // either S = Standard rate or Z = Zero rated goods
+              'cbc:ID': { _text: item.taxCategory || 'S' } // either S = Standard rate or Z = Zero rated goods
             }
           },
           'cac:Price': {
@@ -162,11 +177,11 @@ function convertToUBL(invoice) {
               _text: item.cost.toString()
             },
             'cbc:BaseQuantity': {
-              _attributes: { unitCode: 'EA' },
+              _attributes: { unitCode: item.unitCode || 'EA' },
               _text: item.count.toString()
             }
           }
-        }))
+        })) : []
       }
     };
 
@@ -201,3 +216,4 @@ module.exports = {
   convertToUBL
   // generateAndUploadUBLInvoice
 };
+  

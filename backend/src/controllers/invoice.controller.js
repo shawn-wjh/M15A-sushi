@@ -53,7 +53,8 @@ const invoiceController = {
           timestamp,
           UserID: '123', // TODO: Get UserID from request
           // s3Url: status.location
-          invoice: ublXml
+          invoice: ublXml,
+          valid: false
         }
       };
 
