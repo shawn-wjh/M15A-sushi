@@ -42,7 +42,7 @@ router.post(
 router.post(
   '/:invoiceid/validate',
   getInvoice,
-  async (req, res, next) => {
+  async (req, res) => {
     await validateInvoiceStandard(req, res, false);
   }
 );
