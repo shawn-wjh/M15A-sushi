@@ -444,6 +444,12 @@ const validateInvoiceStandard = (req, res, next) => {
       // Attach validation result to request for potential later use
       req.validationResult = validationResult;
       next();
+    } else if (validationResult.valid === false) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invoice does not comply with Peppol standards',
+        error: validationResult.errors
+      });
     } else {
       return res.status(200).json({
         status: 'success',
