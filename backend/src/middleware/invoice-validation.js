@@ -1,4 +1,4 @@
-/**
+   /**
  * Invoice validation middleware
  * Validates the JSON input for invoice generation
  */
@@ -157,8 +157,6 @@ const validateInvoiceStandard = (req, res, next) => {
     warnings: []
   };
   try {
-    console.log('validateInvoiceStandard req.body: ', req.body);
-    console.log('req.body.xml: ', req.body.xml);
     // Get the UBL XML from the request body
     const ublXml = req.body.xml || req.body.invoice;
 
@@ -441,16 +439,6 @@ const validateInvoiceStandard = (req, res, next) => {
       );
     }
 
-    // Return validation result
-    if (!validationResult.valid) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invoice does not comply with Peppol standards',
-        error: validationResult.errors,
-        validationWarnings: validationResult.warnings
-      });
-    }
-
     // If validation passes
     if (next) {
       // Attach validation result to request for potential later use
@@ -465,6 +453,7 @@ const validateInvoiceStandard = (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log('error in validateInvoiceStandard: ', error);
     return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',

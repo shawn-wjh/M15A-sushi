@@ -41,10 +41,10 @@ router.post(
  */
 router.post(
   '/:invoiceid/validate',
-  async (req, res) => {
-    req.body.xml = await getInvoice(req, res, true);
-    validateInvoiceStandard(req, res);
-  },
+  getInvoice,
+  async (req, res, next) => {
+    await validateInvoiceStandard(req, res, false);
+  }
 );
 
 /**
@@ -94,6 +94,15 @@ router.post(
   // Final handler to combine invoice and validation results
   (req, res) => {
     // If we have both invoice data and validation results
+    if (!req.validationResult.valid) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invoice does not comply with Peppol standards',
+        error: req.validationResult.errors,
+        validationWarnings: req.validationResult.warnings
+      });
+    }
+
     if (req.invoiceData && req.validationResult) {
       return res.status(200).json({
         ...req.invoiceData,
