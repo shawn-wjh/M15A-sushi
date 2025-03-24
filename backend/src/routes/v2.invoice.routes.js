@@ -33,5 +33,15 @@ router.post('/:invoiceid/validate',
   }
 );
 
+router.post('/:invoiceid/update', 
+  // to add user validation
+  updateInvoice
+);
+
+router.delete('/:invoiceid', 
+  // to add user validation
+  deleteInvoice
+);
+
 module.exports = router;
 

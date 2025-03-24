@@ -286,11 +286,11 @@ const invoiceController = {
           InvoiceID: invoiceId,
           UserID: Items[0].UserID,
           invoice: ublXml,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          valid: false // invalidate the invoice after update by default
         }
       };
 
-      // Update invoice in DynamoDB using PutCommand to ensure complete replacement
       await dbClient.send(new PutCommand(updateParams));
 
       return res.status(200).json({
