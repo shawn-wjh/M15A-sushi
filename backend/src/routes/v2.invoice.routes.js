@@ -5,7 +5,9 @@ const router = express.Router();
 const {
   createInvoice,
   getInvoice,
-  updateValidationStatus
+  updateValidationStatus,
+  updateInvoice,
+  deleteInvoice
 } = require('../controllers/invoice.controller');
 
 const { validateInvoiceStandardv2 } = require('../middleware/invoice-validation');
