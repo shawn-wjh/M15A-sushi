@@ -761,6 +761,44 @@ const validatePeppol = (invoice, validationResult) => {
   return validationResult;
 };
 
+
+/**
+ * additional checks to comply with the fair work commision guidelines, 
+ * meant to be used in conjuction with the validate peppol function
+ */
+const validateFairWorkCommission = (invoice, validationResult) => {
+  // https://www.fwc.gov.au/documents/documents/resources/einvoicing-mandatory-fields.pdf?utm_source=chatgpt.com
+  if (!validationResult) {
+    validationResult = {
+      valid: true,
+      errors: [],
+      warnings: []
+    };
+  }
+
+  // Check PaymentMeans -> PayeeFinancialAccount details
+  const ID = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cbc:ID']?._text;
+  const Name = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cbc:Name']?._text;
+  if (!ID || !Name) {
+    validationResult.valid = false;
+    validationResult.errors.push(
+      'Missing PayeeFinancialAccount details'
+    );
+  }
+
+  // check PaymentMeans -> PayeeFinancialAccount -> FinancialInstitutionBranch details
+  const FIB_ID = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cacFinancialInstitutionBranch']?.['cbc:BIC']?._text;
+  const FIB_Name = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cacFinancialInstitutionBranch']?.['cbc:Name']?._text;
+  if (!FIB_ID || !FIB_Name) {
+    validationResult.valid = false;
+    validationResult.errors.push(
+      'Missing FinancialInstitutionBranch details'
+    );
+  }
+
+  return validationResult;
+};
+
 const validateInvoiceStandardv2 = (req, res, next) => {
   let validationResult = {
     valid: true,
@@ -795,8 +833,19 @@ const validateInvoiceStandardv2 = (req, res, next) => {
       });
     }
 
-    if (req.body.schemas && req.body.schemas.includes('peppol')) {
+    if (!req.body.schemas) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No schemas provided for validation'
+      });
+    }
+
+    if (req.body.schemas.includes('peppol')) {
       validationResult = validatePeppol(invoice, validationResult);
+    }
+
+    if (req.body.schemas.includes('fairwork')) {
+      validationResult = validateFairWorkCommission(invoice, validationResult);
     }
 
     // If validation passes
