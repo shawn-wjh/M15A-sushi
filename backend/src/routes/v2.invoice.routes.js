@@ -8,13 +8,13 @@ const {
   updateValidationStatus
 } = require('../controllers/invoice.controller');
 
-const { validateInvoiceStandard } = require('../middleware/invoice-validation');
+const { validateInvoiceStandardv2 } = require('../middleware/invoice-validation');
 
 router.post('/create', createInvoice);
 
 router.post('/:invoiceid/validate', 
   getInvoice,
-  validateInvoiceStandard,
+  validateInvoiceStandardv2,
   updateValidationStatus,
   (req, res) => {
     if (req.status === 'success') {
