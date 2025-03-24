@@ -830,5 +830,6 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
 module.exports = {
   validateInvoiceInput,
-  validateInvoiceStandard
+  validateInvoiceStandard,
+  validateInvoiceStandardv2
 };
