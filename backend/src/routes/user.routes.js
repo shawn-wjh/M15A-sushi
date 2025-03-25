@@ -4,6 +4,7 @@ const router = express.Router();
 
 // Import middleware
 const validation = require('../middleware/user-validation');
+const auth = require('../middleware/auth');
 
 // Import controllers
 const registrationController = require('../controllers/registration.controller');
@@ -28,9 +29,26 @@ router.post(
  */
 router.post(
   '/login',
-  validation.validateEmail,
-  validation.validatePassword,
   authController.login
+);
+
+/**
+ * Get user profile
+ * @route GET /v1/users/profile
+ * @returns {object} 200 - User profile data
+ */
+router.get(
+  '/profile',
+  auth.verifyToken,
+  (req, res) => {
+    // The user data is already available in req.user from the verifyToken middleware
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        user: req.user
+      }
+    });
+  }
 );
 
 module.exports = router;

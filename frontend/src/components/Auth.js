@@ -1,12 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import './Auth.css';
 
-const API_URL = 'http://localhost:3000/v1/users';
+// Helper functions for cookie management
+const setCookie = (name, value, days = 7) => {
+  // 6 hours expiration
+  const expires = new Date(Date.now() + 6 * 3600 * 1000).toUTCString();
+  // Using SameSite=None with Secure for cross-origin requests
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+};
 
-const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+};
+
+const removeCookie = (name) => {
+  document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+};
+
+const Auth = ({ isLoginForm }) => {
+  const [isLogin, setIsLogin] = useState(isLoginForm !== false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -17,13 +33,20 @@ const Auth = () => {
   
   useEffect(() => {
     // Check if user is already logged in
+    const storedToken = getCookie('token');
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    
+    if (storedToken && storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
         console.error('Error parsing stored user data');
       }
+    }
+    
+    // Update login state if prop changes
+    if (isLoginForm !== undefined) {
+      setIsLogin(isLoginForm);
     }
     
     // Animation delay
@@ -32,7 +55,7 @@ const Auth = () => {
     }, 100);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [isLoginForm]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,15 +63,13 @@ const Auth = () => {
     setMessage('');
     
     try {
-      const endpoint = isLogin 
-        ? `${API_URL}/login`
-        : `${API_URL}/register`;
+      const endpoint = isLogin ? '/users/login' : '/users/register';
         
       const payload = isLogin 
         ? { email, password }
         : { email, password, name };
         
-      const response = await axios.post(endpoint, payload);
+      const response = await apiClient.post(endpoint, payload);
       
       console.log('Login response:', response.data);
       
@@ -65,8 +86,10 @@ const Auth = () => {
       console.log('Extracted user data:', userData);
       
       if (token && userData) {
-        // Store token and user data
-        localStorage.setItem('token', token);
+        // Store token in cookie instead of localStorage
+        setCookie('token', token);
+        
+        // Still store user data in localStorage for easy access
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         
@@ -95,7 +118,8 @@ const Auth = () => {
   };
   
   const logout = () => {
-    localStorage.removeItem('token');
+    // Remove token from cookies instead of localStorage
+    removeCookie('token');
     localStorage.removeItem('user');
     setUser(null);
     setMessage({
