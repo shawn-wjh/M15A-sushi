@@ -1,121 +1,151 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import InvoiceForm from './InvoiceForm';
+import apiClient from '../utils/axiosConfig';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('create');
+  const [loading, setLoading] = useState(true);
   const history = useHistory();
 
   useEffect(() => {
     // Check if user is logged in
     const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    console.log('Dashboard - Checking authentication');
-    console.log('Stored user:', storedUser);
-    console.log('Token exists:', !!token);
-    
-    if (!storedUser || !token) {
-      // Redirect to login if not logged in
-      console.log('Not authenticated, redirecting to login');
-      history.push('/auth');
+    if (!storedUser) {
+      history.push('/login');
       return;
     }
-    
+
     try {
-      const userData = JSON.parse(storedUser);
-      console.log('User data parsed successfully:', userData);
-      
-      // Set user state
-      setUser(userData);
-      
-      // Animation delay
-      const timer = setTimeout(() => {
-        const container = document.querySelector('.dashboard-container');
-        if (container) {
-          container.classList.add('visible');
-          console.log('Dashboard container made visible');
-        } else {
-          console.warn('Dashboard container element not found');
-        }
-      }, 100);
-      
-      return () => clearTimeout(timer);
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setLoading(false);
     } catch (e) {
-      console.error('Error parsing stored user data:', e);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      history.push('/auth');
+      console.error('Failed to parse user data');
+      history.push('/login');
     }
   }, [history]);
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = () => {
+    // Clear user data
     localStorage.removeItem('user');
-    history.push('/auth');
+    // Clear auth cookie
+    document.cookie = 'token=; Max-Age=0; path=/; SameSite=Lax';
+    // Redirect to login
+    history.push('/login');
   };
 
-  if (!user) {
-    return <div className="loading">Loading...</div>;
+  const handleCreateInvoice = () => {
+    history.push('/invoice/create');
+  };
+
+  const handleViewInvoices = () => {
+    // This would go to an invoices list page in the future
+    alert('View Invoices functionality coming soon!');
+  };
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        Loading...
+      </div>
+    );
   }
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-container">
-        <header className="dashboard-header">
-          <div className="dashboard-logo" onClick={() => history.push('/')}>
-            <span className="logo-text">Sushi</span>
-            <span className="logo-dot">.</span>
-            <span className="logo-invoice">Invoice</span>
-          </div>
-          
-          <div className="user-info">
-            <span className="user-name">{user.name || user.email}</span>
-            <button className="logout-button" onClick={logout}>Logout</button>
-          </div>
-        </header>
-        
+      <nav className="dashboard-navbar">
+        <div className="dashboard-logo" onClick={() => history.push('/')}>
+          <span className="logo-text">Sushi</span>
+          <span className="logo-dot">.</span>
+          <span className="logo-invoice">Invoice</span>
+        </div>
+        <div className="user-info">
+          <span className="user-name">{user.name || user.email}</span>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
+      </nav>
+      
+      <main className="dashboard-main">
         <div className="dashboard-content">
-          <nav className="dashboard-nav">
-            <ul>
-              <li 
-                className={activeTab === 'create' ? 'active' : ''} 
-                onClick={() => setActiveTab('create')}
-              >
-                Create Invoice
-              </li>
-              <li 
-                className={activeTab === 'list' ? 'active' : ''} 
-                onClick={() => setActiveTab('list')}
-              >
-                My Invoices
-              </li>
-            </ul>
-          </nav>
+          <div className="welcome-banner">
+            <h2>Welcome back, {user.name || user.email}!</h2>
+            <p>Manage your invoices with ease. Create new invoices, view your existing ones, and keep track of your billing information all in one place.</p>
+          </div>
           
-          <main className="dashboard-main">
-            {activeTab === 'create' && (
-              <div className="tab-content">
-                <h2>Create New Invoice</h2>
-                <p>Fill in the details below to generate a new invoice.</p>
-                <InvoiceForm />
-              </div>
-            )}
-            
-            {activeTab === 'list' && (
-              <div className="tab-content">
-                <h2>My Invoices</h2>
-                <p>View and manage your existing invoices.</p>
-                <div className="invoice-list-placeholder">
-                  <p>Invoice list will be implemented in the next iteration.</p>
+          <div className="action-card">
+            <h3>Your Profile</h3>
+            <div className="action-items">
+              <div className="action-item">
+                <div className="action-content">
+                  <div className="action-title">Name</div>
+                  <div className="action-description">{user.name || 'Not provided'}</div>
                 </div>
               </div>
-            )}
-          </main>
+              
+              <div className="action-item">
+                <div className="action-content">
+                  <div className="action-title">Email</div>
+                  <div className="action-description">{user.email}</div>
+                </div>
+              </div>
+              
+              <div className="action-item">
+                <div className="action-content">
+                  <div className="action-title">Role</div>
+                  <div className="action-description">{user.role || 'Standard User'}</div>
+                </div>
+              </div>
+              
+              <div className="action-item">
+                <div className="action-content">
+                  <div className="action-title">Account ID</div>
+                  <div className="action-description">{user.UserID || user.userId || user._id || 'Not available'}</div>
+                </div>
+              </div>
+              
+              {user.createdAt && (
+                <div className="action-item">
+                  <div className="action-content">
+                    <div className="action-title">Member Since</div>
+                    <div className="action-description">{new Date(user.createdAt).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="action-card">
+            <h3>Quick Actions</h3>
+            <div className="action-items">
+              <div className="action-item" onClick={handleCreateInvoice}>
+                <div className="action-icon">+</div>
+                <div className="action-content">
+                  <div className="action-title">Create New Invoice</div>
+                  <div className="action-description">Generate a new invoice for your clients</div>
+                </div>
+              </div>
+              
+              <div className="action-item" onClick={handleViewInvoices}>
+                <div className="action-icon">📋</div>
+                <div className="action-content">
+                  <div className="action-title">View Invoices</div>
+                  <div className="action-description">See all your created invoices</div>
+                </div>
+              </div>
+              
+              <div className="action-item" onClick={() => history.push('/settings')}>
+                <div className="action-icon">⚙️</div>
+                <div className="action-content">
+                  <div className="action-title">Account Settings</div>
+                  <div className="action-description">Update your profile information</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
