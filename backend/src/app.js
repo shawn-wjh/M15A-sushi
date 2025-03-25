@@ -9,6 +9,7 @@ dotenv.config();
 // Import routes
 const invoiceRoutes = require('./routes/invoice.routes');
 const userRoutes = require('./routes/user.routes');
+const systemRoutes = require('./routes/system.routes');
 
 // Create Express app
 const app = express();
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (fo
 // Use routes
 app.use('/v1/invoices', invoiceRoutes);
 app.use('/v1/users', userRoutes);
+app.use('/v1', systemRoutes);
 
 // Handle 404 routes (when the user sends a request to a route that doesn't exist)
 app.use((req, res) => {
