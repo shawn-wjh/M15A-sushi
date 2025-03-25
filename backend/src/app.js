@@ -11,13 +11,19 @@ const invoiceRoutes = require('./routes/invoice.routes');
 const v2InvoiceRoutes = require('./routes/v2.invoice.routes');
 const userRoutes = require('./routes/user.routes');
 const systemRoutes = require('./routes/system.routes');
+const healthRoutes = require('./routes/health.routes');
 
 // Create Express app
 const app = express();
 
+// CORS configuration
+const corsOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',') 
+  : ['http://localhost:3001', 'http://localhost:5173'];
+
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3001', 'http://localhost:5173'],  // Allow frontend origins
+  origin: corsOrigins,  // Allow configured origins
   credentials: true,  // Important for cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -25,6 +31,9 @@ app.use(cors({
 app.use(cookieParser()); // Parse cookies
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (for form data)
+
+// Health check route (needs to be before auth to ensure it's always accessible)
+app.use('/health', healthRoutes);
 
 // Use routes
 app.use('/v1/invoices', invoiceRoutes);
