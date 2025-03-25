@@ -42,18 +42,11 @@ router.post(
  * @returns {object} 200 - Validation report
  */
 router.post(
-  '/validate',
-  (req, res, next) => {
-    // Ensure we have XML to validate
-    if (!req.body.xml) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'No XML provided for validation'
-      });
-    }
-    next();
-  },
-  validateInvoiceStandard
+  '/:invoiceid/validate',
+  getInvoice,
+  async (req, res) => {
+    await validateInvoiceStandard(req, res, false);
+  }
 );
 
 /**
@@ -103,6 +96,15 @@ router.post(
   // Final handler to combine invoice and validation results
   (req, res) => {
     // If we have both invoice data and validation results
+    if (!req.validationResult.valid) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invoice does not comply with Peppol standards',
+        error: req.validationResult.errors,
+        validationWarnings: req.validationResult.warnings
+      });
+    }
+
     if (req.invoiceData && req.validationResult) {
       return res.status(200).json({
         ...req.invoiceData,
@@ -155,7 +157,11 @@ router.get('/list', listInvoices);
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.get('/:invoiceid', getInvoice);
+router.get('/:invoiceid', 
+  async (req, res) => {
+    await getInvoice(req, res, false);
+  }
+);
 
 /**
  * update specific invoice
@@ -172,15 +178,5 @@ router.put('/:invoiceid', updateInvoice);
  * @returns {object} 200 - Success message
  */
 router.delete('/:invoiceid', deleteInvoice);
-
-// /**
-//  * Download invoice as UBL XML
-//  * @route GET /v1/invoices/:invoiceId/download
-//  * @param {string} invoiceId.path.required - Invoice ID
-//  * @returns {file} 200 - UBL XML file
-//  */
-// router.get('/:invoiceId/download',
-//     downloadInvoice
-// );
 
 module.exports = router;

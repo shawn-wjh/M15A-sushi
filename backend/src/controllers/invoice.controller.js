@@ -5,9 +5,9 @@ const { createDynamoDBClient, Tables } = require('../config/database');
 const {
   PutCommand,
   ScanCommand,
-  // UpdateCommand,
   QueryCommand,
-  DeleteCommand
+  DeleteCommand,
+  UpdateCommand
 } = require('@aws-sdk/lib-dynamodb');
 const {
   // generateAndUploadUBLInvoice,
@@ -53,7 +53,8 @@ const invoiceController = {
           timestamp,
           UserID: '123', // TODO: Get UserID from request
           // s3Url: status.location
-          invoice: ublXml
+          invoice: ublXml,
+          valid: false
         }
       };
 
@@ -173,7 +174,7 @@ const invoiceController = {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  getInvoice: async (req, res) => {
+  getInvoice: async (req, res, next) => {
     const invoiceId = req.params.invoiceid;
 
     // check if invoiceId is empty
@@ -200,7 +201,12 @@ const invoiceController = {
       // access the invoice from the dynamoDB response
       const xml = Items[0].invoice;
 
-      return res.status(200).set('Content-Type', 'application/xml').send(xml);
+      if (next) {
+        req.body.xml = xml;
+        next();
+      } else {
+        return res.status(200).set('Content-Type', 'application/xml').send(xml);
+      }
     } catch (error) {
       return res.status(400).json({
         status: 'error',
@@ -280,11 +286,11 @@ const invoiceController = {
           InvoiceID: invoiceId,
           UserID: Items[0].UserID,
           invoice: ublXml,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          valid: false // invalidate the invoice after update by default
         }
       };
 
-      // Update invoice in DynamoDB using PutCommand to ensure complete replacement
       await dbClient.send(new PutCommand(updateParams));
 
       return res.status(200).json({
@@ -353,6 +359,78 @@ const invoiceController = {
         message: 'Invoice deleted successfully'
       });
     } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * Validate an invoice
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  updateValidationStatus: async (req, res, next) => {
+    try {
+      const invoiceId = req.params.invoiceid;
+      const valid = req.validationResult.valid;
+      
+      if (!invoiceId || valid === undefined) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Missing invoice ID or valid status'
+        });
+      }
+
+      // const queryParams = {
+      //   TableName: Tables.INVOICES,
+      //   KeyConditionExpression: 'InvoiceID = :InvoiceId',
+      //   ExpressionAttributeValues: {
+      //     ':InvoiceId': invoiceId
+      //   }
+      // };
+
+      // const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+      // if (!Items || Items.length === 0) {
+      //   return res.status(400).json({
+      //     status: 'error',
+      //     error: 'Invoice not found'
+      //   });
+      // }
+
+      console.log('invoiceId: ', invoiceId);
+      console.log('valid: ', valid);
+
+      const updateParams = {
+        TableName: Tables.INVOICES,
+        Key: {
+          InvoiceID: invoiceId,
+          UserID: '123'
+        },
+        UpdateExpression: 'set valid = :valid',
+        ExpressionAttributeValues: {
+          ':valid': valid
+        }
+      };
+
+      await dbClient.send(new UpdateCommand(updateParams));
+
+      if (next) {
+        req.status = 'success';
+        req.message = `Validation status successfully updated to ${valid}`;
+        next();
+      } else {
+        return res.status(200).json({
+          status: 'success',
+          message: `Validation status successfully updated to ${valid}`
+        });
+      }
+
+      
+    } catch (error) {
+      console.log('error in updateValidationStatus: ', error);
       return res.status(500).json({
         status: 'error',
         error: error.message

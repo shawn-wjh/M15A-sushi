@@ -337,10 +337,9 @@ describe('POST /v1/invoices/validate', () => {
   it('should validate a valid invoice XML', async () => {
     // Create a valid XML for testing that meets Peppol standards
     const req = httpMocks.createRequest({ body: { xml: validXml } });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+    const res = httpMocks.createResponse()
 
-    await validateInvoiceStandard(req, res, next);
+    await validateInvoiceStandard(req, res, false);
 
     expect(res.statusCode).toBe(200);
   });
@@ -349,10 +348,9 @@ describe('POST /v1/invoices/validate', () => {
     const req = httpMocks.createRequest({
       params: {}
     });
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+    const res = httpMocks.createResponse()
 
-    await validateInvoiceStandard(req, res, next);
+    await validateInvoiceStandard(req, res, false);
 
     expect(res.statusCode).toBe(400);
     const responseData = JSON.parse(res._getData());
@@ -404,9 +402,8 @@ describe('POST /v1/invoices/validate', () => {
     async (missing, invalidXml) => {
       const req = httpMocks.createRequest({ body: { xml: invalidXml } });
       const res = httpMocks.createResponse();
-      const next = jest.fn();
 
-      await validateInvoiceStandard(req, res, next);
+      await validateInvoiceStandard(req, res, false);
 
       expect(res.statusCode).toBe(400);
       const responseData = JSON.parse(res._getData());
@@ -437,9 +434,8 @@ describe('POST /v1/invoices/validate', () => {
     async (missing, invalidXml) => {
       const req = httpMocks.createRequest({ body: { xml: invalidXml } });
       const res = httpMocks.createResponse();
-      const next = jest.fn();
 
-      await validateInvoiceStandard(req, res, next);
+      await validateInvoiceStandard(req, res, false);
 
       expect(res.statusCode).toBe(400);
       const responseData = JSON.parse(res._getData());
@@ -465,9 +461,8 @@ describe('POST /v1/invoices/validate', () => {
     async (missing, invalidXml) => {
       const req = httpMocks.createRequest({ body: { xml: invalidXml } });
       const res = httpMocks.createResponse();
-      const next = jest.fn();
 
-      await validateInvoiceStandard(req, res, next);
+      await validateInvoiceStandard(req, res, false);
 
       expect(res.statusCode).toBe(400);
       const responseData = JSON.parse(res._getData());
@@ -500,9 +495,8 @@ describe('POST /v1/invoices/validate', () => {
     async (missing, invalidXml) => {
       const req = httpMocks.createRequest({ body: { xml: invalidXml } });
       const res = httpMocks.createResponse();
-      const next = jest.fn();
 
-      await validateInvoiceStandard(req, res, next);
+      await validateInvoiceStandard(req, res, false);
 
       expect(res.statusCode).toBe(400);
       const responseData = JSON.parse(res._getData());

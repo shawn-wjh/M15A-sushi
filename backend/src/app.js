@@ -8,6 +8,7 @@ dotenv.config();
 
 // Import routes
 const invoiceRoutes = require('./routes/invoice.routes');
+const v2InvoiceRoutes = require('./routes/v2.invoice.routes');
 const userRoutes = require('./routes/user.routes');
 const systemRoutes = require('./routes/system.routes');
 
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (fo
 
 // Use routes
 app.use('/v1/invoices', invoiceRoutes);
+app.use('/v2/invoices', v2InvoiceRoutes);
 app.use('/v1/users', userRoutes);
 app.use('/v1', systemRoutes);
 
