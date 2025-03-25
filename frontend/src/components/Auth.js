@@ -63,7 +63,7 @@ const Auth = ({ isLoginForm }) => {
     setMessage('');
     
     try {
-      const endpoint = isLogin ? '/users/login' : '/users/register';
+      const endpoint = isLogin ? '/v1/users/login' : '/v1/users/register';
         
       const payload = isLogin 
         ? { email, password }

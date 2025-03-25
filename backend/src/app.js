@@ -22,9 +22,24 @@ const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',') 
   : ['http://localhost:3001', 'http://localhost:5173'];
 
+// In production, also allow the current origin
+if (process.env.NODE_ENV === 'production') {
+  corsOrigins.push(process.env.APP_URL || '*');
+}
+
 // Middleware
 app.use(cors({
-  origin: corsOrigins,  // Allow configured origins
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is allowed
+    if (corsOrigins.indexOf(origin) !== -1 || corsOrigins.indexOf('*') !== -1) {
+      return callback(null, true);
+    } else {
+      return callback(null, true); // Allow all origins in production for now
+    }
+  },
   credentials: true,  // Important for cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

@@ -2,7 +2,10 @@ import axios from 'axios';
 
 // Create an axios instance with a base URL for our API
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/v1',
+  // In production, use relative URL (no base path) so that version (v1/v2) can be included in each request
+  baseURL: process.env.NODE_ENV === 'production' 
+    ? '' // Empty string allows for relative paths with version numbers
+    : 'http://localhost:3000', // In development, keep the domain but remove version prefix
   headers: {
     'Content-Type': 'application/json',
   },

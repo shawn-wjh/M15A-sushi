@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import './InvoiceForm.css';
 
-const API_URL = 'http://localhost:3000/v1/invoices';
+// Determine base URL based on environment
+const getBaseUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return '/v1/invoices'; // Use relative path in production
+  }
+  return 'http://localhost:3000/v1/invoices'; // Use full URL in development
+};
+
+const API_URL = getBaseUrl();
 
 // Helper function to get cookie
 const getCookie = (name) => {
@@ -217,17 +226,10 @@ const InvoiceForm = () => {
         itemTotal: item.count * item.cost
       })));
       
-      // Send data to backend using axios with withCredentials to include cookies
-      const response = await axios.post(
-        `${API_URL}/create-and-validate`, 
-        submissionData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true
-        }
+      // Send data to backend using the apiClient (which already has auth and base URL config)
+      const response = await apiClient.post(
+        '/v1/invoices/create-and-validate', 
+        submissionData
       );
       
       setMessage({
