@@ -55,13 +55,19 @@ build-and-deploy:
 
     # Create deployment structure
     - mkdir -p deploy
-    - cp -r backend/* deploy/
+    - cp -r backend deploy/
     - mkdir -p deploy/public
     - cp -r frontend/build/* deploy/public/
 
     # Include config files
     - cp -r .ebextensions deploy/ || true
     - cp Procfile deploy/ || true
+
+    # 🔍 Log structure of deploy folder
+    - echo "==== DEPLOY DIRECTORY STRUCTURE ===="
+    - find deploy -type f
+    - echo "==== DEPLOY FOLDER TREE ===="
+    - tree deploy || ls -R deploy
 
     # Zip & upload
     - cd deploy
