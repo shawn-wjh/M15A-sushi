@@ -43,10 +43,12 @@ app.use('/v2/invoices', v2InvoiceRoutes);
 app.use('/v1/users', userRoutes);
 app.use('/v1', systemRoutes);
 
-// Serve frontend
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve frontend static files
+app.use(express.static(path.resolve(__dirname, '../../public')));
+
+// Serve frontend index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.resolve(__dirname, '../../public/index.html'));
 });
 
 // Handle 404 routes (when the user sends a request to a route that doesn't exist)
