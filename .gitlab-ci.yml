@@ -67,6 +67,11 @@ build-and-deploy:
     - cd deploy
     - zip -r ../app.zip .
     - cd ..
+
+    # Upload versioned
     - aws s3 cp app.zip s3://$S3_BUCKET_NAME/app-$CI_PIPELINE_ID.zip --region $AWS_REGION
+
+    # Upload to fixed name for CodePipeline to use
+    - aws s3 cp app.zip s3://$S3_BUCKET_NAME/app.zip --region $AWS_REGION
   only:
     - main
