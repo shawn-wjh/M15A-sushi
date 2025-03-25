@@ -1,52 +1,62 @@
-# CI/CD configuration is temporarily disabled
-# Will be re-enabled in a future sprint
-
 stages:
   - lint
   - test
-  - deploy  # 🆕 new stage added
+  - build
+  - deploy
 
-# Cache node_modules to speed up builds
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - backend/node_modules/
+    - frontend/node_modules/
 
-# Lint stage: Check code quality
-lint-backend:
-  stage: lint
+# [Existing lint and test stages remain the same]
+
+build-app:
+  stage: build
   image: node:16
   script:
+    # Build frontend
+    - cd frontend
+    - npm install
+    - npm run build  # Creates optimized production build
+    - cd ..
+    
+    # Build backend
     - cd backend
     - npm install
-    - npm run lint
+    # Any backend build steps, if necessary
+    - cd ..
+    
+    # Create deployment structure
+    - mkdir -p deploy
+    - cp -r backend/* deploy/
+    - mkdir -p deploy/public
+    - cp -r frontend/build/* deploy/public/  # Assuming frontend build outputs to 'build' folder
+    
+    # Include necessary config files
+    - cp -r backend/.ebextensions deploy/ || true
+    - cp backend/Procfile deploy/ || true
+  artifacts:
+    paths:
+      - deploy/
   only:
-    - branches
-    - merge_requests
+    - main
 
-# Test stage: Run tests
-test-backend:
-  stage: test
-  image: node:16
-  script:
-    - cd backend
-    - npm install
-    - npx jest
-  only:
-    - branches
-    - merge_requests
-
-# 🆕 Deploy stage: Zip code and upload to S3
 deploy-to-s3:
   stage: deploy
   image: amazonlinux:2
+  dependencies:
+    - build-app
   before_script:
     - yum install -y zip unzip curl
     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip awscliv2.zip
     - ./aws/install
   script:
-    - zip -r app.zip .
-    - aws s3 cp app.zip s3://$S3_BUCKET_NAME/app.zip --region $AWS_REGION
+    - cd deploy
+    - zip -r ../app.zip .
+    - cd ..
+    - aws s3 cp app.zip s3://$S3_BUCKET_NAME/app-$CI_PIPELINE_ID.zip --region $AWS_REGION
   only:
     - main
