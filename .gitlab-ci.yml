@@ -10,7 +10,27 @@ cache:
     - backend/node_modules/
     - frontend/node_modules/
 
-# [Existing lint and test stages remain the same]
+lint-backend:
+  stage: lint
+  image: node:16
+  script:
+    - cd backend
+    - npm install
+    - npm run lint
+  only:
+    - branches
+    - merge_requests
+
+test-backend:
+  stage: test
+  image: node:16
+  script:
+    - cd backend
+    - npm install
+    - npx jest
+  only:
+    - branches
+    - merge_requests
 
 build-app:
   stage: build
@@ -19,44 +39,40 @@ build-app:
     # Build frontend
     - cd frontend
     - npm install
-    - npm run build  # Creates optimized production build
+    - npm run build
     - cd ..
-    
+
     # Build backend
     - cd backend
     - npm install
-    # Any backend build steps, if necessary
     - cd ..
-    
+
     # Create deployment structure
     - mkdir -p deploy
     - cp -r backend/* deploy/
     - mkdir -p deploy/public
-    - cp -r frontend/build/* deploy/public/  # Assuming frontend build outputs to 'build' folder
-    
+    - cp -r frontend/build/* deploy/public/
+
     # Include necessary config files
     - cp -r backend/.ebextensions deploy/ || true
     - cp backend/Procfile deploy/ || true
-  artifacts:
-    paths:
-      - deploy/
+
+    # ✅ Zip deploy directory here
+    - cd deploy
+    - zip -r ../app.zip .
+    - cd ..
   only:
     - main
 
 deploy-to-s3:
   stage: deploy
   image: amazonlinux:2
-  dependencies:
-    - build-app
   before_script:
     - yum install -y zip unzip curl
     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip awscliv2.zip
     - ./aws/install
   script:
-    - cd deploy
-    - zip -r ../app.zip .
-    - cd ..
     - aws s3 cp app.zip s3://$S3_BUCKET_NAME/app-$CI_PIPELINE_ID.zip --region $AWS_REGION
   only:
     - main
