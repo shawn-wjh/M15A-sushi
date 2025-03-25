@@ -36,6 +36,9 @@ build-app:
   stage: build
   image: node:16
   script:
+
+    - apt-get update && apt-get install -y zip
+    
     # Build frontend
     - cd frontend
     - npm install
@@ -54,8 +57,8 @@ build-app:
     - cp -r frontend/build/* deploy/public/
 
     # Include necessary config files
-    - cp -r backend/.ebextensions deploy/ || true
-    - cp backend/Procfile deploy/ || true
+    - cp -r .ebextensions deploy/ || true
+    - cp Procfile deploy/ || true
 
     # ✅ Zip deploy directory here
     - cd deploy
