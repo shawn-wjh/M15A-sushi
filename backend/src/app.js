@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -28,6 +29,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(cookieParser()); // Parse cookies
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (for form data)
@@ -40,6 +42,12 @@ app.use('/v1/invoices', invoiceRoutes);
 app.use('/v2/invoices', v2InvoiceRoutes);
 app.use('/v1/users', userRoutes);
 app.use('/v1', systemRoutes);
+
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Handle 404 routes (when the user sends a request to a route that doesn't exist)
 app.use((req, res) => {
