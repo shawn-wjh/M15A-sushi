@@ -40,7 +40,7 @@ const Dashboard = () => {
   };
 
   const handleViewInvoices = () => {
-    history.push('/invoices');
+    history.push('/invoices/list');
   };
 
   if (loading) {
