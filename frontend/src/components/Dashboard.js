@@ -40,8 +40,7 @@ const Dashboard = () => {
   };
 
   const handleViewInvoices = () => {
-    // This would go to an invoices list page in the future
-    alert('View Invoices functionality coming soon!');
+    history.push('/invoices');
   };
 
   if (loading) {

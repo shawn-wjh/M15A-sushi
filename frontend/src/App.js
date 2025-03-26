@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import InvoiceForm from './components/InvoiceForm';
+import InvoiceList from './components/invoiceList/InvoiceList';
 import './App.css';
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
           <Route path="/signup" component={() => <Auth isLoginForm={false} />} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/invoice/create" component={InvoiceForm} />
-          <Route path="/invoices" component={Dashboard} />
+          <Route path="/invoices" component={InvoiceList} />
           <Route path="/settings" component={Dashboard} />
           <Route path="*">
             <Redirect to="/" />
