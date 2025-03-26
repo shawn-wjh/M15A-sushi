@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import getCookie from "../../utils/cookieHelper";
 import "./InvoicePage.css";
 import XMLWindow from "../invoiceList/XMLWindow";
+import parseInvoiceXml from "../../utils/parseXmlHelper";
 
 const API_URL = "http://localhost:3000/v1/invoices";
 
@@ -40,49 +41,12 @@ const InvoicePage = () => {
           withCredentials: true,
         });
 
-        // Store the raw XML
-        setRawXml(response.data);
-        console.log('response.data: ', response.data);
-
-        // Parse the XML string from the response
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(response.data, "text/xml");
-        console.log('xmlDoc: ', xmlDoc);
-
         // Extract invoice information from XML
-        const invoiceData = {
-          invoiceId: xmlDoc.querySelectorAll("cbc\\:ID, ID")[2]?.textContent || "N/A",
-          issueDate: xmlDoc.querySelector("cbc\\:IssueDate, IssueDate")?.textContent || "N/A",
-          dueDate: xmlDoc.querySelector("cbc\\:DueDate, DueDate")?.textContent || "N/A",
-          currency: xmlDoc.querySelector("cbc\\:DocumentCurrencyCode, DocumentCurrencyCode")?.textContent || "AUD",
-          total: xmlDoc.querySelector("cac\\:LegalMonetaryTotal cbc\\:PayableAmount, LegalMonetaryTotal PayableAmount")?.textContent || "0.00",
-          buyer: {
-            name: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:PartyName cbc\\:Name, AccountingCustomerParty Party PartyName Name")?.textContent || "N/A",
-            address: {
-              street: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:PostalAddress cbc\\:StreetName, AccountingCustomerParty Party PostalAddress StreetName")?.textContent || "N/A",
-              country: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:PostalAddress cac\\:Country cbc\\:IdentificationCode, AccountingCustomerParty Party PostalAddress Country IdentificationCode")?.textContent || "AUS"
-            },
-            phone: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:Contact cbc\\:Telephone, AccountingCustomerParty Party Contact Telephone")?.textContent || "N/A"
-          },
-          supplier: {
-            name: xmlDoc.querySelector("cac\\:AccountingSupplierParty cac\\:Party cac\\:PartyName cbc\\:Name, AccountingSupplierParty Party PartyName Name")?.textContent || "N/A",
-            address: {
-              street: xmlDoc.querySelector("cac\\:AccountingSupplierParty cac\\:Party cac\\:PostalAddress cbc\\:StreetName, AccountingSupplierParty Party PostalAddress StreetName")?.textContent || "N/A",
-              country: xmlDoc.querySelector("cac\\:AccountingSupplierParty cac\\:Party cac\\:PostalAddress cac\\:Country cbc\\:IdentificationCode, AccountingSupplierParty Party PostalAddress Country IdentificationCode")?.textContent || "AUS"
-            }
-          },
-          items: Array.from(xmlDoc.querySelectorAll("cac\\:InvoiceLine, InvoiceLine")).map(line => ({
-            name: line.querySelector("cac\\:Item cbc\\:Name, Item Name")?.textContent || "N/A",
-            count: line.querySelector("cbc\\:BaseQuantity, BaseQuantity")?.textContent || "1",
-            cost: line.querySelector("cac\\:Price cbc\\:PriceAmount, Price PriceAmount")?.textContent || "0.00",
-            currency: line.querySelector("cac\\:Price cbc\\:PriceAmount, Price PriceAmount")?.getAttribute("currencyID") || "AUD"
-          }))
-        };
+        const invoiceData = parseInvoiceXml(response.data);
 
         setInvoice(invoiceData);
         setMessage(null);
       } catch (error) {
-        console.error("Error fetching invoice:", error);
         if (error.response?.status === 401) {
           history.push("/login");
         } else {
@@ -113,18 +77,23 @@ const InvoicePage = () => {
 
   const handleDelete = () => {
     // TODO: Implement delete functionality
-    console.log("Delete invoice");
+    alert("Delete feature yet to be implemented");
   };
 
   const handleEdit = () => {
     // TODO: Implement edit functionality
-    console.log("Edit invoice");
+    alert("Edit feature yet to be implemented");
   };
 
   const handleDownload = () => {
     // TODO: Implement download functionality
-    console.log("Download invoice");
+    alert("Download feature yet to be implemented");
   };
+
+  const handleValidate = () => {
+    // TODO: Implement validate functionality
+    alert("Validate feature yet to be implemented");
+  }
 
   if (!invoice) {
     return (
@@ -191,7 +160,7 @@ const InvoicePage = () => {
               <div className="banner-actions">
                 <button 
                   className="action-button validate"
-                  onClick={() => console.log("Validate invoice")}
+                  onClick={handleValidate}
                   title="Validate Invoice"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
