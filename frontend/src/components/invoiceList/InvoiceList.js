@@ -7,8 +7,48 @@ import FilterPanel from "./FilterPanel";
 import InvoiceListHeader from "./InvoiceListHeader";
 import InvoiceListItem from "./InvoiceListItem";
 import XMLWindow from "./XMLWindow";
+import ActionBarIcon from "./ActionBarIcon";
 
 const API_URL = "http://localhost:3000/v1/invoices/list";
+
+const parseInvoiceXml = (xmlString) => {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    
+    return {
+      invoiceId: xmlDoc.querySelector("cbc\\:ID, ID")?.textContent || "N/A",
+      issueDate: xmlDoc.querySelector("cbc\\:IssueDate, IssueDate")?.textContent || "N/A",
+      dueDate: xmlDoc.querySelector("cbc\\:DueDate, DueDate")?.textContent || "N/A",
+      currency: xmlDoc.querySelector("cbc\\:DocumentCurrencyCode, DocumentCurrencyCode")?.textContent || "AUD",
+      total: xmlDoc.querySelector("cac\\:LegalMonetaryTotal cbc\\:PayableAmount, LegalMonetaryTotal PayableAmount")?.textContent || "0.00",
+      buyer: {
+        name: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:PartyName cbc\\:Name, AccountingCustomerParty Party PartyName Name")?.textContent || "N/A",
+        address: {
+          street: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:PostalAddress cbc\\:StreetName, AccountingCustomerParty Party PostalAddress StreetName")?.textContent || "N/A",
+          country: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:PostalAddress cac\\:Country cbc\\:IdentificationCode, AccountingCustomerParty Party PostalAddress Country IdentificationCode")?.textContent || "AUS"
+        },
+        phone: xmlDoc.querySelector("cac\\:AccountingCustomerParty cac\\:Party cac\\:Contact cbc\\:Telephone, AccountingCustomerParty Party Contact Telephone")?.textContent || "N/A"
+      },
+      supplier: {
+        name: xmlDoc.querySelector("cac\\:AccountingSupplierParty cac\\:Party cac\\:PartyName cbc\\:Name, AccountingSupplierParty Party PartyName Name")?.textContent || "N/A",
+        address: {
+          street: xmlDoc.querySelector("cac\\:AccountingSupplierParty cac\\:Party cac\\:PostalAddress cbc\\:StreetName, AccountingSupplierParty Party PostalAddress StreetName")?.textContent || "N/A",
+          country: xmlDoc.querySelector("cac\\:AccountingSupplierParty cac\\:Party cac\\:PostalAddress cac\\:Country cbc\\:IdentificationCode, AccountingSupplierParty Party PostalAddress Country IdentificationCode")?.textContent || "AUS"
+        }
+      },
+      items: Array.from(xmlDoc.querySelectorAll("cac\\:InvoiceLine, InvoiceLine")).map(line => ({
+        name: line.querySelector("cac\\:Item cbc\\:Name, Item Name")?.textContent || "N/A",
+        count: line.querySelector("cbc\\:BaseQuantity, BaseQuantity")?.textContent || "1",
+        cost: line.querySelector("cac\\:Price cbc\\:PriceAmount, Price PriceAmount")?.textContent || "0.00",
+        currency: line.querySelector("cac\\:Price cbc\\:PriceAmount, Price PriceAmount")?.getAttribute("currencyID") || "AUD"
+      }))
+    };
+  } catch (error) {
+    console.error("Error parsing XML:", error);
+    return null;
+  }
+};
 
 const InvoiceList = () => {
   const history = useHistory();
@@ -65,7 +105,17 @@ const InvoiceList = () => {
           },
           withCredentials: true,
         });
-        setInvoices(response.data.data.invoices);
+
+        // Parse XML data for each invoice
+        const parsedInvoices = response.data.data.invoices.map(invoice => {
+          const parsedData = parseInvoiceXml(invoice.invoice);
+          return {
+            ...invoice,
+            parsedData: parsedData
+          };
+        });
+
+        setInvoices(parsedInvoices);
         setMessage(null);
       } catch (error) {
         console.error("Error fetching invoices:", error);
@@ -164,6 +214,11 @@ const InvoiceList = () => {
     setSelectedXml('');
   };
 
+  const handleValidateSelected = () => {
+    // TODO: Implement validate functionality
+    console.log("Validate selected invoices:", selectedInvoices);
+  };
+
   return (
     <div className="dashboard-page">
       <nav className="dashboard-navbar">
@@ -227,24 +282,47 @@ const InvoiceList = () => {
                   {selectedInvoices.size !== 1 ? "s" : ""} selected
                 </span>
                 <div className="action-buttons">
-                  <button
-                    className="action-button cancel"
+                  <ActionBarIcon
                     onClick={handleCancelSelection}
+                    title="Cancel Selection"
+                    className="cancel"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    className="action-button delete"
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </ActionBarIcon>
+                  <ActionBarIcon
+                    onClick={handleValidateSelected}
+                    title="Validate Selected"
+                    className="validate"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                  </ActionBarIcon>
+                  <ActionBarIcon
                     onClick={handleDeleteSelected}
+                    title="Delete Selected"
+                    className="delete"
                   >
-                    Delete Selected
-                  </button>
-                  <button
-                    className="action-button download"
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18"></path>
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                  </ActionBarIcon>
+                  <ActionBarIcon
                     onClick={handleDownloadSelected}
+                    title="Download Selected"
+                    className="download"
                   >
-                    Download Selected
-                  </button>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                  </ActionBarIcon>
                 </div>
               </div>
             </div>

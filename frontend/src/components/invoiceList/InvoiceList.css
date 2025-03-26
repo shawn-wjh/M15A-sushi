@@ -200,22 +200,43 @@
 }
 
 .invoice-header-icon {
-  padding: 0.5rem;
-  cursor: pointer;
-  color: var(--light-gray);
-  transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--light-gray);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .invoice-header-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--white);
+  transform: translateY(-1px);
+}
+
+.invoice-header-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .invoice-header-icon.view-details {
   font-size: 1.2rem;
+}
+
+.invoice-header-icon.validate {
+  /* color: var(--accent-green); */
+  margin-right: 8px;
+}
+
+.invoice-header-icon.validate:hover {
+  color: var(--accent-green-hover);
+  transform: scale(1.1);
 }
 
 .invoice-header-arrow.expanded {
@@ -431,59 +452,87 @@
   max-width: 900px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 0 20px;
+  gap: 1rem;
 }
 
 .selected-count {
   color: var(--light-gray);
   font-size: 0.9rem;
+  margin-right: 0.5rem;
 }
 
 .action-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
-.action-button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+.action-bar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all var(--transition-fast);
-  border: none;
-}
-
-.action-button.cancel {
-  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--light-gray);
-  border: 1px solid var(--light-gray);
+  padding: 0;
 }
 
-.action-button.cancel:hover {
-  border-color: var(--white);
+.action-bar-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--white);
+  transform: translateY(-1px);
 }
 
-.action-button.delete {
-  background-color: rgba(255, 59, 48, 0.15);
-  color: var(--accent-red);
-  border: 1px solid rgba(255, 59, 48, 0.3);
+.action-bar-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
 }
 
-.action-button.delete:hover {
-  background-color: rgba(255, 59, 48, 0.25);
-}
-
-.action-button.download {
-  background-color: rgba(76, 217, 100, 0.15);
+.action-bar-icon.validate {
   color: var(--accent-green);
-  border: 1px solid rgba(76, 217, 100, 0.3);
+  border-color: rgba(76, 217, 100, 0.3);
 }
 
-.action-button.download:hover {
-  background-color: rgba(76, 217, 100, 0.25);
+.action-bar-icon.validate:hover {
+  background: rgba(76, 217, 100, 0.15);
+  color: var(--accent-green);
+}
+
+.action-bar-icon.delete {
+  color: var(--accent-red);
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
+.action-bar-icon.delete:hover {
+  background: rgba(255, 59, 48, 0.15);
+  color: var(--accent-red);
+}
+
+.action-bar-icon.download {
+  color: var(--accent-green);
+  border-color: rgba(76, 217, 100, 0.3);
+}
+
+.action-bar-icon.download:hover {
+  background: rgba(76, 217, 100, 0.15);
+  color: var(--accent-green);
+}
+
+.action-bar-icon.cancel {
+  color: var(--light-gray);
+}
+
+.action-bar-icon.cancel:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .modal-overlay {

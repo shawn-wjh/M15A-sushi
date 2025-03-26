@@ -1,6 +1,8 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import './InvoiceList.css';
 import { PopOutIcon } from './PopOutIcon';
+import { ValidateIcon } from './ValidateIcon';
 
 const InvoiceListItem = ({
   invoice,
@@ -12,6 +14,9 @@ const InvoiceListItem = ({
   formatDateTime,
   formatDate
 }) => {
+  const history = useHistory();
+  const parsedData = invoice.parsedData;
+
   const handleHeaderClick = (e) => {
     if (e.target.closest(".invoice-header-arrow")) {
       return;
@@ -22,6 +27,16 @@ const InvoiceListItem = ({
   const handleArrowClick = (e) => {
     e.stopPropagation();
     onToggle(invoice.InvoiceID);
+  };
+
+  const handleViewInvoice = (e) => {
+    e.stopPropagation();
+    history.push(`/invoices/${invoice.InvoiceID}`);
+  };
+
+  const handleValidate = (e) => {
+    e.stopPropagation();
+    console.log("Validate invoice:", invoice.InvoiceID);
   };
 
   return (
@@ -41,10 +56,10 @@ const InvoiceListItem = ({
         >
           <div className="invoice-main-info">
             <span className="invoice-buyer">
-              {invoice.buyerName || "unkown"}
+              {parsedData?.buyer?.name || "Unknown"}
             </span>
             <span className="invoice-supplier">
-              {invoice.supplierName || "unkown"}
+              {parsedData?.supplier?.name || "Unknown"}
             </span>
             <span
               className={`invoice-status ${invoice.valid ? "status-valid" : "status-invalid"}`}
@@ -57,12 +72,21 @@ const InvoiceListItem = ({
           </div>
         </div>
         <div className="invoice-header-actions">
+          {!invoice.valid && (
+            <div
+              className="invoice-header-icon validate"
+              title="Validate Invoice"
+              onClick={handleValidate}
+            >
+              <ValidateIcon onClick={handleValidate} />
+            </div>
+          )}
           <div
             className="invoice-header-icon view-details"
-            title="View XML"
-            onClick={() => onViewXml(invoice)}
+            title="View Invoice Details"
+            onClick={handleViewInvoice}
           >
-            <PopOutIcon />
+            <PopOutIcon onClick={handleViewInvoice} />
           </div>
           <div
             className={`invoice-header-arrow ${isExpanded ? "expanded" : ""}`}
@@ -79,37 +103,37 @@ const InvoiceListItem = ({
             <div className="detail-item">
               <span className="detail-label">Issue Date</span>
               <span className="detail-value">
-                {formatDate(invoice.timestamp)}
+                {parsedData?.issueDate || "N/A"}
               </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Due Date</span>
               <span className="detail-value">
-                {formatDate(invoice.dueDate)}
+                {parsedData?.dueDate || "N/A"}
               </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Total Amount</span>
               <span className="detail-value">
-                ${invoice.total || "0.00"}
+                {parsedData?.currency} {parsedData?.total || "0.00"}
               </span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Currency</span>
+              <span className="detail-label">Buyer Address</span>
               <span className="detail-value">
-                {invoice.currency || "USD"}
+                {parsedData?.buyer?.address?.street || "N/A"}
               </span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Customer Email</span>
+              <span className="detail-label">Buyer Phone</span>
               <span className="detail-value">
-                {invoice.customerEmail || "N/A"}
+                {parsedData?.buyer?.phone || "N/A"}
               </span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Customer Phone</span>
+              <span className="detail-label">Items</span>
               <span className="detail-value">
-                {invoice.customerPhone || "N/A"}
+                {parsedData?.items?.length || 0} items
               </span>
             </div>
           </div>
