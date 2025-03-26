@@ -1,7 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
-// const fs = require('fs').promises;
-// const path = require('path');
 const {
   PutCommand,
   ScanCommand,
@@ -10,11 +8,8 @@ const {
   UpdateCommand
 } = require('@aws-sdk/lib-dynamodb');
 const {
-  // generateAndUploadUBLInvoice,
   convertToUBL
 } = require('../middleware/invoice-generation');
-// const { items } = require('../middleware/mockInvoice');
-// const { error } = require('console');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -54,7 +49,8 @@ const invoiceController = {
           UserID: '123', // TODO: Get UserID from request
           // s3Url: status.location
           invoice: ublXml,
-          valid: false
+          valid: false,
+          invoiceJson: data
         }
       };
 
@@ -84,7 +80,7 @@ const invoiceController = {
   listInvoices: async (req, res) => {
     try {
       let { limit, offset, sort, order } = req.query;
-      limit = parseInt(limit, 10);
+      limit = parseInt(limit, 10) || 10;
       offset = parseInt(offset, 10) || 0;
 
       if (limit < 1) {
@@ -383,26 +379,6 @@ const invoiceController = {
         });
       }
 
-      // const queryParams = {
-      //   TableName: Tables.INVOICES,
-      //   KeyConditionExpression: 'InvoiceID = :InvoiceId',
-      //   ExpressionAttributeValues: {
-      //     ':InvoiceId': invoiceId
-      //   }
-      // };
-
-      // const { Items } = await dbClient.send(new QueryCommand(queryParams));
-
-      // if (!Items || Items.length === 0) {
-      //   return res.status(400).json({
-      //     status: 'error',
-      //     error: 'Invoice not found'
-      //   });
-      // }
-
-      console.log('invoiceId: ', invoiceId);
-      console.log('valid: ', valid);
-
       const updateParams = {
         TableName: Tables.INVOICES,
         Key: {
@@ -430,7 +406,6 @@ const invoiceController = {
 
       
     } catch (error) {
-      console.log('error in updateValidationStatus: ', error);
       return res.status(500).json({
         status: 'error',
         error: error.message

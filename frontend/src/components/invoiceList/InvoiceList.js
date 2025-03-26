@@ -8,7 +8,7 @@ import InvoiceListHeader from "./InvoiceListHeader";
 import InvoiceListItem from "./InvoiceListItem";
 import XMLWindow from "./XMLWindow";
 
-const API_URL = "http://localhost:3000/v1/invoices";
+const API_URL = "http://localhost:3000/v1/invoices/list";
 
 const InvoiceList = () => {
   const history = useHistory();
@@ -58,7 +58,7 @@ const InvoiceList = () => {
 
       try {
         const queryParams = new URLSearchParams(filters).toString();
-        const response = await axios.get(`${API_URL}/list?${queryParams}`, {
+        const response = await axios.get(`${API_URL}?${queryParams}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
