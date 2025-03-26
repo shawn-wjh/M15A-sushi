@@ -56,7 +56,7 @@ const InvoiceList = () => {
   const [invoices, setInvoices] = useState([]);
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(true);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showXmlPopup, setShowXmlPopup] = useState(false);
   const [selectedXml, setSelectedXml] = useState('');
