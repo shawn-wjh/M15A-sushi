@@ -1,8 +1,10 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
+import { useState } from 'react';
 import './InvoiceList.css';
 import { PopOutIcon } from './PopOutIcon';
 import { ValidateIcon } from './ValidateIcon';
+import { validateInvoice } from '../invoiceValidationResult/validateLogic'
 
 const InvoiceListItem = ({
   invoice,
@@ -14,6 +16,7 @@ const InvoiceListItem = ({
   formatDateTime,
   formatDate
 }) => {
+  const [validationResult, setValidationResults] = useState(null);
   const history = useHistory();
   const parsedData = invoice.parsedData;
 
@@ -34,9 +37,23 @@ const InvoiceListItem = ({
     history.push(`/invoices/${invoice.InvoiceID}`);
   };
 
-  const handleValidate = (e) => {
+  const handleValidate = async (e) => {
     e.stopPropagation();
-    console.log("Validate invoice:", invoice.InvoiceID);
+  
+    try {
+      const validationRes = await validateInvoice(invoice.InvoiceID);
+      console.log('validationRes:', validationRes);
+  
+      if (!validationRes) {
+        alert('Validation failed! Please try again');
+      } else {
+        alert('Woah, it worked!');
+        console.log('validationRes:', validationRes);
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+      alert('Something went wrong during validation.');
+    }
   };
 
   return (

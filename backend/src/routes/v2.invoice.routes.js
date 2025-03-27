@@ -2,6 +2,11 @@ const express = require('express');
 
 const router = express.Router();
 
+const auth = require('../middleware/auth');
+
+// Apply auth middleware to all routes
+router.use(auth.verifyToken);
+
 const {
   createInvoice,
   getInvoice,
