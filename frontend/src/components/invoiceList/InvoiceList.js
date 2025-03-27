@@ -29,6 +29,48 @@ const InvoiceList = () => {
     offset: 0,
   });
 
+  const fetchInvoices = async () => {
+    const token = getCookie("token");
+    if (!token) {
+      history.push("/login");
+      return;
+    }
+
+    try {
+      const queryParams = new URLSearchParams(filters).toString();
+      const response = await axios.get(`${API_URL}?${queryParams}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      // Parse XML data for each invoice
+      const parsedInvoices = response.data.data.invoices.map(invoice => {
+        const parsedData = parseInvoiceXml(invoice.invoice);
+        return {
+          ...invoice,
+          parsedData: parsedData
+        };
+      });
+
+      setInvoices(parsedInvoices);
+      setMessage(null);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      if (error.response?.status === 401) {
+        history.push("/login");
+      } else {
+        setMessage({ type: "error", text: "Failed to fetch invoices" });
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [filters, history]);
+
   const toggleInvoice = (invoiceId) => {
     setExpandedInvoices((prev) => {
       const newSet = new Set(prev);
@@ -48,49 +90,6 @@ const InvoiceList = () => {
       [name]: value,
     }));
   };
-
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      const token = getCookie("token");
-
-      if (!token) {
-        history.push("/login");
-        return;
-      }
-
-      try {
-        const queryParams = new URLSearchParams(filters).toString();
-        const response = await axios.get(`${API_URL}?${queryParams}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        });
-
-        // Parse XML data for each invoice
-        const parsedInvoices = response.data.data.invoices.map(invoice => {
-          const parsedData = parseInvoiceXml(invoice.invoice);
-          return {
-            ...invoice,
-            parsedData: parsedData
-          };
-        });
-
-        setInvoices(parsedInvoices);
-        setMessage(null);
-      } catch (error) {
-        console.error("Error fetching invoices:", error);
-        if (error.response?.status === 401) {
-          history.push("/login");
-        } else {
-          setMessage({ type: "error", text: "Failed to fetch invoices" });
-        }
-      }
-    };
-
-    fetchInvoices();
-  }, [filters, history]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
@@ -142,11 +141,44 @@ const InvoiceList = () => {
     setShowDeleteConfirm(true);
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: Implement actual delete functionality
-    console.log("Delete selected invoices:", selectedInvoices);
-    setShowDeleteConfirm(false);
-    setSelectedInvoices(new Set());
+  const handleConfirmDelete = async () => {
+    const token = getCookie("token");
+    if (!token) {
+      history.push("/login");
+      return;
+    }
+
+    try {
+      // Create an array of promises for all delete operations
+      const deletePromises = Array.from(selectedInvoices).map(invoiceId =>
+        axios.delete(`http://localhost:3000/v1/invoices/${invoiceId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        })
+      );
+
+      // Wait for all delete operations to complete
+      await Promise.all(deletePromises);
+
+      // Update the UI
+      setShowDeleteConfirm(false);
+      setSelectedInvoices(new Set());
+      
+      // Show success message
+      setMessage({ type: "success", text: `Successfully deleted ${selectedInvoices.size} invoice${selectedInvoices.size !== 1 ? 's' : ''}` });
+      
+      // Refresh the invoice list using the extracted function
+      await fetchInvoices();
+    } catch (error) {
+      console.error("Error deleting invoices:", error);
+      setMessage({ 
+        type: "error", 
+        text: error.response?.data?.message || "Failed to delete invoices" 
+      });
+    }
   };
 
   const handleCancelDelete = () => {

@@ -14,6 +14,7 @@ const InvoicePage = () => {
   const [message, setMessage] = useState(null);
   const [showXmlWindow, setShowXmlWindow] = useState(false);
   const [rawXml, setRawXml] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const getInvoice = async () => {
@@ -76,8 +77,48 @@ const InvoicePage = () => {
   };
 
   const handleDelete = () => {
-    // TODO: Implement delete functionality
-    alert("Delete feature yet to be implemented");
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const token = getCookie("token");
+    if (!token) {
+      history.push("/login");
+      return;
+    }
+
+    const invoiceId = window.location.pathname.split("/").pop();
+
+    if (!invoiceId) {
+      setMessage({ type: "error", text: "Invalid invoice ID" });
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/${invoiceId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      // Show success message
+      setMessage({ type: "success", text: "Invoice successfully deleted" });
+      
+      // Redirect to invoice list
+      history.push("/invoices/list");
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      setMessage({ 
+        type: "error", 
+        text: error.response?.data?.message || "Failed to delete invoice" 
+      });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
   };
 
   const handleEdit = () => {
@@ -215,6 +256,23 @@ const InvoicePage = () => {
               </div>
             </div>
           </div>
+
+          {showDeleteConfirm && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <h3>Delete Confirmation</h3>
+                <p>Are you sure you want to delete this invoice?</p>
+                <div className="modal-buttons">
+                  <button className="modal-button cancel" onClick={handleCancelDelete}>
+                    No
+                  </button>
+                  <button className="modal-button delete" onClick={handleConfirmDelete}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showXmlWindow && (
             <XMLWindow
