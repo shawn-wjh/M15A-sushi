@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -11,11 +13,13 @@ dotenv.config();
 const invoiceRoutes = require('./routes/invoice.routes');
 const v2InvoiceRoutes = require('./routes/v2.invoice.routes');
 const userRoutes = require('./routes/user.routes');
-const systemRoutes = require('./routes/system.routes');
 const healthRoutes = require('./routes/health.routes');
 
 // Create Express app
 const app = express();
+
+// Load Swagger YAML
+const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
 
 // CORS configuration
 const corsOrigins = process.env.CORS_ORIGIN 
@@ -49,14 +53,16 @@ app.use(cookieParser()); // Parse cookies
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (for form data)
 
-// Health check route (needs to be before auth to ensure it's always accessible)
+// Health check route
 app.use('/health', healthRoutes);
+
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Use routes
 app.use('/v1/invoices', invoiceRoutes);
 app.use('/v2/invoices', v2InvoiceRoutes);
 app.use('/v1/users', userRoutes);
-app.use('/v1', systemRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.resolve(__dirname, '../../public')));
