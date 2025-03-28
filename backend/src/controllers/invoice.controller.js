@@ -39,13 +39,12 @@ const invoiceController = {
       // 4. Store in DynamoDB
 
       const data = req.body;
-      console.log("req.body: ", req.body);
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
 
       // convert invoice to UBL XML
       const ublXml = convertToUBL(data);
-      console.log(ublXml);
+      
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
         TableName: Tables.INVOICES,
@@ -406,9 +405,6 @@ const invoiceController = {
       //   });
       // }
 
-      console.log('invoiceId: ', invoiceId);
-      console.log('valid: ', valid);
-
       const updateParams = {
         TableName: Tables.INVOICES,
         Key: {
@@ -436,7 +432,6 @@ const invoiceController = {
 
       
     } catch (error) {
-      console.log('error in updateValidationStatus: ', error);
       return res.status(500).json({
         status: 'error',
         error: error.message

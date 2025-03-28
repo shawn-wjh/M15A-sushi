@@ -58,7 +58,7 @@ jest.mock('../src/middleware/auth', () => ({
 }));
 
 describe('POST /v1/invoices/create', () => {
-  it.only('should create new invoice', async () => {
+  it('should create new invoice', async () => {
     const response = await request(app)
       .post('/v1/invoices/create')
       .send(mockInvoice);
