@@ -39,12 +39,13 @@ const invoiceController = {
       // 4. Store in DynamoDB
 
       const data = req.body;
+      console.log("req.body: ", req.body);
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
 
       // convert invoice to UBL XML
       const ublXml = convertToUBL(data);
-
+      console.log(ublXml);
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
         TableName: Tables.INVOICES,
@@ -84,7 +85,12 @@ const invoiceController = {
   listInvoices: async (req, res) => {
     try {
       let { limit, offset, sort, order } = req.query;
-      limit = parseInt(limit, 10);
+      if (!limit) {
+        limit = 10;
+      } else {
+        limit = parseInt(limit, 10);
+      }
+        
       offset = parseInt(offset, 10) || 0;
 
       if (limit < 1) {
