@@ -44,7 +44,7 @@ const invoiceController = {
 
       // convert invoice to UBL XML
       const ublXml = convertToUBL(data);
-
+      
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
         TableName: Tables.INVOICES,
@@ -84,7 +84,12 @@ const invoiceController = {
   listInvoices: async (req, res) => {
     try {
       let { limit, offset, sort, order } = req.query;
-      limit = parseInt(limit, 10);
+      if (!limit) {
+        limit = 10;
+      } else {
+        limit = parseInt(limit, 10);
+      }
+        
       offset = parseInt(offset, 10) || 0;
 
       if (limit < 1) {
@@ -400,9 +405,6 @@ const invoiceController = {
       //   });
       // }
 
-      console.log('invoiceId: ', invoiceId);
-      console.log('valid: ', valid);
-
       const updateParams = {
         TableName: Tables.INVOICES,
         Key: {
@@ -430,7 +432,6 @@ const invoiceController = {
 
       
     } catch (error) {
-      console.log('error in updateValidationStatus: ', error);
       return res.status(500).json({
         status: 'error',
         error: error.message

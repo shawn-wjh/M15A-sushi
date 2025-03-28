@@ -87,7 +87,7 @@ const validateInvoiceInput = (req, res, next) => {
         throw new Error('Due date is not a valid date');
       }
       // Only check date order if dueDate is provided
-      if (issueDate >= dueDate) {
+      if (issueDate > dueDate) {
         throw new Error('Issue date must be before due date');
       }
     }
@@ -142,7 +142,7 @@ const checkCurrencyCode = (currencyCode) => {
 const checkCountryCode = (countryCode) => {
   return (
     typeof countryCode === 'string' &&
-    /^[A-Z]{3}$/.test(countryCode.toUpperCase())
+    /^[A-Z]{2}$/.test(countryCode.toUpperCase())
   );
 };
 
@@ -459,8 +459,7 @@ const validateInvoiceStandard = (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log('error in validateInvoiceStandard: ', error);
-    return res.status(400).json({
+      return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
       error: validationResult.errors
@@ -868,8 +867,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log('error in validateInvoiceStandard: ', error);
-    return res.status(400).json({
+      return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
       error: validationResult.errors
