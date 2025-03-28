@@ -1,11 +1,31 @@
 openapi: 3.0.0
 info:
-  title: M15ASushi - Invoice Management API
-  description: API for creating validated UBL 2.4-compliant invoices.
+  title: M15ASushi - Invoice Creation and Validation API
+  description: |
+    A comprehensive API for creating UBL 2.4-compliant invoices and validating against PEPPOL standards. 
+    
+    ## v1 capabilities:
+    - Generate UBL 2.4-compliant invoices from JSON objects
+    - Validate UBL-XML invoice against Australian and New Zealand PEPPOL standards
+    - Secure storage of invoices requiring specific user authentication to access
+    - Retrieve invoices in XML format
+    
+    # Guide to testing:
+    
+    We strongly recommend using [Postman](https://www.postman.com/) for testing our API as it will allow you to authenticate requests easiest.
+    
+    1. Copy and paste the following script in **Scripts->Post-response**.
+          ```javascript var jsonData = pm.response.json();
+          if (jsonData.status === "success" && jsonData.data && jsonData.data.token) {
+              pm.environment.set("token", jsonData.data.token);
+          }
+    2. Register or login using the **/v1/user/register** or **/v1/user/login** endpoints respectively.
+    3. Copy the `token`, then go to **Authorization**, select **Bearer Token** for the Auth Type and paste your `token`.
+    4. All done! Your token will now be automatically used when you call our routes :)
   version: 1.0.0
 servers:
   - url: http://sushi-invoice-application.ap-southeast-2.elasticbeanstalk.com
-    description: Production Server
+
 paths:
   /v1/user/register:
     post:
