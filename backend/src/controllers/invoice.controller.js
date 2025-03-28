@@ -1,7 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
-// const fs = require('fs').promises;
-// const path = require('path');
 const {
   PutCommand,
   ScanCommand,
@@ -13,8 +11,7 @@ const {
   // generateAndUploadUBLInvoice,
   convertToUBL
 } = require('../middleware/invoice-generation');
-// const { items } = require('../middleware/mockInvoice');
-// const { error } = require('console');
+const { checkUserId } = require('../middleware/auth');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -44,14 +41,21 @@ const invoiceController = {
 
       // convert invoice to UBL XML
       const ublXml = convertToUBL(data);
-      
+
+      if (!checkUserId(req.user.userId)) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'No user ID provided',
+        });
+      }
+
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
         TableName: Tables.INVOICES,
         Item: {
           InvoiceID: invoiceId,
           timestamp,
-          UserID: '123', // TODO: Get UserID from request
+          UserID: req.user.userId, // TODO: Get UserID from request
           // s3Url: status.location
           invoice: ublXml,
           valid: false
@@ -121,8 +125,7 @@ const invoiceController = {
         });
       }
 
-      // leaving userId as 123 as thats what has been done on previous codes
-      const userId = '123';
+      const userId = req.user.userId;
 
       const scanParams = {
         TableName: Tables.INVOICES,
@@ -180,8 +183,6 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res, next) => {
-    const invoiceId = req.params.invoiceid;
-
     // check if invoiceId is empty
     if (!invoiceId) {
       throw new Error('Missing invoice ID');
@@ -201,6 +202,14 @@ const invoiceController = {
 
       if (!Items || Items.length === 0) {
         throw new Error('Invoice not found');
+      }
+
+      // check if allowed access
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
       }
 
       // access the invoice from the dynamoDB response
@@ -281,6 +290,13 @@ const invoiceController = {
         });
       }
 
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
+
       // Convert updated data to UBL XML
       const ublXml = convertToUBL(updateData);
 
@@ -345,6 +361,13 @@ const invoiceController = {
         });
       }
 
+      if (!checkUserId(req.user.userId, Item[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
+
       // Get the UserID from the found item
       const userID = Items[0].UserID;
 
@@ -402,6 +425,13 @@ const invoiceController = {
       //   return res.status(400).json({
       //     status: 'error',
       //     error: 'Invoice not found'
+      //   });
+      // }
+
+      // if (Items[0].UserId != req.user.userId) {
+      //   return res.status(401).json({
+      //     status: 'error',
+      //     error: 'Unauthorised Access'
       //   });
       // }
 
