@@ -11,24 +11,19 @@ jest.mock('@aws-sdk/client-dynamodb');
 // Mock the database client to return successful responses
 jest.mock('../src/config/database', () => {
   const mockSend = jest.fn().mockImplementation(async (command) => {
+    const { validInvoiceXML } = require('./test-utils');
     if (command.constructor.name === 'QueryCommand') {
       // Mock response for invoice query
-      if (
-        command.input.ExpressionAttributeValues[':InvoiceID'] ===
-        'test-invoice-id'
-      ) {
-        return {
-          Items: [
-            {
-              InvoiceID: 'test-invoice-id',
-              UserID: '123',
-              invoice:
-                '<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"><cbc:ID>TEST-001</cbc:ID><cbc:IssueDate>2025-03-05</cbc:IssueDate><cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode><cac:AccountingSupplierParty><cac:Party><cbc:Name>Test Supplier</cbc:Name></cac:Party></cac:AccountingSupplierParty><cac:AccountingCustomerParty><cac:Party><cbc:Name>Test Buyer</cbc:Name></cac:Party></cac:AccountingCustomerParty><cac:LegalMonetaryTotal><cbc:PayableAmount currencyID="AUD">150</cbc:PayableAmount></cac:LegalMonetaryTotal><cac:InvoiceLine><cbc:ID>1</cbc:ID><cbc:Name>Test Item</cbc:Name></cac:InvoiceLine></Invoice>',
-              timestamp: new Date().toISOString()
-            }
-          ]
-        };
-      }
+      return {
+        Items: [
+          {
+            InvoiceID: 'test-invoice-id',
+            UserID: 'test-user',
+            invoice: validInvoiceXML,
+            timestamp: new Date().toISOString()
+          }
+        ]
+      };
     }
     // Default response for other commands
     return { Items: [] };
@@ -309,34 +304,12 @@ describe('POST /v1/invoices/create', () => {
 });
 
 describe('POST /v1/invoices/validate', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should validate a valid invoice XML', async () => {
-    const mockDbModule = require('../src/config/database');
-    mockDbModule
-      .createDynamoDBClient()
-      .send.mockImplementation(async (command) => {
-        if (command.constructor.name === 'QueryCommand') {
-          return {
-            Items: [
-              {
-                InvoiceID: 'test-invoice-id',
-                UserID: '123',
-                invoice: validInvoiceXML,
-                timestamp: new Date().toISOString()
-              }
-            ]
-          };
-        }
-        return {}; // Default empty response
-      });
-
     const response = await request(app)
       .post('/v1/invoices/test-invoice-id/validate')
       .send();
 
+    console.log(response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'success');
     expect(response.body).toHaveProperty('message');
@@ -355,7 +328,7 @@ describe('POST /v1/invoices/validate', () => {
             Items: [
               {
                 InvoiceID: 'test-invoice-id',
-                UserID: '123',
+                UserID: 'test-user',
                 invoice: invalidXml,
                 timestamp: new Date().toISOString()
               }
@@ -420,7 +393,7 @@ describe('GET /v1/invoices/:invoiceid', () => {
             Items: [
               {
                 InvoiceID: 'test-invoice-id',
-                UserID: '123',
+                UserID: 'test-user',
                 invoice: validInvoiceXML,
                 timestamp: new Date().toISOString()
               }
@@ -490,7 +463,7 @@ describe('PUT /v1/invoices/:invoiceid', () => {
             Items: [
               {
                 InvoiceID: 'test-invoice-id',
-                UserID: '123',
+                UserID: 'test-user',
                 invoice: '<Invoice>Test XML</Invoice>',
                 timestamp: new Date().toISOString()
               }
@@ -589,7 +562,7 @@ describe('DELETE /v1/invoices/:invoiceid', () => {
             Items: [
               {
                 InvoiceID: 'test-invoice-id',
-                UserID: '123',
+                UserID: 'test-user',
                 invoice: '<Invoice>Test XML</Invoice>',
                 timestamp: new Date().toISOString()
               }
