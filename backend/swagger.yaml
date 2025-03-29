@@ -19,7 +19,7 @@ info:
           if (jsonData.status === "success" && jsonData.data && jsonData.data.token) {
               pm.environment.set("token", jsonData.data.token);
           }
-    2. Register or login using the **/v1/user/register** or **/v1/user/login** endpoints respectively.
+    2. Register or login using the **/v1/users/register** or **/v1/users/login** endpoints respectively.
     3. Copy the `token`, then go to **Authorization**, select **Bearer Token** for the Auth Type and paste your `token`.
     4. All done! Your token will now be automatically used when you call our routes :)
   version: 1.0.0
@@ -27,7 +27,7 @@ servers:
   - url: http://sushi-invoice-application.ap-southeast-2.elasticbeanstalk.com
 
 paths:
-  /v1/user/register:
+  /v1/users/register:
     post:
       summary: Register a new user
       description: |
@@ -88,7 +88,7 @@ paths:
                     type: string
                     example: Specific error message
 
-  /v1/user/login:
+  /v1/users/login:
     post:
       summary: User login
       description: |
@@ -133,9 +133,9 @@ paths:
                     type: string
                     example: Specific error message
 
-  /v1/user/logout:
+  /v1/users/logout:
     post:
-      summary: User logout
+      summary: User logout - IN DEVELOPMENT
       description: |
         This endpoint logs out the user by invalidating their authentication token, effectively ending their session.
       operationId: logoutUser
@@ -161,9 +161,9 @@ paths:
                     type: string
                     example: Specific error message
 
-  /v1/user:
+  /v1/users:
     put:
-      summary: Update user profile
+      summary: Update user profile - IN DEVELOPMENT
       description: |
         This endpoint allows a user to update their profile information, including email, name, and password. The email must be unique, and the password must meet the specified complexity requirements.
       operationId: updateUser
@@ -231,7 +231,7 @@ paths:
                     example: Specific error message
                     
     delete:
-      summary: Remove user profile
+      summary: Remove user profile - IN DEVELOPMENT
       description: |
         This endpoint allows a user to delete their profile, removing all associated data from the system.
       operationId: removeUser
