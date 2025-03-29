@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import InvoiceForm from './components/InvoiceForm';
+import Welcome from './components/Welcome';
 import './App.css';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
     <BrowserRouter>
       <div className="App">
         <Switch>
+          <Route exact path="/welcome" component={Welcome} />
           <Route exact path="/" component={LandingPage} />
           <Route path="/auth" component={Auth} />
           <Route path="/login" component={() => <Auth isLoginForm={true} />} />
