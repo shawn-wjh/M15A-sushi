@@ -11,7 +11,7 @@ const {
   // generateAndUploadUBLInvoice,
   convertToUBL
 } = require('../middleware/invoice-generation');
-const { checkUserId } = require('../middleware/auth');
+const { checkUserId } = require('../middleware/helperFunctions');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -88,12 +88,7 @@ const invoiceController = {
   listInvoices: async (req, res) => {
     try {
       let { limit, offset, sort, order } = req.query;
-      if (!limit) {
-        limit = 10;
-      } else {
-        limit = parseInt(limit, 10);
-      }
-        
+      limit = parseInt(limit, 10) || 10;
       offset = parseInt(offset, 10) || 0;
 
       if (limit < 1) {
@@ -183,6 +178,8 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res, next) => {
+    const invoiceId = req.params.invoiceid;
+
     // check if invoiceId is empty
     if (!invoiceId) {
       throw new Error('Missing invoice ID');
@@ -361,7 +358,7 @@ const invoiceController = {
         });
       }
 
-      if (!checkUserId(req.user.userId, Item[0])) {
+      if (!checkUserId(req.user.userId, Items[0])) {
         return res.status(401).json({
           status: 'error',
           error: 'Unauthorised Access'

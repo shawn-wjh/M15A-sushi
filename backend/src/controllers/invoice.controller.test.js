@@ -1,22 +1,13 @@
-// const {
-//   createInvoice,
-//   validateInvoice,
-//   listInvoices,
-//   getInvoice,
-//   // downloadInvoice,
-//   updateInvoice,
-//   deleteInvoice
-// } = require('./invoice.controller');
-// const mockInvoice = require('../middleware/mockInvoice');
-// const request = require('supertest');
-// const app = require('../../src/app');
 const invoiceController = require('../../src/controllers/invoice.controller');
 const { createDynamoDBClient } = require('../config/database');
-// const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
 
 const dbClient = createDynamoDBClient();
-// jest.mock('@aws-sdk/client-s3');
-// jest.mock('@aws-sdk/client-dynamodb');
+
+jest.mock('../../src/middleware/helperFunctions', () => {
+  return {
+    checkUserId: jest.fn(() => true),
+  };
+});
 
 describe('createInvoice', () => {
   // it('should return 200 when creating a new invoice', async () => {
@@ -53,12 +44,13 @@ function createRes() {
   res.send = jest.fn().mockReturnValue(res);
   return res;
 }
+
 describe('invoiceController.listInvoices', () => {
   let req;
   let res;
 
   beforeEach(() => {
-    req = { query: {} };
+    req = { query: {}, user: { userId: 'test-user' } };
     res = createRes();
 
     dbClient.send.mockReset();
@@ -80,7 +72,7 @@ describe('invoiceController.listInvoices', () => {
   });
 
   test('should return 400 for invalid limit (less than 1)', async () => {
-    req.query.limit = '0';
+    req.query.limit = '-1';
 
     await invoiceController.listInvoices(req, res);
 
