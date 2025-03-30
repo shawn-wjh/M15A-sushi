@@ -1,10 +1,10 @@
-import React from 'react';
-import { useHistory } from 'react-router-dom';
-import { useState } from 'react';
-import './InvoiceList.css';
-import { PopOutIcon } from './PopOutIcon';
-import { ValidateIcon } from './ValidateIcon';
-import { validateInvoice } from '../invoiceValidationResult/validateLogic'
+import React from "react";
+import { useHistory } from "react-router-dom";
+import { useState } from "react";
+import "./InvoiceList.css";
+import { PopOutIcon } from "./PopOutIcon";
+import { ValidateIcon } from "./ValidateIcon";
+import { validateInvoice } from "../invoiceValidationResult/validateLogic";
 
 const InvoiceListItem = ({
   invoice,
@@ -14,14 +14,18 @@ const InvoiceListItem = ({
   onToggle,
   onViewXml,
   formatDateTime,
-  formatDate
+  formatDate,
 }) => {
   const [validationResult, setValidationResults] = useState(null);
   const history = useHistory();
   const parsedData = invoice.parsedData;
 
   const handleHeaderClick = (e) => {
-    if (e.target.closest(".invoice-header-arrow")) {
+    if (
+      e.target.closest(".invoice-header-arrow") ||
+      e.target.closest(".invoice-header-icon") ||
+      e.target.closest(".invoice-checkbox-container")
+    ) {
       return;
     }
     onToggle(invoice.InvoiceID);
@@ -35,29 +39,31 @@ const InvoiceListItem = ({
   const handleViewInvoice = (e) => {
     e.stopPropagation();
     history.push(`/invoices/${invoice.InvoiceID}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleValidate = async (e) => {
-    e.stopPropagation();
-  
-    try {
-      const validationRes = await validateInvoice(invoice.InvoiceID);
-      console.log('validationRes:', validationRes);
-  
-      if (!validationRes) {
-        alert('Validation failed! Please try again');
-      } else {
-        alert('Woah, it worked!');
-        console.log('validationRes:', validationRes);
-      }
-    } catch (error) {
-      console.error('Validation error:', error);
-      alert('Something went wrong during validation.');
-    }
+    // e.stopPropagation();
+
+    // try {
+    //   const validationRes = await validateInvoice(invoice.InvoiceID);
+    //   console.log('validationRes:', validationRes);
+
+    //   if (!validationRes) {
+    //     alert('Validation failed! Please try again');
+    //   } else {
+    //     alert('Woah, it worked!');
+    //     console.log('validationRes:', validationRes);
+    //   }
+    // } catch (error) {
+    //   console.error('Validation error:', error);
+    //   alert('Something went wrong during validation.');
+    // }
+    alert("Validation not implemented yet");
   };
 
   return (
-    <li className="invoice-item">
+    <li className="invoice-item" onClick={(e) => handleHeaderClick(e)}>
       <div className="invoice-header">
         <div className="invoice-checkbox-container">
           <input
@@ -67,10 +73,7 @@ const InvoiceListItem = ({
             onChange={() => onSelect(invoice.InvoiceID)}
           />
         </div>
-        <div
-          className="invoice-header-content"
-          onClick={(e) => handleHeaderClick(e)}
-        >
+        <div className="invoice-header-content">
           <div className="invoice-main-info">
             <span className="invoice-buyer">
               {parsedData?.buyer?.name || "Unknown"}
@@ -83,9 +86,9 @@ const InvoiceListItem = ({
             >
               {invoice.valid ? "Valid" : "Invalid"}
             </span>
-          </div>
-          <div className="invoice-dates">
-            <span>{formatDateTime(invoice.timestamp)}</span>
+            <span className="invoice-dates">
+              {formatDateTime(invoice.timestamp)}
+            </span>
           </div>
         </div>
         <div className="invoice-header-actions">

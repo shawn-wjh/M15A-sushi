@@ -197,8 +197,8 @@ const invoiceController = {
               bValue = bData.DueDate ? new Date(bData.DueDate) : null;
               break;
             case 'total':
-              aValue = aData.LegalMonetaryTotal?.TotalPayableAmount ? parseFloat(aData.LegalMonetaryTotal.TotalPayableAmount) : null;
-              bValue = bData.LegalMonetaryTotal?.TotalPayableAmount ? parseFloat(bData.LegalMonetaryTotal.TotalPayableAmount) : null;
+              aValue = aData.TotalPayableAmount._ ? parseFloat(aData.TotalPayableAmount._) : null;
+              bValue = bData.TotalPayableAmount._ ? parseFloat(bData.TotalPayableAmount._) : null;
               break;
             default:
               return 0;
@@ -224,10 +224,9 @@ const invoiceController = {
       });
 
       // apply offset and limit
-      const totalInvoices = parsedInvoices.length;
-      const maxOffset = totalInvoices - limit;
+      const maxOffset = parsedInvoices.length;
       if (offset > maxOffset) {
-        offset = maxOffset < 0 ? 0 : maxOffset;
+        offset = maxOffset - limit; // default to limit
       }
 
       const paginatedInvoices = parsedInvoices.slice(offset, offset + limit);
@@ -235,7 +234,7 @@ const invoiceController = {
       return res.status(200).json({
         status: 'success',
         data: {
-          count: totalInvoices,
+          count: parsedInvoices.length,
           invoices: paginatedInvoices
         }
       });

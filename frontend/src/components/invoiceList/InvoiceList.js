@@ -7,8 +7,8 @@ import "./InvoiceList.css";
 import FilterPanel from "./FilterPanel";
 import InvoiceListHeader from "./InvoiceListHeader";
 import InvoiceListItem from "./InvoiceListItem";
-import XMLWindow from "./XMLWindow";
 import ActionBarIcon from "./ActionBarIcon";
+import InvoicePagination from "./InvoicePagination";
 
 const API_URL = "http://localhost:3000/v1/invoices/list";
 
@@ -26,8 +26,9 @@ const InvoiceList = () => {
     sort: "issuedate",
     order: "desc",
     limit: 10,
-    offset: 0,
   });
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchInvoices = async () => {
     const token = getCookie("token");
@@ -37,7 +38,11 @@ const InvoiceList = () => {
     }
 
     try {
-      const queryParams = new URLSearchParams(filters).toString();
+      const queryParams = new URLSearchParams({
+        ...filters,
+        offset: (currentPage - 1) * filters.limit
+      }).toString();
+      
       const response = await axios.get(`${API_URL}?${queryParams}`, {
         headers: {
           "Content-Type": "application/json",
@@ -56,6 +61,7 @@ const InvoiceList = () => {
       });
 
       setInvoices(parsedInvoices);
+      setTotalInvoices(response.data.data.count);
       setMessage(null);
     } catch (error) {
       console.error("Error fetching invoices:", error);
@@ -69,7 +75,7 @@ const InvoiceList = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [filters, history]);
+  }, [filters, currentPage, history]);
 
   const toggleInvoice = (invoiceId) => {
     setExpandedInvoices((prev) => {
@@ -187,7 +193,7 @@ const InvoiceList = () => {
 
   const handleDownloadSelected = () => {
     // TODO: Implement download functionality
-    console.log("Download selected invoices:", selectedInvoices);
+    alert("Download not yet implemented");
   };
 
   const handleCancelSelection = () => {
@@ -210,7 +216,14 @@ const InvoiceList = () => {
 
   const handleValidateSelected = () => {
     // TODO: Implement validate functionality
-    console.log("Validate selected invoices:", selectedInvoices);
+    alert("Validate not yet implemented");
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    setSelectedInvoices(new Set());
+    setExpandedInvoices(new Set());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -321,6 +334,12 @@ const InvoiceList = () => {
               </div>
             </div>
           )}
+
+          <InvoicePagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalInvoices / filters.limit)}
+            onPageChange={handlePageChange}
+          />
         </div>
       </main>
 
@@ -339,14 +358,6 @@ const InvoiceList = () => {
             </div>
           </div>
         </div>
-      )}
-
-      {showXmlPopup && (
-        <XMLWindow
-          xml={selectedXml}
-          onCopy={handleCopyXml}
-          onClose={handleCloseXml}
-        />
       )}
     </div>
   );

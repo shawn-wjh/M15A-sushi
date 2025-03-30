@@ -20,9 +20,7 @@ const InvoiceListHeader = ({
         <span className="invoice-column-header">Buyer</span>
         <span className="invoice-column-header">Supplier</span>
         <span className="invoice-column-header">Status</span>
-      </div>
-      <div className="invoice-dates">
-        <span>Last Modified</span>
+        <span className="invoice-dates">Last Modified</span>
       </div>
     </div>
   );

@@ -79,13 +79,11 @@ const FilterPanel = ({
             <label>View Options</label>
             <div className="view-options">
               <button
-                className="view-option-button"
                 onClick={handleExpandAll}
               >
                 Expand All
               </button>
               <button
-                className="view-option-button"
                 onClick={handleCollapseAll}
               >
                 Collapse All

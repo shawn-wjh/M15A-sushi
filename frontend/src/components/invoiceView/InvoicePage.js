@@ -3,7 +3,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import getCookie from "../../utils/cookieHelper";
 import "./InvoicePage.css";
-import XMLWindow from "../invoiceList/XMLWindow";
+import XMLWindow from "./XMLWindow";
 import parseInvoiceXml from "../../utils/parseXmlHelper";
 
 const API_URL = "http://localhost:3000/v1/invoices";
@@ -46,6 +46,7 @@ const InvoicePage = () => {
         const invoiceData = parseInvoiceXml(response.data);
 
         setInvoice(invoiceData);
+        setRawXml(response.data);
         setMessage(null);
       } catch (error) {
         if (error.response?.status === 401) {
@@ -209,7 +210,7 @@ const InvoicePage = () => {
                   </svg>
                 </button>
                 <button 
-                  className="action-button view-xml"
+                  className="action-button"
                   onClick={handleViewXml}
                   title="View XML"
                 >
@@ -222,7 +223,7 @@ const InvoicePage = () => {
                   </svg>
                 </button>
                 <button 
-                  className="action-button edit"
+                  className="action-button"
                   onClick={handleEdit}
                   title="Edit Invoice"
                 >
@@ -232,7 +233,7 @@ const InvoicePage = () => {
                   </svg>
                 </button>
                 <button 
-                  className="action-button download"
+                  className="action-button"
                   onClick={handleDownload}
                   title="Download Invoice"
                 >

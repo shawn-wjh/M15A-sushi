@@ -29,6 +29,10 @@
     "Segoe UI",
     Roboto,
     sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-bottom: 4rem;
 }
 
 .invoice-list-header {
@@ -97,9 +101,11 @@
 }
 
 .filter-group {
+  padding-top: 1rem;
+  padding-right: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0rem;
 }
 
 .filter-group label {
@@ -122,10 +128,29 @@
   font-family: inherit;
 }
 
-.filter-group select:focus {
+.filter-group button {
+  background-color: var(--dark-gray);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 12px 15px;
+}
+
+.filter-group select:hover,
+.filter-group button:hover {
+  background-color: var(--gray);
+  cursor: pointer;
   border-color: var(--accent-red);
   outline: none;
   box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+  animation: hover-animation 0.3s ease;
+}
+
+.view-options {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .filter-label {
@@ -146,6 +171,9 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
 }
 
 .invoice-list-header-row {
@@ -245,7 +273,7 @@
 
 .invoice-main-info {
   display: grid;
-  grid-template-columns: 120px 120px 80px;
+  grid-template-columns: 120px 120px 80px 170px;
   gap: 1.5rem;
   align-items: center;
   flex: 1;
@@ -259,7 +287,7 @@
   justify-content: flex-start;
   color: var(--light-gray);
   font-size: 0.9rem;
-  margin-right: 2rem;
+  padding-left: 2.5rem;
 }
 
 .invoice-list-header-row .invoice-dates {
@@ -267,7 +295,6 @@
   align-items: center;
   min-width: 150px;
   justify-content: flex-start;
-  margin-right: 2rem;
 }
 
 .invoice-item {
@@ -280,8 +307,8 @@
 }
 
 .invoice-item:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
 }
 
 .invoice-column-header {
@@ -607,78 +634,13 @@
   background-color: rgba(255, 59, 48, 0.25);
 }
 
-.xml-modal-content {
-  background-color: var(--gray);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  max-width: 800px;
-  width: 90%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
 
-.xml-modal-header {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
-.xml-modal-header h3 {
-  color: var(--white);
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.xml-modal-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.xml-modal-button {
-  background: none;
-  border: none;
-  color: var(--light-gray);
-  cursor: pointer;
-  padding: 0.5rem;
-  font-size: 1.2rem;
-  transition: all var(--transition-fast);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.xml-modal-button:hover {
-  color: var(--white);
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.xml-modal-button.copy:hover {
-  color: var(--accent-green);
-}
-
-.xml-modal-button.close:hover {
-  color: var(--accent-red);
-}
-
-.xml-content {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-  background-color: var(--dark-gray);
-}
-
-.xml-content pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: monospace;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--light-white);
-  text-align: left;
+/* Position pagination at the bottom of the container */
+.invoice-pagination {
+  margin-top: auto;
+  width: 100%;
+  background-color: white;
+  padding: 1rem 0;
+  border-top: 1px solid #e2e8f0;
 }

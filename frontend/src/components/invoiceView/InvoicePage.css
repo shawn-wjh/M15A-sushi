@@ -119,7 +119,7 @@
   transform: translateY(-2px);
 }
 
-.action-button.view-xml:hover {
+/* .action-button.view-xml:hover {
   background: rgba(64, 153, 255, 0.2);
   border-color: rgba(64, 153, 255, 0.3);
 }
@@ -132,11 +132,16 @@
 .action-button.download:hover {
   background: rgba(255, 149, 0, 0.2);
   border-color: rgba(255, 149, 0, 0.3);
-}
+} */
 
 .action-button.validate:hover {
   background: rgba(52, 199, 89, 0.2);
   border-color: rgba(52, 199, 89, 0.3);
+}
+
+.action-button.delete:hover {
+  background: rgba(255, 59, 48, 0.2);
+  border-color: rgba(255, 59, 48, 0.3);
 }
 
 .welcome-banner h2 {

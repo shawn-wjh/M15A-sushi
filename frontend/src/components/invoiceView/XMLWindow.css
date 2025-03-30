@@ -1,0 +1,75 @@
+.xml-modal-content {
+  background-color: var(--gray);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.xml-modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.xml-modal-header h3 {
+  color: var(--white);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.xml-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.xml-modal-button {
+  background: none;
+  border: none;
+  color: var(--light-gray);
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.2rem;
+  transition: all var(--transition-fast);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xml-modal-button:hover {
+  color: var(--white);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.xml-modal-button.copy:hover {
+  color: var(--accent-green);
+}
+
+.xml-modal-button.close:hover {
+  color: var(--accent-red);
+}
+
+.xml-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  background-color: var(--dark-gray);
+}
+
+.xml-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--light-white);
+  text-align: left;
+}
