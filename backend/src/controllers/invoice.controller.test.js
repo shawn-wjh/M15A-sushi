@@ -71,7 +71,7 @@ describe('invoiceController.listInvoices', () => {
     });
   });
 
-  test('should return 400 for invalid limit (less than 1)', async () => {
+  test('should return 400 for invalid limit (less than 0)', async () => {
     req.query.limit = '-1';
 
     await invoiceController.listInvoices(req, res);
@@ -120,38 +120,25 @@ describe('invoiceController.listInvoices', () => {
   });
 
   test('should return paginated and sorted invoices', async () => {
-    const invoices = [
-      {
-        InvoiceID: '1',
-        timestamp: '2025-03-15T00:00:00.000Z',
-        UserID: '123',
-        invoice: '<xml>1</xml>'
-      },
-      {
-        InvoiceID: '2',
-        timestamp: '2025-03-16T00:00:00.000Z',
-        UserID: '123',
-        invoice: '<xml>2</xml>'
-      },
-      {
-        InvoiceID: '3',
-        timestamp: '2025-03-17T00:00:00.000Z',
-        UserID: '123',
-        invoice: '<xml>3</xml>'
-      },
-      {
-        InvoiceID: '4',
-        timestamp: '2025-03-18T00:00:00.000Z',
-        UserID: '123',
-        invoice: '<xml>4</xml>'
-      },
-      {
-        InvoiceID: '5',
-        timestamp: '2025-03-19T00:00:00.000Z',
-        UserID: '123',
-        invoice: '<xml>5</xml>'
-      }
+    const variables = [
+      { issueDate: '2025-03-15', dueDate: '2025-03-15', total: 100 },
+      { issueDate: '2025-03-16', dueDate: '2025-03-16', total: 200 },
+      { issueDate: '2025-03-17', dueDate: '2025-03-17', total: 300 },
+      { issueDate: '2025-03-18', dueDate: '2025-03-18', total: 400 },
+      { issueDate: '2025-03-19', dueDate: '2025-03-19', total: 500 }
     ];
+
+    const invoices = variables.map((invoice, index) => ({
+      InvoiceID: `${index + 1}`,
+      UserID: '123',
+      invoice: `<Invoice>
+        <IssueDate>${invoice.issueDate}</IssueDate>
+        <DueDate>${invoice.dueDate}</DueDate>
+        <LegalMonetaryTotal>
+          <PayableAmount>${invoice.total}</PayableAmount>
+        </LegalMonetaryTotal>
+      </Invoice>`
+    }));
 
     dbClient.send.mockResolvedValueOnce({ Items: invoices });
 
@@ -174,6 +161,7 @@ describe('invoiceController.listInvoices', () => {
     });
   });
 });
+
 // describe('getInvoice', () => {
 //   it('should return 200 when getting an existing invoice', async () => {
 //     const createRes = await request(app).post('/v1/invoices').send({mockInvoice});

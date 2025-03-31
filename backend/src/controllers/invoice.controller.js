@@ -7,14 +7,46 @@ const {
   DeleteCommand,
   UpdateCommand
 } = require('@aws-sdk/lib-dynamodb');
-const {
-  // generateAndUploadUBLInvoice,
-  convertToUBL
-} = require('../middleware/invoice-generation');
+const { convertToUBL } = require('../middleware/invoice-generation');
+const xml2js = require('xml2js');
 const { checkUserId } = require('../middleware/helperFunctions');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
+
+// Helper function to parse XML safely
+const parseXMLSafely = async (xmlString) => {
+  try {
+    // First, check if we have valid XML
+    if (!xmlString || typeof xmlString !== 'string') {
+      console.error('Invalid XML string:', xmlString);
+      return null;
+    }
+
+    const parser = new xml2js.Parser({
+      explicitArray: false,
+      ignoreAttrs: false,
+      tagNameProcessors: [xml2js.processors.stripPrefix],
+      attrNameProcessors: [xml2js.processors.stripPrefix]
+    });
+    
+    const result = await parser.parseStringPromise(xmlString);
+
+    // Extract relevant data from the parsed XML
+    const invoice = result?.Invoice || {};
+    return {
+      IssueDate: invoice.IssueDate || null,
+      DueDate: invoice.DueDate || null,
+      TotalPayableAmount: invoice.LegalMonetaryTotal?.PayableAmount || 
+                          invoice.LegalMonetaryTotal?.TaxInclusiveAmount ||
+                          null
+    };
+  } catch (error) {
+    console.error('Error parsing XML:', error);
+    console.error('XML content:', xmlString);
+    return null;
+  }
+};
 
 /**
  * Invoice Controller
@@ -58,7 +90,8 @@ const invoiceController = {
           UserID: req.user.userId, // TODO: Get UserID from request
           // s3Url: status.location
           invoice: ublXml,
-          valid: false
+          valid: false,
+          invoiceJson: data
         }
       };
 
@@ -86,6 +119,45 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   listInvoices: async (req, res) => {
+    // Extract and validate query parameters first, before any async operations
+    let { limit, offset, sort, order } = req.query;
+    
+    // Validate limit
+    limit = parseInt(limit, 10) || 10;
+    if (limit < 1) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'limit must be greater than 0'
+      });
+    }
+
+    // Validate offset
+    offset = parseInt(offset, 10) || 0;
+    if (offset < 0) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'offset must be at least 0'
+      });
+    }
+
+    // Validate sort and order if provided
+    const validSortFields = ['issuedate', 'duedate', 'total'];
+    const validOrders = ['asc', 'desc'];
+    
+    if (sort && !validSortFields.includes(sort.toLowerCase())) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'invalid sort query'
+      });
+    }
+    
+    if (order && !validOrders.includes(order.toLowerCase())) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'invalid order query'
+      });
+    }
+
     try {
       let { limit, offset, sort, order } = req.query;
       limit = parseInt(limit, 10) || 10;
@@ -133,37 +205,82 @@ const invoiceController = {
       const { Items } = await dbClient.send(new ScanCommand(scanParams));
       const allInvoices = Items || [];
 
+      // Parse all invoices first
+      const parsedInvoices = await Promise.all(allInvoices.map(async (invoice) => {
+        const parsedXML = await parseXMLSafely(invoice.invoice);
+        if (!parsedXML) {
+          console.error('Failed to parse invoice:', invoice.InvoiceID);
+        }
+        return {
+          ...invoice,
+          parsedData: parsedXML || {
+            IssueDate: null,
+            DueDate: null,
+            TotalPayableAmount: null
+          }
+        };
+      }));
+
       if (sort) {
-        switch (sort.toLowerCase()) {
-          case 'issuedate':
-            allInvoices.sort((a, b) => {
-              return new Date(a.timestamp) - new Date(b.timestamp);
-            });
-            break;
-          default:
-            break;
-        }
+        parsedInvoices.sort((a, b) => {
+          const aData = a.parsedData || {};
+          const bData = b.parsedData || {};
+
+          let aValue, bValue;
+
+          switch (sort.toLowerCase()) {
+            case 'issuedate':
+              aValue = aData.IssueDate ? new Date(aData.IssueDate) : null;
+              bValue = bData.IssueDate ? new Date(bData.IssueDate) : null;
+              break;
+            case 'duedate':
+              aValue = aData.DueDate ? new Date(aData.DueDate) : null;
+              bValue = bData.DueDate ? new Date(bData.DueDate) : null;
+              break;
+            case 'total':
+              aValue = aData.TotalPayableAmount._ ? parseFloat(aData.TotalPayableAmount._) : null;
+              bValue = bData.TotalPayableAmount._ ? parseFloat(bData.TotalPayableAmount._) : null;
+              break;
+            default:
+              return 0;
+          }
+
+          // Handle null values
+          if (aValue === null && bValue === null) return 0;
+          if (aValue === null) return 1;
+          if (bValue === null) return -1;
+
+          // Compare valid values
+          return aValue - bValue;
+        });
+
         if (order && order.toLowerCase() === 'desc') {
-          allInvoices.reverse();
+          parsedInvoices.reverse();
         }
       }
 
-      const totalInvoices = allInvoices.length;
-      const maxOffset = totalInvoices - limit;
+      // remove the parsedData field from the invoices after sorting
+      parsedInvoices.forEach(invoice => {
+        delete invoice.parsedData;
+      });
+
+      // apply offset and limit
+      const maxOffset = parsedInvoices.length;
       if (offset > maxOffset) {
-        offset = maxOffset < 0 ? 0 : maxOffset;
+        offset = maxOffset - limit; // default to limit
       }
 
-      const paginatedInvoices = allInvoices.slice(offset, offset + limit);
+      const paginatedInvoices = parsedInvoices.slice(offset, offset + limit);
 
       return res.status(200).json({
         status: 'success',
         data: {
-          count: totalInvoices,
+          count: parsedInvoices.length,
           invoices: paginatedInvoices
         }
       });
     } catch (error) {
+      console.error('Error in listInvoices:', error);
       return res.status(500).json({
         status: 'error',
         message: 'Failed to list invoices',
@@ -400,7 +517,7 @@ const invoiceController = {
     try {
       const invoiceId = req.params.invoiceid;
       const valid = req.validationResult.valid;
-      
+
       if (!invoiceId || valid === undefined) {
         return res.status(400).json({
           status: 'error',
@@ -456,8 +573,6 @@ const invoiceController = {
           message: `Validation status successfully updated to ${valid}`
         });
       }
-
-      
     } catch (error) {
       return res.status(500).json({
         status: 'error',

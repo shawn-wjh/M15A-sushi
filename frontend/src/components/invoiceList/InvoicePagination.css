@@ -1,0 +1,53 @@
+.invoice-pagination {
+  margin-top: auto;
+  width: 100%;
+  background-color: var(--black);
+  padding: 1rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-button,
+.page-number {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--dark-gray);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all var(--transition-fast);
+  color: var(--light-gray);
+}
+
+.pagination-button:hover:not(:disabled),
+.page-number:hover:not(.active) {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: var(--white);
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
+.pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  color: var(--light-gray);
+}
+
+.page-number.active {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: var(--accent-red);
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
+.ellipsis {
+  padding: 0 0.5rem;
+  color: var(--light-gray);
+} 
