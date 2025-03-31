@@ -16,7 +16,6 @@ const {
 } = require('../controllers/invoice.controller');
 
 const { validateInvoiceStandardv2, validateInvoiceInput } = require('../middleware/invoice-validation');
-const auth = require('../middleware/auth');
 
 // Apply auth middleware to all routes
 router.use(auth.verifyToken);
