@@ -51,6 +51,14 @@ const InvoiceList = () => {
         withCredentials: true,
       });
 
+      // case where user has no invoices
+      if (response.data.data.invoices.length === 0) {
+        setInvoices([]);
+        setTotalInvoices(0);
+        setMessage({ type: 'info', text: 'No Invoices Created Yet' });
+        return;
+      }
+
       // Parse XML data for each invoice
       const parsedInvoices = response.data.data.invoices.map(invoice => {
         const parsedData = parseInvoiceXml(invoice.invoice);
@@ -246,8 +254,8 @@ const InvoiceList = () => {
 
       <main className="dashboard-main">
         <div className="invoice-list-container">
+          {message && <div className="error-message">{message.text}</div>}
           <div className="invoice-list-header">
-            {message && <div className="error-message">{message.text}</div>}
 
             <FilterPanel
               isFilterPanelOpen={isFilterPanelOpen}
