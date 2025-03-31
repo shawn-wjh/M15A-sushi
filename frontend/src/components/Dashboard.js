@@ -55,7 +55,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard-page">
       <nav className="dashboard-navbar">
-        <div className="dashboard-logo" onClick={() => history.push('/')}>
+        <div className="dashboard-logo" onClick={() => history.push('/dashboard')}>
           <span className="logo-text">Sushi</span>
           <span className="logo-dot">.</span>
           <span className="logo-invoice">Invoice</span>

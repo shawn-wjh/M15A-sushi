@@ -129,7 +129,12 @@ const Auth = ({ isLoginForm }) => {
   };
   
   const backToHome = () => {
-    history.push('/');
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      history.push('/dashboard');
+    } else {
+      history.push('/');
+    }
   };
   
   if (user) {

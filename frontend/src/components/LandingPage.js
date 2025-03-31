@@ -11,6 +11,14 @@ const LandingPage = () => {
   const pricingRef = useRef(null);
   const aboutRef = useRef(null);
   
+  // Function to scroll to top of page
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+  
   useEffect(() => {
     setIsVisible(true);
     
@@ -55,7 +63,7 @@ const LandingPage = () => {
   return (
     <div className="landing-container">
       <nav className="navbar">
-        <div className="logo">
+        <div className="logo" onClick={scrollToTop}>
           <span className="logo-text">Sushi</span>
           <span className="logo-dot">.</span>
           <span className="logo-invoice">Invoice</span>

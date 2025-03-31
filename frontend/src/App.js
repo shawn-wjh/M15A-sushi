@@ -9,21 +9,57 @@ import InvoicePage from './components/invoiceView/InvoicePage';
 import Welcome from './components/Welcome';
 import './App.css';
 
+// Protected route component
+const ProtectedRoute = ({ component: Component, ...rest }) => {
+  const isAuthenticated = localStorage.getItem('user') !== null;
+  
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        isAuthenticated ? (
+          <Component {...props} />
+        ) : (
+          <Redirect to="/login" />
+        )
+      }
+    />
+  );
+};
+
+// Public route component that redirects to dashboard if user is logged in
+const PublicRoute = ({ component: Component, restricted, ...rest }) => {
+  const isAuthenticated = localStorage.getItem('user') !== null;
+  
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        isAuthenticated && restricted ? (
+          <Redirect to="/dashboard" />
+        ) : (
+          <Component {...props} />
+        )
+      }
+    />
+  );
+};
+
 function App() {
   return (
     <BrowserRouter>
       <div className="App">
         <Switch>
           <Route exact path="/welcome" component={Welcome} />
-          <Route exact path="/" component={LandingPage} />
-          <Route path="/auth" component={Auth} />
-          <Route path="/login" component={() => <Auth isLoginForm={true} />} />
-          <Route path="/signup" component={() => <Auth isLoginForm={false} />} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/invoice/create" component={InvoiceForm} />
-          <Route path="/invoices/list" component={InvoiceList} />
-          <Route path="/invoices/:invoiceid" component={InvoicePage} />
-          <Route path="/settings" component={Dashboard} />
+          <PublicRoute restricted={true} exact path="/" component={LandingPage} />
+          <PublicRoute restricted={true} path="/auth" component={Auth} />
+          <PublicRoute restricted={true} path="/login" component={() => <Auth isLoginForm={true} />} />
+          <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
+          <ProtectedRoute path="/dashboard" component={Dashboard} />
+          <ProtectedRoute path="/invoice/create" component={InvoiceForm} />
+          <ProtectedRoute path="/invoices/list" component={InvoiceList} />
+          <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
+          <ProtectedRoute path="/settings" component={Dashboard} />
           <Route path="*">
             <Redirect to="/" />
           </Route>
