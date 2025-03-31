@@ -9,6 +9,7 @@ const {
 } = require('@aws-sdk/lib-dynamodb');
 const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
+const { checkUserId } = require('../middleware/helperFunctions');
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
@@ -73,13 +74,20 @@ const invoiceController = {
       // convert invoice to UBL XML
       const ublXml = convertToUBL(data);
 
+      if (!checkUserId(req.user.userId)) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'No user ID provided',
+        });
+      }
+
       // Prepare invoice item for DynamoDB
       const invoiceItem = {
         TableName: Tables.INVOICES,
         Item: {
           InvoiceID: invoiceId,
           timestamp,
-          UserID: '123', // TODO: Get UserID from request
+          UserID: req.user.userId, // TODO: Get UserID from request
           // s3Url: status.location
           invoice: ublXml,
           valid: false,
@@ -151,7 +159,40 @@ const invoiceController = {
     }
 
     try {
-      const userId = '123';
+      let { limit, offset, sort, order } = req.query;
+      limit = parseInt(limit, 10) || 10;
+      offset = parseInt(offset, 10) || 0;
+
+      if (limit < 1) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'limit must be greater than 0'
+        });
+      }
+      if (offset < 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'offset must be at least 0'
+        });
+      }
+
+      // Validate sort and order if provided
+      const validSortFields = ['issuedate', 'duedate', 'total'];
+      const validOrders = ['asc', 'desc'];
+      if (sort && !validSortFields.includes(sort.toLowerCase())) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'invalid sort query'
+        });
+      }
+      if (order && !validOrders.includes(order.toLowerCase())) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'invalid order query'
+        });
+      }
+
+      const userId = req.user.userId;
 
       const scanParams = {
         TableName: Tables.INVOICES,
@@ -277,6 +318,14 @@ const invoiceController = {
         throw new Error('Invoice not found');
       }
 
+      // check if allowed access
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
+
       // access the invoice from the dynamoDB response
       const xml = Items[0].invoice;
 
@@ -355,6 +404,13 @@ const invoiceController = {
         });
       }
 
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
+
       // Convert updated data to UBL XML
       const ublXml = convertToUBL(updateData);
 
@@ -419,6 +475,13 @@ const invoiceController = {
         });
       }
 
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
+
       // Get the UserID from the found item
       const userID = Items[0].UserID;
 
@@ -461,6 +524,30 @@ const invoiceController = {
           error: 'Missing invoice ID or valid status'
         });
       }
+
+      // const queryParams = {
+      //   TableName: Tables.INVOICES,
+      //   KeyConditionExpression: 'InvoiceID = :InvoiceId',
+      //   ExpressionAttributeValues: {
+      //     ':InvoiceId': invoiceId
+      //   }
+      // };
+
+      // const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+      // if (!Items || Items.length === 0) {
+      //   return res.status(400).json({
+      //     status: 'error',
+      //     error: 'Invoice not found'
+      //   });
+      // }
+
+      // if (Items[0].UserId != req.user.userId) {
+      //   return res.status(401).json({
+      //     status: 'error',
+      //     error: 'Unauthorised Access'
+      //   });
+      // }
 
       const updateParams = {
         TableName: Tables.INVOICES,

@@ -3,6 +3,12 @@ const { createDynamoDBClient } = require('../config/database');
 
 const dbClient = createDynamoDBClient();
 
+jest.mock('../../src/middleware/helperFunctions', () => {
+  return {
+    checkUserId: jest.fn(() => true),
+  };
+});
+
 describe('createInvoice', () => {
   // it('should return 200 when creating a new invoice', async () => {
   //     const request = httpMocks.createRequest({
@@ -38,12 +44,13 @@ function createRes() {
   res.send = jest.fn().mockReturnValue(res);
   return res;
 }
+
 describe('invoiceController.listInvoices', () => {
   let req;
   let res;
 
   beforeEach(() => {
-    req = { query: {} };
+    req = { query: {}, user: { userId: 'test-user' } };
     res = createRes();
 
     dbClient.send.mockReset();

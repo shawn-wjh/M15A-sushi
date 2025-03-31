@@ -225,7 +225,7 @@ const validXml = `
               <cbc:CityName>Test City</cbc:CityName>
               <cbc:PostalZone>2000</cbc:PostalZone>
               <cac:Country>
-                <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
+                <cbc:IdentificationCode>AU</cbc:IdentificationCode>
               </cac:Country>
             </cac:PostalAddress>
             <cac:PartyTaxScheme>
@@ -254,7 +254,7 @@ const validXml = `
               <cbc:CityName>Test City</cbc:CityName>
               <cbc:PostalZone>2000</cbc:PostalZone>
               <cac:Country>
-                <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
+                <cbc:IdentificationCode>AU</cbc:IdentificationCode>
               </cac:Country>
             </cac:PostalAddress>
             <cac:Contact>

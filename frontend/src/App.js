@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import InvoiceForm from './components/InvoiceForm';
 import InvoiceList from './components/invoiceList/InvoiceList';
 import InvoicePage from './components/invoiceView/InvoicePage';
+import Welcome from './components/Welcome';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
     <BrowserRouter>
       <div className="App">
         <Switch>
+          <Route exact path="/welcome" component={Welcome} />
           <Route exact path="/" component={LandingPage} />
           <Route path="/auth" component={Auth} />
           <Route path="/login" component={() => <Auth isLoginForm={true} />} />

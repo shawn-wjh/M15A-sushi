@@ -98,7 +98,7 @@ const validInvoiceXML = `
       <cac:PostalAddress>
         <cbc:StreetName>123 Test St</cbc:StreetName>
         <cac:Country>
-          <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
+          <cbc:IdentificationCode>AU</cbc:IdentificationCode>
         </cac:Country>
       </cac:PostalAddress>
       <cac:Contact>
@@ -116,7 +116,7 @@ const validInvoiceXML = `
       <cac:PostalAddress>
         <cbc:StreetName>123 Test St</cbc:StreetName>
         <cac:Country>
-          <cbc:IdentificationCode>AUS</cbc:IdentificationCode>
+          <cbc:IdentificationCode>AU</cbc:IdentificationCode>
         </cac:Country>
       </cac:PostalAddress>
       <cac:Contact>

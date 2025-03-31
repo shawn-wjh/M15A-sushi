@@ -4,12 +4,17 @@ const config = require('./index');
 
 const createDynamoDBClient = () => {
   const clientConfig = {
-    region: config.aws.region,
-    credentials: {
+    region: config.aws.region
+  };
+
+  // Only add explicit credentials if they are provided
+  // This allows the SDK to use the IAM role in production
+  if (config.aws.credentials.accessKeyId && config.aws.credentials.secretAccessKey) {
+    clientConfig.credentials = {
       accessKeyId: config.aws.credentials.accessKeyId,
       secretAccessKey: config.aws.credentials.secretAccessKey
-    }
-  };
+    };
+  }
 
   // Add local endpoint for development and testing if specified
   if (config.dynamodb.endpoint) {

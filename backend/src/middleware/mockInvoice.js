@@ -8,13 +8,13 @@ const mockInvoice = {
   currency: 'AUD',
   buyerAddress: {
     street: '123 Test St',
-    country: 'AUS'
+    country: 'AU'
   },
   buyerEmail: 'buyer@test.com',
   buyerPhone: '+61234567890',
   supplierAddress: {
     street: '123 Test St',
-    country: 'AUS'
+    country: 'AU'
   },
   supplierEmail: 'supplier@test.com',
   supplierPhone: '+61234567890',
