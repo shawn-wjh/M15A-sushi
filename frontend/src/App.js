@@ -56,8 +56,6 @@ function App() {
           <PublicRoute restricted={true} path="/login" component={() => <Auth isLoginForm={true} />} />
           <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
           <ProtectedRoute path="/dashboard" component={Dashboard} />
-          <ProtectedRoute path="/invoice/create" component={InvoiceForm} />
-          <ProtectedRoute path="/invoices/list" component={InvoiceList} />
           <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
           <ProtectedRoute path="/settings" component={Dashboard} />
           <Route path="*">

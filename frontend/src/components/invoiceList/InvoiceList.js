@@ -228,22 +228,6 @@ const InvoiceList = () => {
 
   return (
     <div className="dashboard-page">
-      <nav className="dashboard-navbar">
-        <div className="dashboard-logo" onClick={() => history.push("/")}>
-          <span className="logo-text">Sushi</span>
-          <span className="logo-dot">.</span>
-          <span className="logo-invoice">Invoice</span>
-        </div>
-        <div className="user-info">
-          <button
-            onClick={() => history.push("/dashboard")}
-            className="logout-button"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </nav>
-
       <main className="dashboard-main">
         <div className="invoice-list-container">
           <div className="invoice-list-header">

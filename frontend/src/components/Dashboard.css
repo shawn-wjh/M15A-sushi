@@ -293,6 +293,7 @@ body {
   background-color: var(--dark-bg);
   flex: 1;
   min-height: calc(100vh - 70px);
+  overflow-y: auto; /* Add scroll for overflow content */
 }
 
 .content-area h2 {
@@ -300,6 +301,107 @@ body {
   margin-bottom: 25px;
   font-size: 1.5rem;
   color: #fff;
+}
+
+/* Invoice Sections Styles */
+.create-invoice-section, 
+.invoice-list-section {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Ensure Invoice Forms maintain dashboard theme */
+.create-invoice-section form {
+  background-color: var(--sidebar-bg);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  margin-bottom: 30px;
+  color: var(--text-dark);
+}
+
+.create-invoice-section input,
+.create-invoice-section textarea,
+.create-invoice-section select {
+  background-color: #333;
+  border: 1px solid var(--border-light);
+  color: var(--text-dark);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.create-invoice-section input:focus,
+.create-invoice-section textarea:focus,
+.create-invoice-section select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+}
+
+.create-invoice-section button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.create-invoice-section button:hover {
+  background-color: var(--primary-light);
+}
+
+/* Override InvoiceList styles to match dashboard theme */
+.invoice-list-section table {
+  background-color: var(--sidebar-bg);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-light);
+  width: 100%;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+}
+
+.invoice-list-section th {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--text-dark);
+  padding: 12px 15px;
+  text-align: left;
+}
+
+.invoice-list-section td {
+  padding: 12px 15px;
+  border-top: 1px solid var(--border-light);
+}
+
+.invoice-list-section tr:hover {
+  background-color: rgba(255, 59, 48, 0.05);
+}
+
+.invoice-list-section .pagination {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.invoice-list-section .pagination button {
+  background-color: var(--sidebar-bg);
+  color: var(--text-dark);
+  border: 1px solid var(--border-light);
+  padding: 8px 12px;
+  margin: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.invoice-list-section .pagination button:hover,
+.invoice-list-section .pagination button.active {
+  background-color: var(--primary-color);
+  color: white;
 }
 
 /* Section Redirect */

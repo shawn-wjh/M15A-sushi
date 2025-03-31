@@ -33,11 +33,11 @@ const InvoiceForm = () => {
     currency: 'AUD',
     buyerAddress: {
       street: '',
-      country: 'AUS'
+      country: 'AU'
     },
     supplierAddress: {
       street: '',
-      country: 'AUS'
+      country: 'AU'
     },
     buyerPhone: '',
     items: [
@@ -251,11 +251,11 @@ const InvoiceForm = () => {
         currency: 'AUD',
         buyerAddress: {
           street: '',
-          country: 'AUS'
+          country: 'AU'
         },
         supplierAddress: {
           street: '',
-          country: 'AUS'
+          country: 'AU'
         },
         buyerPhone: '',
         items: [
@@ -281,19 +281,6 @@ const InvoiceForm = () => {
 
   return (
     <div className="dashboard-page">
-      <nav className="dashboard-navbar">
-        <div className="dashboard-logo" onClick={() => history.push('/')}>
-          <span className="logo-text">Sushi</span>
-          <span className="logo-dot">.</span>
-          <span className="logo-invoice">Invoice</span>
-        </div>
-        <div className="user-info">
-          <button onClick={() => history.push('/dashboard')} className="logout-button">
-            Back to Dashboard
-          </button>
-        </div>
-      </nav>
-      
       <main className="dashboard-main">
         <div className="invoice-form-container">
           {createdInvoice ? (
@@ -315,12 +302,6 @@ const InvoiceForm = () => {
               </div>
               
               <div className="form-actions">
-                <button 
-                  className="form-button secondary" 
-                  onClick={() => history.push('/dashboard')}
-                >
-                  Back to Dashboard
-                </button>
                 <button 
                   className="form-button primary" 
                   onClick={() => setCreatedInvoice(null)}
@@ -433,10 +414,10 @@ const InvoiceForm = () => {
                         value={formData.buyerAddress.country}
                         onChange={handleChange}
                       >
-                        <option value="AUS">Australia</option>
-                        <option value="USA">United States</option>
-                        <option value="GBR">United Kingdom</option>
-                        <option value="NZL">New Zealand</option>
+                        <option value="AU">Australia</option>
+                        <option value="US">United States</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="NZ">New Zealand</option>
                       </select>
                     </div>
                     
@@ -490,10 +471,10 @@ const InvoiceForm = () => {
                       value={formData.supplierAddress.country}
                       onChange={handleChange}
                     >
-                      <option value="AUS">Australia</option>
-                      <option value="USA">United States</option>
-                      <option value="GBR">United Kingdom</option>
-                      <option value="NZL">New Zealand</option>
+                      <option value="AU">Australia</option>
+                      <option value="US">United States</option>
+                      <option value="GB">United Kingdom</option>
+                      <option value="NZ">New Zealand</option>
                     </select>
                   </div>
                 </div>
@@ -613,11 +594,11 @@ const InvoiceForm = () => {
                           currency: 'AUD',
                           buyerAddress: {
                             street: '',
-                            country: 'AUS'
+                            country: 'AU'
                           },
                           supplierAddress: {
                             street: '',
-                            country: 'AUS'
+                            country: 'AU'
                           },
                           buyerPhone: '',
                           items: [

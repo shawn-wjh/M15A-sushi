@@ -4,6 +4,8 @@ import apiClient from '../utils/axiosConfig';
 import './Dashboard.css';
 // Import icons - assuming we'll use Font Awesome or similar
 // If not available, we'll need to add the package
+import InvoiceForm from './InvoiceForm';
+import InvoiceList from './invoiceList/InvoiceList';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -39,11 +41,13 @@ const Dashboard = () => {
   };
 
   const handleCreateInvoice = () => {
-    history.push('/invoice/create');
+    // Set active section to create invoice instead of redirecting
+    setActiveSection('createInvoice');
   };
 
   const handleViewInvoices = () => {
-    history.push('/invoices/list');
+    // Set active section to invoices instead of redirecting
+    setActiveSection('invoices');
   };
 
   const renderActiveSectionContent = () => {
@@ -53,18 +57,34 @@ const Dashboard = () => {
       case 'overview':
         return renderOverviewSection();
       case 'invoices':
-        return (
-          <div className="section-redirect">
-            <h2>Invoices</h2>
-            <p>Redirecting to invoices list...</p>
-            {handleViewInvoices()}
-          </div>
-        );
+        return renderInvoiceListSection();
+      case 'createInvoice':
+        return renderCreateInvoiceSection();
       case 'settings':
         return renderSettingsSection();
       default:
         return renderOverviewSection();
     }
+  };
+
+  // New method to render the Create Invoice section
+  const renderCreateInvoiceSection = () => {
+    return (
+      <div className="create-invoice-section">
+        <h2>Create Invoice</h2>
+        <InvoiceForm />
+      </div>
+    );
+  };
+
+  // New method to render the Invoice List section
+  const renderInvoiceListSection = () => {
+    return (
+      <div className="invoice-list-section">
+        <h2>Invoices</h2>
+        <InvoiceList />
+      </div>
+    );
   };
 
   const renderProfileSection = () => {
