@@ -1,9 +1,16 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import axios from "axios";
 import getCookie from "../../utils/cookieHelper";
 import "./validationResults.css";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { FaEdit } from "react-icons/fa";
 
 const API_URL = "http://localhost:3000/v2/invoices";
+
+const schemaNameMap = {
+  "peppol": "PEPPOL A-NZ",
+  "fairwork": "Fair Work Commision",
+}
 
 async function validateInvoices(invoiceIds, schemas) {
   const token = getCookie("token");
@@ -13,6 +20,7 @@ async function validateInvoices(invoiceIds, schemas) {
 
   try {
     const validationPromises = invoiceIds.map(async (invoiceId) => {
+      console.log("validating invoice with schemas: ", schemas);
       const response = await axios.post(
         `${API_URL}/${invoiceId}/validate`,
         { schemas: schemas },
@@ -25,7 +33,6 @@ async function validateInvoices(invoiceIds, schemas) {
         }
       );
 
-      console.log("response.data: ", response.data);
       return {
         invoiceId,
         validationResult: response.data.validationResult,
@@ -46,21 +53,145 @@ async function validateInvoices(invoiceIds, schemas) {
 }
 
 const ValidationResult = () => {
-  // get schemas and invoiceids from url
   const location = useLocation();
+  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
+  const [validationResults, setValidationResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // turn schema and invoiceids query into arrays
-  const schemas = searchParams.get("schemas")?.split(" ") || [];
-  const invoiceids = searchParams.get("invoiceids")?.split(" ") || [];
+  const { schemas, invoiceids } = useMemo(() => {
+    console.log("useMemo running with search:", location.search);
+    return {
+      schemas: searchParams.get("schemas")?.split(" ") || [],
+      invoiceids: searchParams.get("invoiceids")?.split(" ") || []
+    };
+  }, [location.search]);
 
-  // get validation results
-  const validationResults = validateInvoices(invoiceids, schemas);
-  console.log("validationResults: ", validationResults);
+  const fetchValidationResults = useCallback(async () => {
+    console.log("fetchValidationResults called with:", { invoiceids, schemas });
+    try {
+      setLoading(true);
+      const results = await validateInvoices(invoiceids, schemas);
+      console.log("validationResults set with: ", results);
+      setValidationResults(results);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching validation results:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [invoiceids, schemas]);
+
+  useEffect(() => {
+    console.log("useEffect running");
+    fetchValidationResults();
+  }, [fetchValidationResults]);
+
+  const handleEditInvoice = (invoiceId) => {
+    alert("Edit invoice functionality is not available yet");
+  };
+
+  if (error) {
+    return (
+      <div className="validation-container">
+        <div className="validation-error-icon">✕</div>
+        <h3>Error Validating Invoices</h3>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  const allValid = validationResults?.every(
+    (result) => result.validationResult.valid
+  );
 
   return (
-    <div>
-      <h1>made it to validation result page!! Still under construction</h1>
+    <div className="validation-container">
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          <div className={`validation-success-icon ${allValid ? "valid" : "invalid"}`}>
+            {allValid ? "✓" : "✕"}
+          </div>
+          <h3>
+            {allValid
+              ? "All Invoices Validated Successfully!"
+              : "Some Invoices Failed Validation"}
+          </h3>
+          <p>
+            Validation was performed against the following schemas:
+            <ul className="validation-schema-list">
+              {schemas.map((schema) => (
+                <li key={schema}>{schemaNameMap[schema]}</li>
+              ))}
+            </ul>
+          </p>
+
+          <div className="validation-invoice-details">
+            <h4>Invoice Validation Results</h4>
+            <div className="validation-invoice-list">
+              {validationResults?.map((result) => (
+                <div key={result.invoiceId} className="validation-invoice-item">
+                  <div className="validation-invoice-info">
+                    <span className="validation-invoice-id">
+                      Invoice ID: {result.invoiceId}
+                    </span>
+                    <span
+                      className={`validation-status ${
+                        result.validationResult.valid ? "success" : "failed"
+                      }`}
+                    >
+                      {result.validationResult.valid ? "Valid" : "Invalid"}
+                    </span>
+                    <button
+                      className="validation-edit-button"
+                      onClick={() => handleEditInvoice(result.invoiceId)}
+                      title="Edit Invoice"
+                    >
+                      <FaEdit />
+                    </button>
+                  </div>
+                  {!result.validationResult.valid && result.validationResult.errors && (
+                    <div className="validation-errors">
+                      <h5>Errors:</h5>
+                      <ul>
+                        {result.validationResult.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {result.validationResult.warnings && result.validationResult.warnings.length > 0 && (
+                    <div className="validation-warnings">
+                      <h5>Warnings:</h5>
+                      <ul>
+                        {result.validationResult.warnings.map((warning, index) => (
+                          <li key={index}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="validation-form-actions">
+            <button
+              className="validation-form-button primary"
+              onClick={() => history.push({
+                pathname: '/dashboard',
+                state: { section: 'invoices' }
+              })}
+              title="Back to Invoice List"
+            >
+              Done
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

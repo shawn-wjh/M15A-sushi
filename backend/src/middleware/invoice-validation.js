@@ -757,6 +757,14 @@ const validatePeppol = (invoice, validationResult) => {
     );
   }
 
+  // append schema name to each warning and error message
+  validationResult.errors = validationResult.errors.map(error => {
+    return error + ' (PEPPOL A-NZ)';
+  });
+  validationResult.warnings = validationResult.warnings.map(warning => {
+    return warning + ' (PEPPOL A-NZ)';
+  });
+
   return validationResult;
 };
 
@@ -794,6 +802,14 @@ const validateFairWorkCommission = (invoice, validationResult) => {
       'Missing FinancialInstitutionBranch details'
     );
   }
+
+  // append schema name to each warning and error message
+  validationResult.errors = validationResult.errors.map(error => {
+    return error + ' (Fair Work Commission)';
+  });
+  validationResult.warnings = validationResult.warnings.map(warning => {
+    return warning + ' (Fair Work Commission)';
+  });
 
   return validationResult;
 };
@@ -844,7 +860,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
     const validSchemas = ['peppol', 'fairwork'];
 
-    if (!validSchemas.every(schema => schemas.includes(schema))) {
+    if (!schemas.every(schema => validSchemas.includes(schema))) {
       return res.status(400).json({
         status: 'error',
         message: 'Invalid schema(s) provided'
@@ -871,7 +887,6 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     if (next) {
       // Attach validation result to request for potential later use
       req.validationResult = validationResult;
-      console.log('next called with req.validationResult set to: ', req.validationResult);
       next();
     } else if (validationResult.valid === false) {
       return res.status(400).json({
