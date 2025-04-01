@@ -7,6 +7,7 @@ import InvoiceForm from './components/InvoiceForm';
 import InvoiceList from './components/invoiceList/InvoiceList';
 import InvoicePage from './components/invoiceView/InvoicePage';
 import Welcome from './components/Welcome';
+import ValidationResults from './components/invoiceValidationResult/validationResults';
 import './App.css';
 
 // Protected route component
@@ -57,6 +58,7 @@ function App() {
           <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
           <ProtectedRoute path="/dashboard" component={Dashboard} />
           <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
+          <ProtectedRoute path="/validation-result" component={ValidationResults} />
           <ProtectedRoute path="/settings" component={Dashboard} />
           <Route path="*">
             <Redirect to="/" />

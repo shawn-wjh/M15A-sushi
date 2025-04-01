@@ -49,6 +49,7 @@ const InvoicePage = () => {
         setRawXml(response.data);
         setMessage(null);
       } catch (error) {
+        console.log('error in getInvoice: (correct error) ', error);
         if (error.response?.status === 401) {
           history.push("/login");
         } else {

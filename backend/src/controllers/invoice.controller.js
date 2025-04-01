@@ -87,8 +87,7 @@ const invoiceController = {
         Item: {
           InvoiceID: invoiceId,
           timestamp,
-          UserID: req.user.userId, // TODO: Get UserID from request
-          // s3Url: status.location
+          UserID: req.user.userId,
           invoice: ublXml,
           valid: false,
           invoiceJson: data
@@ -319,6 +318,9 @@ const invoiceController = {
       }
 
       // check if allowed access
+      console.log('req.user.userId: ', req.user.userId);
+      console.log('Items[0].UserID: ', Items[0].UserID);
+      console.log('checkUserId(req.user.userId, Items[0]): ', checkUserId(req.user.userId, Items[0]));
       if (!checkUserId(req.user.userId, Items[0])) {
         return res.status(401).json({
           status: 'error',
