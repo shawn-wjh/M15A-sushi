@@ -14,6 +14,7 @@ const OrderSearch = ({ onOrderSelect }) => {
   const [error, setError] = useState('');
   const [showOrderData, setShowOrderData] = useState(false);
   const [orderData, setOrderData] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Helper function to flatten the order data
   const flattenOrderData = (data) => {
@@ -51,6 +52,10 @@ const OrderSearch = ({ onOrderSelect }) => {
    * Fetches an invoice template based on the order ID
    */
   const handleFetchOrder = async (forTemplate = true) => {
+    // Reset messages
+    setError('');
+    setSuccessMessage('');
+    
     // Validate input
     if (!orderId.trim()) {
       setError('Please enter an Order ID');
@@ -63,7 +68,6 @@ const OrderSearch = ({ onOrderSelect }) => {
     }
     
     setIsLoading(true);
-    setError(null);
     
     try {
       // Get the auth token for our own API
@@ -88,9 +92,11 @@ const OrderSearch = ({ onOrderSelect }) => {
       if (response.data && response.data.status === 'success') {
         if (forTemplate) {
           onOrderSelect(response.data.data);
+          setSuccessMessage('Order data successfully loaded into invoice form');
         } else {
           setOrderData(response.data.data);
           setShowOrderData(true);
+          setSuccessMessage('Order data successfully fetched');
         }
       } else {
         setError('Failed to get order data');
@@ -122,6 +128,7 @@ const OrderSearch = ({ onOrderSelect }) => {
   const closeOrderDataPopup = () => {
     setShowOrderData(false);
     setOrderData(null);
+    setSuccessMessage('');
   };
   
   return (
@@ -153,13 +160,19 @@ const OrderSearch = ({ onOrderSelect }) => {
           />
         </div>
         
+        {successMessage && (
+          <div className="order-search-success">
+            {successMessage}
+          </div>
+        )}
+        
         <div className="button-group">
           <button 
             className="fetch-order-button"
             onClick={() => handleFetchOrder(true)}
             disabled={isLoading}
           >
-            {isLoading ? 'Loading...' : 'Fetch Order Data to Invoice'}
+            {isLoading ? 'Loading...' : 'Create Invoice from Order'}
           </button>
           
           <button 

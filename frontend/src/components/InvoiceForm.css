@@ -478,6 +478,12 @@
   font-weight: 500;
 }
 
+/* Make labels red in the invoice success page */
+.invoice-success .detail-label {
+  color: var(--light-gray);
+  font-weight: 500;
+}
+
 .detail-value {
   font-weight: 600;
   color: var(--white);

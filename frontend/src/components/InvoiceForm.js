@@ -430,12 +430,6 @@ const InvoiceForm = () => {
     // Update form with the properly structured data
     setFormData(formattedData);
     
-    // Show success message
-    setMessage({
-      type: 'success',
-      text: 'Order data loaded successfully'
-    });
-    
     // Reset any previous submission state
     setCreatedInvoice(null);
     setWasValidated(false);
