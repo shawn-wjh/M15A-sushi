@@ -14,6 +14,7 @@ const invoiceRoutes = require('./routes/invoice.routes');
 const v2InvoiceRoutes = require('./routes/v2.invoice.routes');
 const userRoutes = require('./routes/user.routes');
 const healthRoutes = require('./routes/health.routes');
+const orderRoutes = require('./routes/order.routes');
 
 // Create Express app
 const app = express();
@@ -46,7 +47,7 @@ app.use(cors({
   },
   credentials: true,  // Important for cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'token']
 }));
 
 app.use(cookieParser()); // Parse cookies
@@ -63,6 +64,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/v1/invoices', invoiceRoutes);
 app.use('/v2/invoices', v2InvoiceRoutes);
 app.use('/v1/users', userRoutes);
+app.use('/v1/admin/orders', orderRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.resolve(__dirname, '../../public')));

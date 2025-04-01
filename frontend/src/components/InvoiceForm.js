@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/axiosConfig';
 import './InvoiceForm.css';
+import OrderSearch from './OrderSearch';
 
 // Determine base URL based on environment
 const getBaseUrl = () => {
@@ -385,6 +386,65 @@ const InvoiceForm = () => {
     }
   };
 
+  // Handle order selection from OrderSearch component
+  const handleOrderSelect = (orderData) => {
+    console.log('Received order data:', orderData);
+
+    // Create a properly structured form data object with default values
+    const formattedData = {
+      // Map the received data to form fields
+      invoiceId: orderData.invoiceId || '',
+      total: 0,
+      buyer: orderData.buyer || '',
+      supplier: orderData.supplier || '',
+      issueDate: orderData.issueDate || '',
+      dueDate: '',
+      currency: orderData.currency || 'AUD',
+      // Ensure these objects exist with default values
+      buyerAddress: {
+        street: '',
+        country: 'AU'
+      },
+      supplierAddress: {
+        street: '',
+        country: 'AU'
+      },
+      buyerPhone: '',
+      supplierPhone: '',
+      supplierEmail: '',
+      TaxTotal: 0,
+      taxRate: 10,
+      // Handle empty or missing items array
+      items: Array.isArray(orderData.items?.[0]) ? 
+        // If items is an empty array inside array, create default item
+        [{ name: '', count: 1, cost: 0, currency: orderData.currency || 'AUD' }] :
+        // If items exist, map them
+        (orderData.items || []).map(item => ({
+          name: item.description || '',
+          count: item.quantity || 1,
+          cost: item.unitPrice || 0,
+          currency: orderData.currency || 'AUD'
+        }))
+    };
+
+    // Update form with the properly structured data
+    setFormData(formattedData);
+    
+    // Show success message
+    setMessage({
+      type: 'success',
+      text: 'Order data loaded successfully'
+    });
+    
+    // Reset any previous submission state
+    setCreatedInvoice(null);
+    setWasValidated(false);
+    setSubmittedValues(null);
+    
+    // Calculate totals based on the items
+    setTimeout(() => calculateTotal(formattedData.items), 0);
+  };
+
   // Format error message to display each error on a separate line
   const formatErrorMessage = (errorText) => {
     if (!errorText) return '';
@@ -480,6 +540,8 @@ const InvoiceForm = () => {
                 <h2>Create New Invoice</h2>
                 <p>Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).</p>
               </div>
+              
+              <OrderSearch onOrderSelect={handleOrderSelect} />
               
               <form onSubmit={handleSubmit} className="invoice-form">
                 <div className="form-section">
