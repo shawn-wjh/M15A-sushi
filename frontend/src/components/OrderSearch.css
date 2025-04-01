@@ -195,4 +195,14 @@
 button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.order-search-success {
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  background-color: rgba(76, 217, 100, 0.15);
+  color: #4cd964;
+  border: 1px solid rgba(76, 217, 100, 0.3);
 } 
