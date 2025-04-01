@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import apiClient from '../utils/axiosConfig';
 import './Dashboard.css';
 // Import icons - assuming we'll use Font Awesome or similar
@@ -10,7 +10,8 @@ import InvoiceList from './invoiceList/InvoiceList';
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('overview');
+  const location = useLocation();
+  const [activeSection, setActiveSection] = useState(location.state?.section || 'overview');
   const history = useHistory();
 
   useEffect(() => {
@@ -30,6 +31,13 @@ const Dashboard = () => {
       history.push('/login');
     }
   }, [history]);
+
+  // Update activeSection when location state changes
+  useEffect(() => {
+    if (location.state?.section) {
+      setActiveSection(location.state.section);
+    }
+  }, [location.state]);
 
   const handleLogout = () => {
     // Clear user data
