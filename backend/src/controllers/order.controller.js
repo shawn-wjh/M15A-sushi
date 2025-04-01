@@ -95,15 +95,4 @@ const orderController = {
   }
 };
 
-/**
- * Helper function to get a date X days in the future
- * @param {number} days - Number of days to add
- * @returns {string} ISO date string YYYY-MM-DD
- */
-function getDatePlusDays(days) {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
-}
-
 module.exports = orderController; 
