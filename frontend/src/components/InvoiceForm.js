@@ -58,7 +58,6 @@ const InvoiceForm = () => {
   const [message, setMessage] = useState(null);
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [wasValidated, setWasValidated] = useState(false);
-  const [submittedValues, setSubmittedValues] = useState(null);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -283,15 +282,6 @@ const InvoiceForm = () => {
       // Calculate tax amount based on subtotal
       const taxAmount = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
       
-      // Store a copy of the submitted values for display
-      setSubmittedValues({
-        total: roundedTotal,
-        taxRate: taxRate,
-        taxAmount: taxAmount,
-        currency: formData.currency,
-        totalWithTax: roundedTotal + taxAmount
-      });
-      
       // Create a new data object with the correct total, tax data, and normalized items
       const submissionData = {
         ...formData,
@@ -338,13 +328,8 @@ const InvoiceForm = () => {
       // Store the created invoice data
       setCreatedInvoice(response.data);
       
-      // Log the response data for debugging - more detailed
-      console.log('RESPONSE DATA FROM SERVER (FULL DETAILS):', JSON.stringify(response.data, null, 2));
-      console.log('Currency:', response.data.currency);
-      console.log('Total:', response.data.total);
-      console.log('Tax rate:', response.data.taxRate);
-      console.log('Tax amount:', response.data.taxAmount || response.data.TaxTotal);
-      console.log('Total with tax:', response.data.totalWithTax);
+      // Log the response data for debugging
+      console.log('Response data from server:', response.data);
       
       // Reset form after successful submission
       setFormData({
@@ -420,34 +405,6 @@ const InvoiceForm = () => {
     // For simple error messages, just return as is
     return errorString;
   };
-  
-  // Helper function to extract values from the response
-  const extractInvoiceValue = (invoice, field, defaultValue = 0) => {
-    // First check if the field exists directly in the invoice object
-    if (invoice[field] !== undefined && invoice[field] !== null) {
-      return typeof invoice[field] === 'number' ? 
-        invoice[field] : parseFloat(invoice[field] || defaultValue);
-    }
-    
-    // Check nested properties
-    if (field === 'taxAmount' && invoice.taxTotal?.amount !== undefined) {
-      return typeof invoice.taxTotal.amount === 'number' ? 
-        invoice.taxTotal.amount : parseFloat(invoice.taxTotal.amount || defaultValue);
-    }
-    
-    // Check alternative field names
-    if (field === 'taxAmount' && invoice.TaxTotal !== undefined) {
-      return typeof invoice.TaxTotal === 'number' ? 
-        invoice.TaxTotal : parseFloat(invoice.TaxTotal || defaultValue);
-    }
-    
-    // If we have submitted values and the field is found there, use it as backup
-    if (submittedValues && submittedValues[field] !== undefined) {
-      return submittedValues[field];
-    }
-    
-    return defaultValue;
-  };
 
   return (
     <div className="dashboard-page">
@@ -475,26 +432,24 @@ const InvoiceForm = () => {
                 <div className="detail-item">
                   <span className="detail-label">Subtotal:</span>
                   <span className="detail-value">
-                    {createdInvoice.currency || 'AUD'} {extractInvoiceValue(createdInvoice, 'total').toFixed(2)}
+                    {createdInvoice.currency} {parseFloat(createdInvoice.total || 0).toFixed(2)}
                   </span>
                 </div>
                 
                 <div className="detail-item">
-                  <span className="detail-label">Tax ({extractInvoiceValue(createdInvoice, 'taxRate').toFixed(1)}%):</span>
+                  <span className="detail-label">Tax ({parseFloat(createdInvoice.taxRate || 0).toFixed(1)}%):</span>
                   <span className="detail-value">
-                    {createdInvoice.currency || 'AUD'} {extractInvoiceValue(createdInvoice, 'taxAmount').toFixed(2)}
+                    {createdInvoice.currency} {parseFloat(createdInvoice.taxAmount || createdInvoice.taxTotal?.amount || createdInvoice.TaxTotal || 0).toFixed(2)}
                   </span>
                 </div>
                 
                 <div className="detail-item">
                   <span className="detail-label">Total Amount:</span>
                   <span className="detail-value total">
-                    {createdInvoice.currency || 'AUD'} {
-                      (extractInvoiceValue(createdInvoice, 'totalWithTax') || 
-                        (extractInvoiceValue(createdInvoice, 'total') + 
-                         extractInvoiceValue(createdInvoice, 'taxAmount'))
-                      ).toFixed(2)
-                    }
+                    {createdInvoice.currency} {parseFloat(
+                      createdInvoice.totalWithTax || 
+                      (createdInvoice.total || 0) + parseFloat(createdInvoice.taxAmount || createdInvoice.taxTotal?.amount || createdInvoice.TaxTotal || 0)
+                    ).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -502,10 +457,7 @@ const InvoiceForm = () => {
               <div className="form-actions">
                 <button 
                   className="form-button primary" 
-                  onClick={() => {
-                    setCreatedInvoice(null);
-                    setSubmittedValues(null);
-                  }}
+                  onClick={() => setCreatedInvoice(null)}
                 >
                   Create Another Invoice
                 </button>
