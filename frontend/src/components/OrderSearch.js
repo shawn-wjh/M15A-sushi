@@ -11,12 +11,46 @@ const OrderSearch = ({ onOrderSelect }) => {
   const [orderId, setOrderId] = useState('');
   const [tokenInput, setTokenInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const [showOrderData, setShowOrderData] = useState(false);
+  const [orderData, setOrderData] = useState(null);
+  
+  // Helper function to flatten the order data
+  const flattenOrderData = (data) => {
+    const flattened = {};
+    
+    // Helper function to recursively flatten objects
+    const flatten = (obj, prefix = '') => {
+      for (const key in obj) {
+        if (key === 'items' && Array.isArray(obj[key])) {
+          // Special handling for items array
+          const itemsFormatted = obj[key].map((item, index) => {
+            const itemDetails = [];
+            for (const [itemKey, itemValue] of Object.entries(item)) {
+              itemDetails.push(`${itemKey}: ${itemValue}`);
+            }
+            return `Item ${index + 1}:\n  ${itemDetails.join('\n  ')}`;
+          }).join('\n\n');
+          flattened[key] = itemsFormatted || 'No items';
+        } else if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+          flatten(obj[key], `${prefix}${key}_`);
+        } else if (Array.isArray(obj[key])) {
+          // Handle other arrays by joining values
+          flattened[`${prefix}${key}`] = obj[key].join(', ');
+        } else {
+          flattened[`${prefix}${key}`] = obj[key];
+        }
+      }
+    };
+    
+    flatten(data);
+    return flattened;
+  };
   
   /**
    * Fetches an invoice template based on the order ID
    */
-  const handleFetchOrder = async () => {
+  const handleFetchOrder = async (forTemplate = true) => {
     // Validate input
     if (!orderId.trim()) {
       setError('Please enter an Order ID');
@@ -41,8 +75,8 @@ const OrderSearch = ({ onOrderSelect }) => {
       }
       
       // Call our backend API with the orderId and token
-      // Using axios directly instead of apiClient to explicitly set all headers
-      const response = await apiClient.get(`/v1/admin/orders/${orderId}/invoice-template`, {
+      const endpoint = forTemplate ? `/v1/admin/orders/${orderId}/invoice-template` : `/v1/admin/orders/${orderId}`;
+      const response = await apiClient.get(endpoint, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
@@ -51,9 +85,13 @@ const OrderSearch = ({ onOrderSelect }) => {
         withCredentials: true
       });
       
-      // If successful, call the onOrderSelect callback with the template data
       if (response.data && response.data.status === 'success') {
-        onOrderSelect(response.data.data);
+        if (forTemplate) {
+          onOrderSelect(response.data.data);
+        } else {
+          setOrderData(response.data.data);
+          setShowOrderData(true);
+        }
       } else {
         setError('Failed to get order data');
       }
@@ -79,6 +117,11 @@ const OrderSearch = ({ onOrderSelect }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const closeOrderDataPopup = () => {
+    setShowOrderData(false);
+    setOrderData(null);
   };
   
   return (
@@ -110,18 +153,53 @@ const OrderSearch = ({ onOrderSelect }) => {
           />
         </div>
         
-        <button 
-          className="fetch-order-button"
-          onClick={handleFetchOrder}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Loading...' : 'Fetch Order Data'}
-        </button>
+        <div className="button-group">
+          <button 
+            className="fetch-order-button"
+            onClick={() => handleFetchOrder(true)}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'Fetch Order Data to Invoice'}
+          </button>
+          
+          <button 
+            className="display-order-button"
+            onClick={() => handleFetchOrder(false)}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'Display Order Data'}
+          </button>
+        </div>
       </div>
       
       {error && (
         <div className="order-search-error">
           {error}
+        </div>
+      )}
+
+      {showOrderData && orderData && (
+        <div className="order-data-popup">
+          <div className="popup-content">
+            <h4>Order Details</h4>
+            <div className="order-details">
+              {Object.entries(flattenOrderData(orderData))
+                .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+                .map(([key, value]) => (
+                  <div key={key} className="detail-row">
+                    <span className="detail-label">
+                      {key.replace(/_/g, ' ')}:
+                    </span>
+                    <span className="detail-value">
+                      {value?.toString() || 'N/A'}
+                    </span>
+                  </div>
+              ))}
+            </div>
+            <button className="close-button" onClick={closeOrderDataPopup}>
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
