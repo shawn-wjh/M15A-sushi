@@ -318,9 +318,6 @@ const invoiceController = {
       }
 
       // check if allowed access
-      console.log('req.user.userId: ', req.user.userId);
-      console.log('Items[0].UserID: ', Items[0].UserID);
-      console.log('checkUserId(req.user.userId, Items[0]): ', checkUserId(req.user.userId, Items[0]));
       if (!checkUserId(req.user.userId, Items[0])) {
         return res.status(401).json({
           status: 'error',
@@ -519,43 +516,51 @@ const invoiceController = {
     try {
       const invoiceId = req.params.invoiceid;
       const valid = req.validationResult.valid;
-
+      
       if (!invoiceId || valid === undefined) {
         return res.status(400).json({
           status: 'error',
           error: 'Missing invoice ID or valid status'
         });
       }
+      
+      if (!checkUserId(req.user.userId)) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
 
-      // const queryParams = {
-      //   TableName: Tables.INVOICES,
-      //   KeyConditionExpression: 'InvoiceID = :InvoiceId',
-      //   ExpressionAttributeValues: {
-      //     ':InvoiceId': invoiceId
-      //   }
-      // };
+      // find the invoice in the database
+      const queryParams = {
+        TableName: Tables.INVOICES,
+        KeyConditionExpression: 'InvoiceID = :InvoiceID',
+        ExpressionAttributeValues: {
+          ':InvoiceID': invoiceId
+        }
+      };
 
-      // const { Items } = await dbClient.send(new QueryCommand(queryParams));
+      const { Items } = await dbClient.send(new QueryCommand(queryParams));
 
-      // if (!Items || Items.length === 0) {
-      //   return res.status(400).json({
-      //     status: 'error',
-      //     error: 'Invoice not found'
-      //   });
-      // }
+      if (!Items || Items.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invoice not found'
+        });
+      }
 
-      // if (Items[0].UserId != req.user.userId) {
-      //   return res.status(401).json({
-      //     status: 'error',
-      //     error: 'Unauthorised Access'
-      //   });
-      // }
+      // check if the user has access to the invoice
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'Unauthorised Access'
+        });
+      }
 
       const updateParams = {
         TableName: Tables.INVOICES,
         Key: {
           InvoiceID: invoiceId,
-          UserID: '123'
         },
         UpdateExpression: 'set valid = :valid',
         ExpressionAttributeValues: {
@@ -564,7 +569,7 @@ const invoiceController = {
       };
 
       await dbClient.send(new UpdateCommand(updateParams));
-
+      
       if (next) {
         req.status = 'success';
         req.message = `Validation status successfully updated to ${valid}`;

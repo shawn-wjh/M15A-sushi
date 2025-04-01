@@ -11,7 +11,6 @@ async function validateInvoices(invoiceIds, schemas) {
     throw new Error("No authentication token found");
   }
 
-  console.log("token: ", token);
   try {
     const validationPromises = invoiceIds.map(async (invoiceId) => {
       const response = await axios.post(
@@ -50,13 +49,14 @@ const ValidationResult = () => {
   // get schemas and invoiceids from url
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const schemas = searchParams.get("schemas")?.split("+") || [];
-  const invoiceids = searchParams.get("invoiceids")?.split("+") || [];
 
-  // console.log('schemas in validationResults (should be an array): ', schemas);
+  // turn schema and invoiceids query into arrays
+  const schemas = searchParams.get("schemas")?.split(" ") || [];
+  const invoiceids = searchParams.get("invoiceids")?.split(" ") || [];
+
   // get validation results
-  // const validationResults = validateInvoices(invoiceids, schemas);
-  // console.log("validationResults: ", validationResults);
+  const validationResults = validateInvoices(invoiceids, schemas);
+  console.log("validationResults: ", validationResults);
 
   return (
     <div>
