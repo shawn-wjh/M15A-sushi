@@ -18,8 +18,7 @@
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 30px 20px;
-  min-height: 100vh;
+  padding: 0 20px 4rem;
   background-color: var(--black);
   color: var(--white);
   font-family:
@@ -32,7 +31,6 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 4rem;
 }
 
 .invoice-list-header {

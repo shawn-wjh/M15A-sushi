@@ -18,8 +18,7 @@
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 30px 20px;
-  min-height: 100vh;
+  padding: 0 20px 30px;
   background-color: var(--black);
   color: var(--white);
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -134,6 +133,24 @@
   font-weight: 500;
 }
 
+.required-indicator {
+  color: var(--accent-red);
+  margin-left: 3px;
+}
+
+.required-note {
+  color: var(--accent-red);
+  font-size: 0.8rem;
+  margin-left: 3px;
+}
+
+.field-note {
+  font-size: 0.8rem;
+  color: var(--light-gray);
+  margin-top: 5px;
+  font-style: italic;
+}
+
 .form-group input,
 .form-group select {
   width: 100%;
@@ -215,24 +232,89 @@
   font-size: 14px;
 }
 
-.invoice-total {
-  background-color: var(--gray);
-  border-radius: 12px;
+.totals-section {
+  margin-top: 20px;
+}
+
+.invoice-summary {
+  background-color: var(--dark-gray);
+  border-radius: 8px;
   padding: 20px;
+}
+
+.summary-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 10px 0;
 }
 
-.total-label {
+.summary-row:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-label {
+  color: var(--light-gray);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.summary-value {
+  color: var(--white);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.tax-row {
+  display: flex;
+  justify-content: space-between;
   color: var(--light-gray);
 }
 
-.total-value {
-  color: var(--accent-red);
+.total-row {
+  padding-top: 15px;
+  margin-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.summary-value.total {
+  color: var(--accent-green);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.tax-configuration {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.tax-rate-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 150px;
+}
+
+.tax-rate-field {
+  padding-right: 30px !important;
+  font-weight: 600;
+  font-size: 16px !important;
+  color: var(--accent-green) !important;
+}
+
+.tax-rate-symbol {
+  position: absolute;
+  right: 15px;
+  font-weight: 600;
+  color: var(--light-gray);
+}
+
+.tax-rate-help {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--light-gray);
+  font-style: italic;
 }
 
 .form-actions {
@@ -278,9 +360,41 @@
 }
 
 .form-button.secondary:hover {
-  background-color: var(--gray);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-button.validate-button {
+  background-color: #4cd964;
+  color: var(--white);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-button.validate-button:hover {
+  background-color: #3cb853;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(76, 217, 100, 0.3);
+}
+
+.form-button.validate-button:disabled {
+  background-color: #3a8a48;
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.checkmark-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .message {
@@ -297,9 +411,15 @@
 }
 
 .message.error {
-  background-color: rgba(255, 59, 48, 0.15);
+  background-color: rgba(255, 59, 48, 0.1);
+  border-left: 4px solid var(--accent-red);
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
   color: var(--accent-red);
-  border: 1px solid rgba(255, 59, 48, 0.3);
+  font-size: 14px;
+  white-space: pre-wrap;
+  line-height: 1.6;
 }
 
 .invoice-success {
@@ -367,6 +487,12 @@
   color: var(--accent-green);
 }
 
+.detail-value.total {
+  color: var(--accent-green);
+  font-weight: 700;
+  font-size: 18px;
+}
+
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
@@ -422,4 +548,24 @@
   line-height: 1.6;
   font-size: 1.1rem;
   max-width: 80%;
+}
+
+.error-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.error-list li {
+  margin-bottom: 10px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.error-list li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent-red);
+  font-weight: bold;
 } 
