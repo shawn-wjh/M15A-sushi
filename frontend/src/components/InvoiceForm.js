@@ -58,6 +58,7 @@ const InvoiceForm = () => {
   const [message, setMessage] = useState(null);
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [wasValidated, setWasValidated] = useState(false);
+  const [submittedValues, setSubmittedValues] = useState(null);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -307,6 +308,16 @@ const InvoiceForm = () => {
         }))
       };
       
+      // Save submitted values for display
+      const displayValues = {
+        ...submissionData,
+        subtotal: roundedTotal,
+        taxAmount: taxAmount,
+        taxRate: taxRate,
+        total: roundedTotal + taxAmount
+      };
+      setSubmittedValues(displayValues);
+      
       console.log('Submitting invoice with total:', roundedTotal);
       console.log('Tax amount:', taxAmount);
       console.log('Item costs:', normalizedItems.map(item => ({
@@ -432,24 +443,21 @@ const InvoiceForm = () => {
                 <div className="detail-item">
                   <span className="detail-label">Subtotal:</span>
                   <span className="detail-value">
-                    {createdInvoice.currency} {parseFloat(createdInvoice.total || 0).toFixed(2)}
+                    {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.subtotal || 0).toFixed(2)}
                   </span>
                 </div>
                 
                 <div className="detail-item">
-                  <span className="detail-label">Tax ({parseFloat(createdInvoice.taxRate || 0).toFixed(1)}%):</span>
+                  <span className="detail-label">Tax ({parseFloat(submittedValues?.taxRate || 0).toFixed(1)}%):</span>
                   <span className="detail-value">
-                    {createdInvoice.currency} {parseFloat(createdInvoice.taxAmount || createdInvoice.taxTotal?.amount || createdInvoice.TaxTotal || 0).toFixed(2)}
+                    {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.taxAmount || 0).toFixed(2)}
                   </span>
                 </div>
                 
                 <div className="detail-item">
                   <span className="detail-label">Total Amount:</span>
                   <span className="detail-value total">
-                    {createdInvoice.currency} {parseFloat(
-                      createdInvoice.totalWithTax || 
-                      (createdInvoice.total || 0) + parseFloat(createdInvoice.taxAmount || createdInvoice.taxTotal?.amount || createdInvoice.TaxTotal || 0)
-                    ).toFixed(2)}
+                    {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.total || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -457,7 +465,10 @@ const InvoiceForm = () => {
               <div className="form-actions">
                 <button 
                   className="form-button primary" 
-                  onClick={() => setCreatedInvoice(null)}
+                  onClick={() => {
+                    setCreatedInvoice(null);
+                    setSubmittedValues(null);
+                  }}
                 >
                   Create Another Invoice
                 </button>
