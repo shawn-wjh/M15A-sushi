@@ -4,7 +4,8 @@ import getCookie from "../../utils/cookieHelper";
 import "./validationResults.css";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { FaEdit } from "react-icons/fa";
-
+import MenuBar from "../MenuBar";
+import TopBar from "../TopBar";
 const API_URL = "http://localhost:3000/v2/invoices";
 
 const schemaNameMap = {
@@ -107,6 +108,10 @@ const ValidationResult = () => {
   );
 
   return (
+    <>
+    <MenuBar activeSection="invoices" />
+    <div className="invoice-page-content">
+    <TopBar /> 
     <div className="validation-container">
       {loading ? (
         <div>Loading...</div>
@@ -116,9 +121,11 @@ const ValidationResult = () => {
             {allValid ? "✓" : "✕"}
           </div>
           <h3>
-            {allValid
-              ? "All Invoices Validated Successfully!"
-              : "Some Invoices Failed Validation"}
+            {validationResults.length > 1 && allValid ? "All Invoices Validated Successfully!" :
+            validationResults.length === 1 && allValid ? "Invoice Validated Successfully!" :
+            validationResults.length > 1 && !allValid ? "Some Invoices Failed Validation" :
+            validationResults.length === 1 && !allValid ? "Invoice Failed Validation" :
+            "Invoice Failed Validation"}
           </h3>
           <p>
             Validation was performed against the following schemas:
@@ -199,6 +206,8 @@ const ValidationResult = () => {
         </>
       )}
     </div>
+    </div>
+    </>
   );
 };
 

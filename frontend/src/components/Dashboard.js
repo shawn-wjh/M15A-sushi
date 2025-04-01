@@ -89,7 +89,6 @@ const Dashboard = () => {
   const renderInvoiceListSection = () => {
     return (
       <div className="invoice-list-section">
-        <h2>Invoices</h2>
         <InvoiceList />
       </div>
     );

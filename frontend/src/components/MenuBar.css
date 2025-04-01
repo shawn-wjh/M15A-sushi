@@ -1,0 +1,251 @@
+/* Variables */
+:root {
+  --menu-primary-color: #ff3b30;
+  --menu-primary-light: #ff6259;
+  --menu-secondary-color: #333333;
+  --menu-dark-bg: #121212;
+  --menu-sidebar-bg: #222222;
+  --menu-content-bg: #121212;
+  --menu-text-dark: #ffffff;
+  --menu-text-muted: #888888;
+  --menu-border-light: #333333;
+  --menu-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --menu-transition-speed: 0.3s;
+}
+
+/* Menu Sidebar Layout */
+.menu-sidebar {
+  width: 250px;
+  background-color: var(--menu-sidebar-bg);
+  border-right: 1px solid var(--menu-border-light);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.menu-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--menu-border-light);
+}
+
+.menu-dashboard-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.menu-logo-text {
+  color: #ffffff;
+}
+
+.menu-logo-dot {
+  color: var(--menu-primary-color);
+  font-size: 1.8rem;
+  margin: 0 2px;
+}
+
+.menu-logo-invoice {
+  color: var(--menu-text-muted);
+  font-weight: 400;
+}
+
+.menu-create-invoice-button-container {
+  padding: 20px;
+}
+
+.menu-create-invoice-button {
+  width: 100%;
+  background-color: var(--menu-primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--menu-transition-speed);
+}
+
+.menu-create-invoice-button:hover {
+  background-color: var(--menu-primary-light);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+.menu-plus-icon {
+  margin-right: 8px;
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+.menu-sidebar-nav {
+  flex: 1;
+  padding: 10px 0;
+  overflow-y: auto;
+}
+
+.menu-sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-sidebar-nav li {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  margin: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color var(--menu-transition-speed);
+  color: var(--menu-text-muted);
+}
+
+.menu-sidebar-nav li:hover {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--menu-primary-color);
+}
+
+.menu-sidebar-nav li.menu-active {
+  background-color: rgba(255, 59, 48, 0.2);
+  color: var(--menu-primary-color);
+  font-weight: 600;
+}
+
+.menu-nav-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  opacity: 0.8;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.menu-profile-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>');
+}
+
+.menu-overview-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>');
+}
+
+.menu-invoices-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>');
+}
+
+.menu-settings-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>');
+}
+
+.menu-logout-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>');
+}
+
+.menu-sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid var(--menu-border-light);
+}
+
+.menu-logout-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--menu-text-muted);
+  font-size: 1rem;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color var(--menu-transition-speed);
+}
+
+.menu-logout-button:hover {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--menu-primary-color);
+}
+
+/* Active state for menu navigation items */
+.menu-sidebar-nav li.menu-active .menu-profile-icon,
+.menu-sidebar-nav li.menu-active .menu-overview-icon,
+.menu-sidebar-nav li.menu-active .menu-invoices-icon,
+.menu-sidebar-nav li.menu-active .menu-settings-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>');
+}
+
+.menu-sidebar-nav li.menu-active .menu-overview-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>');
+}
+
+.menu-sidebar-nav li.menu-active .menu-invoices-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>');
+}
+
+.menu-sidebar-nav li.menu-active .menu-settings-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>');
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .menu-sidebar {
+    width: 80px;
+    overflow: hidden;
+  }
+  
+  .menu-sidebar-header {
+    padding: 15px;
+    text-align: center;
+  }
+  
+  .menu-dashboard-logo {
+    font-size: 1.2rem;
+    justify-content: center;
+  }
+  
+  .menu-logo-invoice {
+    display: none;
+  }
+  
+  .menu-create-invoice-button-container {
+    padding: 10px;
+  }
+  
+  .menu-create-invoice-button {
+    padding: 10px;
+  }
+  
+  .menu-create-invoice-button span:not(.menu-plus-icon) {
+    display: none;
+  }
+  
+  .menu-plus-icon {
+    margin: 0;
+  }
+  
+  .menu-sidebar-nav li {
+    padding: 15px 0;
+    justify-content: center;
+  }
+  
+  .menu-sidebar-nav li span {
+    display: none;
+  }
+  
+  .menu-nav-icon {
+    margin: 0;
+  }
+  
+  .menu-logout-button span {
+    display: none;
+  }
+} 

@@ -6,6 +6,8 @@ import "./InvoicePage.css";
 import XMLWindow from "./XMLWindow";
 import parseInvoiceXml from "../../utils/parseXmlHelper";
 import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPopUp";
+import MenuBar from "../MenuBar";
+import TopBar from "../TopBar";
 
 const API_URL = "http://localhost:3000/v1/invoices";
 
@@ -171,31 +173,17 @@ const InvoicePage = () => {
   }
 
   return (
-    <>
+    <div className="invoice-page-container">
+      <MenuBar activeSection="invoices" />
       {isValidationPopUpOpen && (
         <ValidationSchemaPopUp
           onClose={() => setIsValidationPopUpOpen(false)}
           invoiceIds={[invoiceId]}
         />
       )}
-      <div className="dashboard-page">
-        <nav className="dashboard-navbar">
-          <div className="dashboard-logo" onClick={() => history.push("/")}>
-            <span className="logo-text">Sushi</span>
-            <span className="logo-dot">.</span>
-            <span className="logo-invoice">Invoice</span>
-          </div>
-          <div className="user-info">
-            <button
-              onClick={() => history.push("/dashboard")}
-              className="logout-button"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </nav>
-
-        <main className="dashboard-main">
+      <div className="invoice-page-content">
+        <TopBar />
+        <main className="content-area">
           <div className="invoice-view-container">
             <button
               className="back-button"
@@ -504,7 +492,7 @@ const InvoicePage = () => {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

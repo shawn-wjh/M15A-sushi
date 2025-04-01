@@ -236,7 +236,6 @@ const InvoiceList = () => {
 
   return (
     <div className="dashboard-page">
-      <main className="dashboard-main">
         <div className="invoice-list-container">
           {message && <div className="error-message">{message.text}</div>}
           <div className="invoice-list-header">
@@ -333,7 +332,6 @@ const InvoiceList = () => {
             onPageChange={handlePageChange}
           />
         </div>
-      </main>
 
       {showDeleteConfirm && (
         <div className="modal-overlay">
