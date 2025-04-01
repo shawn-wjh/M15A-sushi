@@ -181,10 +181,16 @@ const ValidationResult = () => {
           <div className="validation-form-actions">
             <button
               className="validation-form-button primary"
-              onClick={() => history.push({
-                pathname: '/dashboard',
-                state: { section: 'invoices' }
-              })}
+              onClick={() => {
+                if (history.location.state?.from === '/dashboard') {
+                  history.push({
+                    pathname: '/dashboard',
+                    state: { section: 'invoices' }
+                  });
+                } else {
+                  history.goBack();
+                }
+              }}
               title="Back to Invoice List"
             >
               Done
