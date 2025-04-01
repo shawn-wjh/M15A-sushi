@@ -166,7 +166,8 @@ function convertToUBL(invoice) {
           'cac:Item': {
             'cbc:Name': { _text: item.name },
             'cac:ClassifiedTaxCategory': {
-              'cbc:ID': { _text: item.taxCategory || 'S' } // either S = Standard rate or Z = Zero rated goods
+              'cbc:ID': { _text: item.taxCategory || 'S' }, // either S = Standard rate or Z = Zero rated goods
+              'cbc:Percent': { _text: (item.taxPercent || invoice.taxRate || 0).toString() }
             }
           },
           'cac:Price': {
@@ -181,7 +182,17 @@ function convertToUBL(invoice) {
               _text: item.count.toString()
             }
           }
-        })) : []
+        })) : [],
+        
+        // Add TaxTotal element
+        'cbc:TaxTotal': {
+          'cbc:TaxAmount': {
+            _attributes: {
+              currencyID: invoice.currency || 'AUD'
+            },
+            _text: (invoice.taxTotal?.amount || invoice.taxAmount || 0).toString()
+          }
+        }
       }
     };
 

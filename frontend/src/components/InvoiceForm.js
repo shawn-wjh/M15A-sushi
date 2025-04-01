@@ -40,6 +40,10 @@ const InvoiceForm = () => {
       country: 'AU'
     },
     buyerPhone: '',
+    supplierPhone: '',
+    supplierEmail: '',
+    TaxTotal: 0,
+    taxRate: 10, // Default 10% GST for Australia
     items: [
       {
         name: '',
@@ -53,6 +57,8 @@ const InvoiceForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [createdInvoice, setCreatedInvoice] = useState(null);
+  const [wasValidated, setWasValidated] = useState(false);
+  const [submittedValues, setSubmittedValues] = useState(null);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -112,10 +118,49 @@ const InvoiceForm = () => {
     // Round to 2 decimal places to avoid floating point issues
     const roundedTotal = Math.round(total * 100) / 100;
     
+    // Calculate tax amount based on tax rate
+    const TaxTotal = Math.round(roundedTotal * (formData.taxRate / 100) * 100) / 100;
+    
     setFormData(prev => ({
       ...prev,
-      total: roundedTotal
+      total: roundedTotal,
+      TaxTotal: TaxTotal
     }));
+  };
+
+  // Handle tax rate change
+  const handleTaxRateChange = (e) => {
+    // Allow empty input field
+    const newTaxRate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
+    
+    setFormData(prev => ({
+      ...prev,
+      taxRate: newTaxRate
+    }));
+    
+    // Recalculate tax amount with new rate (use 0 if field is empty)
+    const calcRate = newTaxRate === '' ? 0 : newTaxRate;
+    setTimeout(() => {
+      const items = formData.items;
+      const total = items.reduce((sum, item) => {
+        const count = item.count === '' ? 0 : parseFloat(item.count);
+        const cost = item.cost === '' ? 0 : parseFloat(item.cost);
+        const itemTotal = count * cost;
+        return sum + (isNaN(itemTotal) ? 0 : itemTotal);
+      }, 0);
+      
+      // Round to 2 decimal places
+      const roundedTotal = Math.round(total * 100) / 100;
+      
+      // Calculate tax amount
+      const TaxTotal = Math.round(roundedTotal * (calcRate / 100) * 100) / 100;
+      
+      setFormData(prev => ({
+        ...prev,
+        total: roundedTotal,
+        TaxTotal: TaxTotal
+      }));
+    }, 0);
   };
 
   // Add a new item
@@ -156,11 +201,12 @@ const InvoiceForm = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, shouldValidate = false) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage(null);
     setCreatedInvoice(null);
+    setWasValidated(shouldValidate);
     
     try {
       // Convert any empty string values to numbers before validation
@@ -192,6 +238,26 @@ const InvoiceForm = () => {
         return;
       }
       
+      // Validate tax rate if validating against Peppol
+      if (shouldValidate && (formData.taxRate === '' || formData.taxRate === 0)) {
+        setMessage({
+          type: 'error',
+          text: 'Tax rate is required for Peppol compliance. Please enter a valid tax rate.'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Validate supplier contact information (at least one of phone or email must be provided)
+      if (shouldValidate && !formData.supplierPhone && !formData.supplierEmail) {
+        setMessage({
+          type: 'error',
+          text: 'Supplier contact information is required for Peppol compliance. Please provide at least one supplier contact method (phone or email).'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Validate items with normalized values
       const invalidItems = normalizedItems.some(item => !item.name || item.count <= 0 || item.cost <= 0);
       if (invalidItems) {
@@ -211,14 +277,48 @@ const InvoiceForm = () => {
       // Round to 2 decimal places
       const roundedTotal = Math.round(calculatedTotal * 100) / 100;
       
-      // Create a new data object with the correct total and normalized items
+      // Ensure tax rate is a number
+      const taxRate = formData.taxRate === '' ? 0 : parseFloat(formData.taxRate);
+      
+      // Calculate tax amount based on subtotal
+      const taxAmount = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
+      
+      // Store a copy of the submitted values for display
+      setSubmittedValues({
+        total: roundedTotal,
+        taxRate: taxRate,
+        taxAmount: taxAmount,
+        currency: formData.currency,
+        totalWithTax: roundedTotal + taxAmount
+      });
+      
+      // Create a new data object with the correct total, tax data, and normalized items
       const submissionData = {
         ...formData,
-        items: normalizedItems,
-        total: roundedTotal
+        total: roundedTotal,
+        taxRate: taxRate,
+        taxAmount: taxAmount,
+        TaxTotal: taxAmount, // Keep for backward compatibility
+        totalWithTax: roundedTotal + taxAmount,
+        supplierContact: {
+          phone: formData.supplierPhone || '',
+          email: formData.supplierEmail || ''
+        },
+        // Add explicit tax data in the format expected by the backend
+        taxTotal: {
+          amount: taxAmount,
+          currencyID: formData.currency
+        },
+        // Add tax information to each line item
+        items: normalizedItems.map(item => ({
+          ...item,
+          taxCategory: 'S', // Standard rate
+          taxPercent: taxRate
+        }))
       };
       
       console.log('Submitting invoice with total:', roundedTotal);
+      console.log('Tax amount:', taxAmount);
       console.log('Item costs:', normalizedItems.map(item => ({
         name: item.name,
         count: item.count,
@@ -227,18 +327,24 @@ const InvoiceForm = () => {
       })));
       
       // Send data to backend using the apiClient (which already has auth and base URL config)
-      const response = await apiClient.post(
-        '/v1/invoices/create-and-validate', 
-        submissionData
-      );
+      const endpoint = shouldValidate ? '/v2/invoices/create-and-validate' : '/v2/invoices/create';
+      const response = await apiClient.post(endpoint, submissionData);
       
       setMessage({
         type: 'success',
-        text: 'Invoice created and validated successfully!'
+        text: shouldValidate ? 'Invoice created and validated successfully!' : 'Invoice created successfully!'
       });
       
       // Store the created invoice data
       setCreatedInvoice(response.data);
+      
+      // Log the response data for debugging - more detailed
+      console.log('RESPONSE DATA FROM SERVER (FULL DETAILS):', JSON.stringify(response.data, null, 2));
+      console.log('Currency:', response.data.currency);
+      console.log('Total:', response.data.total);
+      console.log('Tax rate:', response.data.taxRate);
+      console.log('Tax amount:', response.data.taxAmount || response.data.TaxTotal);
+      console.log('Total with tax:', response.data.totalWithTax);
       
       // Reset form after successful submission
       setFormData({
@@ -258,6 +364,10 @@ const InvoiceForm = () => {
           country: 'AU'
         },
         buyerPhone: '',
+        supplierPhone: '',
+        supplierEmail: '',
+        TaxTotal: 0,
+        taxRate: 10,
         items: [
           {
             name: '',
@@ -279,6 +389,66 @@ const InvoiceForm = () => {
     }
   };
 
+  // Format error message to display each error on a separate line
+  const formatErrorMessage = (errorText) => {
+    if (!errorText) return '';
+    
+    // Ensure errorText is a string
+    const errorString = typeof errorText === 'string' ? errorText : String(errorText);
+    
+    // Generic handler for error messages containing validation rules
+    if (errorString.includes('Peppol rule')) {
+      // Extract individual errors using regex
+      const errorRegex = /Missing[^(]+ \(Peppol rule [^)]+\)/g;
+      const matches = errorString.match(errorRegex);
+      
+      if (matches && matches.length > 0) {
+        // Remove duplicate errors
+        const uniqueErrors = [...new Set(matches)];
+        
+        // Return as a list
+        return (
+          <ul className="error-list">
+            {uniqueErrors.map((err, index) => (
+              <li key={index}>{err}</li>
+            ))}
+          </ul>
+        );
+      }
+    }
+    
+    // For simple error messages, just return as is
+    return errorString;
+  };
+  
+  // Helper function to extract values from the response
+  const extractInvoiceValue = (invoice, field, defaultValue = 0) => {
+    // First check if the field exists directly in the invoice object
+    if (invoice[field] !== undefined && invoice[field] !== null) {
+      return typeof invoice[field] === 'number' ? 
+        invoice[field] : parseFloat(invoice[field] || defaultValue);
+    }
+    
+    // Check nested properties
+    if (field === 'taxAmount' && invoice.taxTotal?.amount !== undefined) {
+      return typeof invoice.taxTotal.amount === 'number' ? 
+        invoice.taxTotal.amount : parseFloat(invoice.taxTotal.amount || defaultValue);
+    }
+    
+    // Check alternative field names
+    if (field === 'taxAmount' && invoice.TaxTotal !== undefined) {
+      return typeof invoice.TaxTotal === 'number' ? 
+        invoice.TaxTotal : parseFloat(invoice.TaxTotal || defaultValue);
+    }
+    
+    // If we have submitted values and the field is found there, use it as backup
+    if (submittedValues && submittedValues[field] !== undefined) {
+      return submittedValues[field];
+    }
+    
+    return defaultValue;
+  };
+
   return (
     <div className="dashboard-page">
       <main className="dashboard-main">
@@ -287,7 +457,7 @@ const InvoiceForm = () => {
             <div className="invoice-success">
               <div className="success-icon">✓</div>
               <h3>Invoice Created Successfully!</h3>
-              <p>Your invoice has been created and validated.</p>
+              <p>Your invoice has been {wasValidated ? 'created and validated' : 'created'}</p>
               
               <div className="invoice-details">
                 <div className="detail-item">
@@ -295,16 +465,47 @@ const InvoiceForm = () => {
                   <span className="detail-value">{createdInvoice.invoiceId}</span>
                 </div>
                 
+                {wasValidated && (
+                  <div className="detail-item">
+                    <span className="detail-label">Validation:</span>
+                    <span className="detail-value success">{createdInvoice.validation?.status || 'Success'}</span>
+                  </div>
+                )}
+                
                 <div className="detail-item">
-                  <span className="detail-label">Status:</span>
-                  <span className="detail-value success">{createdInvoice.validation?.status || 'Success'}</span>
+                  <span className="detail-label">Subtotal:</span>
+                  <span className="detail-value">
+                    {createdInvoice.currency || 'AUD'} {extractInvoiceValue(createdInvoice, 'total').toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">Tax ({extractInvoiceValue(createdInvoice, 'taxRate').toFixed(1)}%):</span>
+                  <span className="detail-value">
+                    {createdInvoice.currency || 'AUD'} {extractInvoiceValue(createdInvoice, 'taxAmount').toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">Total Amount:</span>
+                  <span className="detail-value total">
+                    {createdInvoice.currency || 'AUD'} {
+                      (extractInvoiceValue(createdInvoice, 'totalWithTax') || 
+                        (extractInvoiceValue(createdInvoice, 'total') + 
+                         extractInvoiceValue(createdInvoice, 'taxAmount'))
+                      ).toFixed(2)
+                    }
+                  </span>
                 </div>
               </div>
               
               <div className="form-actions">
                 <button 
                   className="form-button primary" 
-                  onClick={() => setCreatedInvoice(null)}
+                  onClick={() => {
+                    setCreatedInvoice(null);
+                    setSubmittedValues(null);
+                  }}
                 >
                   Create Another Invoice
                 </button>
@@ -477,6 +678,37 @@ const InvoiceForm = () => {
                       <option value="NZ">New Zealand</option>
                     </select>
                   </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="supplierPhone">
+                        Phone Number <span className="required-note">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        id="supplierPhone"
+                        name="supplierPhone"
+                        value={formData.supplierPhone}
+                        onChange={handleChange}
+                        placeholder="e.g., +61 123 456 789"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="supplierEmail">
+                        Email Address <span className="required-note">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        id="supplierEmail"
+                        name="supplierEmail"
+                        value={formData.supplierEmail}
+                        onChange={handleChange}
+                        placeholder="e.g., supplier@example.com"
+                      />
+                      <div className="field-note">* At least one contact method required for Peppol validation</div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="form-section">
@@ -511,70 +743,91 @@ const InvoiceForm = () => {
                         <input
                           type="text"
                           id={`item-${index}-name`}
+                          name={`item-${index}-name`}
                           value={item.name}
                           onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                           required
-                          placeholder="e.g., Product A"
                         />
                       </div>
                       
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label htmlFor={`item-${index}-count`}>Quantity *</label>
-                          <input
-                            type="number"
-                            id={`item-${index}-count`}
-                            value={item.count}
-                            onChange={(e) => handleItemChange(index, 'count', e.target.value)}
-                            min="1"
-                            step="1"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="form-group">
-                          <label htmlFor={`item-${index}-cost`}>Unit Price *</label>
-                          <input
-                            type="number"
-                            id={`item-${index}-cost`}
-                            value={item.cost}
-                            onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
-                            min="0.01"
-                            step="0.01"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="form-group">
-                          <label htmlFor={`item-${index}-currency`}>Currency</label>
-                          <select
-                            id={`item-${index}-currency`}
-                            value={item.currency}
-                            onChange={(e) => handleItemChange(index, 'currency', e.target.value)}
-                          >
-                            <option value="AUD">AUD</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                          </select>
-                        </div>
+                      <div className="form-group">
+                        <label htmlFor={`item-${index}-count`}>Count</label>
+                        <input
+                          type="text"
+                          id={`item-${index}-count`}
+                          name={`item-${index}-count`}
+                          value={item.count}
+                          onChange={(e) => handleItemChange(index, 'count', e.target.value)}
+                        />
                       </div>
                       
-                      <div className="item-total">
-                        Item Total: {formData.currency} {(item.count * item.cost).toFixed(2)}
+                      <div className="form-group">
+                        <label htmlFor={`item-${index}-cost`}>Cost</label>
+                        <input
+                          type="text"
+                          id={`item-${index}-cost`}
+                          name={`item-${index}-cost`}
+                          value={item.cost}
+                          onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                <div className="invoice-total">
-                  <span className="total-label">Invoice Total:</span>
-                  <span className="total-value">{formData.currency} {formData.total.toFixed(2)}</span>
+                <div className="form-section">
+                  <h3>Tax Information</h3>
+                  <div className="tax-configuration">
+                    <div className="form-group">
+                      <label htmlFor="taxRate">
+                        Tax Rate (%) <span className="required-indicator">*</span>
+                      </label>
+                      <div className="tax-rate-input">
+                        <input
+                          type="number"
+                          id="taxRate"
+                          name="taxRate"
+                          value={formData.taxRate}
+                          onChange={handleTaxRateChange}
+                          min="0"
+                          step="0.1"
+                          className="tax-rate-field"
+                        />
+                        <span className="tax-rate-symbol">%</span>
+                      </div>
+                      <div className="tax-rate-help">
+                        Enter the applicable tax rate (e.g., 10 for 10% GST in Australia). 
+                        Required for Peppol validation.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="form-section totals-section">
+                  <h3>Invoice Summary</h3>
+                  <div className="invoice-summary">
+                    <div className="summary-row">
+                      <span className="summary-label">Subtotal:</span>
+                      <span className="summary-value">{formData.currency} {formData.total.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="summary-row tax-row">
+                      <div className="tax-rate-display">
+                        <span className="summary-label">Tax ({formData.taxRate === '' ? '0' : formData.taxRate}%):</span>
+                      </div>
+                      <span className="summary-value">{formData.currency} {formData.TaxTotal.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="summary-row total-row">
+                      <span className="summary-label">Total (inc. tax):</span>
+                      <span className="summary-value total">{formData.currency} {(formData.total + formData.TaxTotal).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
                 
                 {message && (
-                  <div className={`message ${message.type}`} style={{ marginBottom: '20px' }}>
-                    {message.text}
+                  <div className={`message ${message.type}`}>
+                    {formatErrorMessage(message.text)}
                   </div>
                 )}
                 
@@ -601,6 +854,10 @@ const InvoiceForm = () => {
                             country: 'AU'
                           },
                           buyerPhone: '',
+                          supplierPhone: '',
+                          supplierEmail: '',
+                          TaxTotal: 0,
+                          taxRate: 10,
                           items: [
                             {
                               name: '',
@@ -623,6 +880,20 @@ const InvoiceForm = () => {
                   >
                     {isSubmitting ? 'Creating...' : 'Create Invoice'}
                   </button>
+                  
+                  <button 
+                    type="button" 
+                    className="form-button validate-button"
+                    disabled={isSubmitting}
+                    onClick={(e) => handleSubmit(e, true)}
+                  >
+                    {isSubmitting ? 'Processing...' : (
+                      <>
+                        <span className="checkmark-icon">✓</span>
+                        Create & Validate
+                      </>
+                    )}
+                  </button>
                 </div>
               </form>
             </>
@@ -633,4 +904,4 @@ const InvoiceForm = () => {
   );
 };
 
-export default InvoiceForm; 
+export default InvoiceForm;
