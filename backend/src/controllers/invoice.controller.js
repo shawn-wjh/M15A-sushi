@@ -294,6 +294,7 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res, next) => {
+    console.log('in getInvoice');
     const invoiceId = req.params.invoiceid;
 
     // check if invoiceId is empty
@@ -317,6 +318,9 @@ const invoiceController = {
         throw new Error('Invoice not found');
       }
 
+      console.log('req.user.userId: ', req.user.userId);
+      console.log('Items[0]: ', Items[0]);
+      console.log('checkingUserId(req.user.userId, Items[0]): ', checkUserId(req.user.userId, Items[0]));
       // check if allowed access
       if (!checkUserId(req.user.userId, Items[0])) {
         return res.status(401).json({
@@ -561,6 +565,7 @@ const invoiceController = {
         TableName: Tables.INVOICES,
         Key: {
           InvoiceID: invoiceId,
+          UserID: req.user.userId
         },
         UpdateExpression: 'set valid = :valid',
         ExpressionAttributeValues: {
