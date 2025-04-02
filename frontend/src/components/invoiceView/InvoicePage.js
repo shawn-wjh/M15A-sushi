@@ -1,5 +1,5 @@
 import { useHistory } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../utils/axiosConfig";
 import { useState, useEffect } from "react";
 import getCookie from "../../utils/cookieHelper";
 import "./InvoicePage.css";
@@ -9,7 +9,7 @@ import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPo
 import MenuBar from "../MenuBar";
 import TopBar from "../TopBar";
 
-const API_URL = "http://localhost:3000/v1/invoices";
+const API_URL = "/v1/invoices";
 
 const InvoicePage = () => {
   const history = useHistory();
@@ -40,13 +40,7 @@ const InvoicePage = () => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}/${invoiceId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        });
+        const response = await apiClient.get(`${API_URL}/${invoiceId}`);
 
         // Extract invoice information from XML
         const invoiceData = parseInvoiceXml(response.data);
@@ -103,13 +97,7 @@ const InvoicePage = () => {
     }
 
     try {
-      await axios.delete(`${API_URL}/${invoiceId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      await apiClient.delete(`${API_URL}/${invoiceId}`);
 
       // Show success message
       setMessage({ type: "success", text: "Invoice successfully deleted" });
@@ -332,11 +320,14 @@ const InvoicePage = () => {
                   <h3>Delete Confirmation</h3>
                   <p>Are you sure you want to delete this invoice?</p>
                   <div className="modal-buttons">
+                    {message && (
+                      <div className="error-message">{message.text}</div>
+                    )}
                     <button
                       className="modal-button cancel"
                       onClick={handleCancelDelete}
                     >
-                      No
+                      Cancel
                     </button>
                     <button
                       className="modal-button delete"
