@@ -21,7 +21,8 @@ async function validateInvoices(invoiceIds, schemas) {
 
   try {
     const validationPromises = invoiceIds.map(async (invoiceId) => {
-      console.log("validating invoice with schemas: ", schemas);
+      console.log("in validateInvoices, validating invoice with schemas: ", schemas);
+      console.log("in validateInvoices, token: ", token);
       const response = await axios.post(
         `${API_URL}/${invoiceId}/validate`,
         { schemas: schemas },
@@ -34,6 +35,7 @@ async function validateInvoices(invoiceIds, schemas) {
         }
       );
 
+      console.log("in validateInvoices, response: ", response);
       return {
         invoiceId,
         validationResult: response.data.validationResult,
@@ -189,13 +191,9 @@ const ValidationResult = () => {
             <button
               className="validation-form-button primary"
               onClick={() => {
-                if (history.location.state?.from === '/dashboard') {
-                  history.push({
-                    pathname: '/dashboard',
-                    state: { section: 'invoices' }
-                  });
-                } else {
-                  history.goBack();
+                history.goBack();
+                if (history.location.pathname === '/dashboard') {
+                  history.push('/invoices');
                 }
               }}
               title="Back to Invoice List"

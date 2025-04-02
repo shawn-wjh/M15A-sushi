@@ -3,18 +3,14 @@
  * invoice if one is given.
  */
 const checkUserId = (userId, invoice) => {
-  // no user id
+  // if no userId, return false
   if (!userId) {
     return false;
   }
 
-  // yes user id no invoice given
-  if (!invoice) {
-    return true;
-  }
-
-  if (invoice.UserID != userId) {
-    return false;
+  // if invoice is given, check if userId matches
+  if (invoice) {
+    return invoice.UserID === userId;
   }
 
   return true;
