@@ -757,6 +757,14 @@ const validatePeppol = (invoice, validationResult) => {
     );
   }
 
+  // append schema name to each warning and error message
+  validationResult.errors = validationResult.errors.map(error => {
+    return error + ' (PEPPOL A-NZ)';
+  });
+  validationResult.warnings = validationResult.warnings.map(warning => {
+    return warning + ' (PEPPOL A-NZ)';
+  });
+
   return validationResult;
 };
 
@@ -795,6 +803,14 @@ const validateFairWorkCommission = (invoice, validationResult) => {
     );
   }
 
+  // append schema name to each warning and error message
+  validationResult.errors = validationResult.errors.map(error => {
+    return error + ' (Fair Work Commission)';
+  });
+  validationResult.warnings = validationResult.warnings.map(warning => {
+    return warning + ' (Fair Work Commission)';
+  });
+
   return validationResult;
 };
 
@@ -811,7 +827,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     if (!ublXml) {
       throw new Error('No UBL XML provided for validation');
     }
-
+    
     // Parse the XML to a JavaScript object
     const options = {
       compact: true,
@@ -825,26 +841,46 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     if (!invoice) {
       validationResult.valid = false;
       validationResult.errors.push('Missing Invoice root element');
-      return res.status(400).json({
+      return res.status(500).json({
         status: 'error',
-        message: 'Invoice does not comply with Peppol standards',
+        message: 'Invoice could not be parsed',
         validationErrors: validationResult.errors
       });
     }
 
-    if (!req.body.schemas) {
+    // check valid schemas
+    const schemas = req.body.schemas;
+
+    if (!schemas) {
       return res.status(400).json({
         status: 'error',
         message: 'No schemas provided for validation'
       });
     }
 
-    if (req.body.schemas.includes('peppol')) {
-      validationResult = validatePeppol(invoice, validationResult);
+    const validSchemas = ['peppol', 'fairwork'];
+
+    if (!schemas.every(schema => validSchemas.includes(schema))) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid schema(s) provided'
+      });
     }
 
-    if (req.body.schemas.includes('fairwork')) {
-      validationResult = validateFairWorkCommission(invoice, validationResult);
+    // perform checks
+    if (schemas.includes('peppol')) {
+      const peppolResult = validatePeppol(invoice, validationResult);
+      validationResult.valid = peppolResult.valid;
+      validationResult.errors.push(...peppolResult.errors);
+      validationResult.warnings.push(...peppolResult.warnings);
+    }
+
+
+    if (schemas.includes('fairwork')) {
+      const fairWorkResult = validateFairWorkCommission(invoice, validationResult);
+      validationResult.valid = fairWorkResult.valid;
+      validationResult.errors.push(...fairWorkResult.errors);
+      validationResult.warnings.push(...fairWorkResult.warnings);
     }
 
     // If validation passes

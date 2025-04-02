@@ -16,9 +16,7 @@
 
 .invoice-list-container {
   width: 100%;
-  max-width: 900px;
   margin: 0 auto;
-  padding: 0 20px 4rem;
   background-color: var(--black);
   color: var(--white);
   font-family:

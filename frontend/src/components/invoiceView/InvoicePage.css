@@ -14,15 +14,28 @@
   --transition-fast: 0.2s ease;
 }
 
-.invoice-view-container {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 30px 20px;
+.invoice-page-container {
+  display: flex;
   min-height: 100vh;
   background-color: var(--black);
-  color: var(--white);
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.invoice-page-content {
+  flex: 1;
+  margin-left: 250px; /* Same width as MenuBar */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--dark-bg);
+}
+
+.invoice-view-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: var(--sidebar-bg);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: var(--card-shadow);
 }
 
 .welcome-banner {
@@ -304,6 +317,21 @@
   border: 1px solid rgba(255, 59, 48, 0.3);
 }
 
+.dashboard-navbar {
+  background-color: var(--sidebar-bg);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
@@ -314,5 +342,21 @@
     flex-direction: column;
     gap: 10px;
     text-align: center;
+  }
+  
+  .invoice-page-content {
+    margin-left: 80px; /* Same width as collapsed MenuBar */
+  }
+  
+  .dashboard-navbar {
+    padding: 1rem;
+  }
+  
+  .dashboard-main {
+    padding: 1rem;
+  }
+  
+  .invoice-view-container {
+    padding: 1rem;
   }
 } 

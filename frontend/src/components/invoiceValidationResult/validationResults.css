@@ -1,0 +1,227 @@
+.validation-container {
+  background-color: var(--gray);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: validationFadeIn 0.5s ease forwards;
+  max-width: 800px;
+  margin: 40px auto;
+}
+
+.validation-success-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 20px rgba(76, 217, 100, 0.3);
+}
+
+.validation-success-icon.valid {
+  background-color: rgba(76, 217, 100, 0.15);
+  color: var(--accent-green);
+}
+
+.validation-success-icon.invalid {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+  box-shadow: 0 0 20px rgba(255, 59, 48, 0.3);
+}
+
+.validation-error-icon {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 20px rgba(255, 59, 48, 0.3);
+}
+
+.validation-container h3 {
+  color: var(--white);
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.validation-container p {
+  color: var(--light-gray);
+  margin-bottom: 30px;
+}
+
+.validation-schema-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.validation-schema-list li {
+  display: inline-block;
+  background-color: var(--dark-gray);
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin: 5px;
+  color: var(--white);
+}
+
+.validation-invoice-details {
+  background-color: var(--dark-gray);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.validation-invoice-details h4 {
+  color: var(--white);
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.validation-invoice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.validation-invoice-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.validation-invoice-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+}
+
+.validation-invoice-id {
+  color: var(--white);
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.validation-status {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.validation-status.success {
+  background-color: rgba(76, 217, 100, 0.15);
+  color: var(--accent-green);
+}
+
+.validation-status.failed {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+}
+
+.validation-errors {
+  text-align: left;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(255, 59, 48, 0.1);
+  border-radius: 4px;
+}
+
+.validation-warnings {
+  text-align: left;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(255, 149, 0, 0.1);
+  border-radius: 4px;
+}
+
+.validation-errors h5,
+.validation-warnings h5 {
+  color: var(--white);
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.validation-errors ul,
+.validation-warnings ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.validation-errors li,
+.validation-warnings li {
+  color: var(--light-gray);
+  font-size: 13px;
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+.validation-edit-button {
+  background: none;
+  border: none;
+  color: var(--light-gray);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+  align-items: center;
+  height: 100%;
+}
+
+.validation-edit-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+
+.validation-form-actions {
+  margin-top: 30px;
+}
+
+.validation-form-button {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.validation-form-button.primary {
+  background-color: var(--dark-gray);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 15%;
+}
+
+.validation-form-button.primary:hover {
+  background-color: var(--accent-white);
+  transform: translateY(-1px);
+}
+
+@keyframes validationFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
