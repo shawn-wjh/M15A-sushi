@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import axios from 'axios';
 import apiClient from '../utils/axiosConfig';
 import './InvoiceForm.css';
 import OrderSearch from './OrderSearch';
+import { useEffect } from 'react';
+import { schemaNameMap } from './invoiceValidationResult/validationResults';
 
 // Determine base URL based on environment
 const getBaseUrl = () => {
@@ -60,6 +61,9 @@ const InvoiceForm = () => {
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [wasValidated, setWasValidated] = useState(false);
   const [submittedValues, setSubmittedValues] = useState(null);
+  const [selectedSchemas, setSelectedSchemas] = useState([]);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [validationWarnings, setValidationWarnings] = useState([]);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -101,32 +105,8 @@ const InvoiceForm = () => {
       items: updatedItems
     }));
     
-    // Always recalculate total when any item field changes
-    setTimeout(() => calculateTotal(updatedItems), 0);
-  };
-
-  // Calculate total from items
-  const calculateTotal = (items = formData.items) => {
-    const total = items.reduce((sum, item) => {
-      // Make sure to convert to numbers and multiply count by cost
-      // Treat empty strings as 0 for calculation purposes
-      const count = item.count === '' ? 0 : parseFloat(item.count);
-      const cost = item.cost === '' ? 0 : parseFloat(item.cost);
-      const itemTotal = count * cost;
-      return sum + (isNaN(itemTotal) ? 0 : itemTotal);
-    }, 0);
-    
-    // Round to 2 decimal places to avoid floating point issues
-    const roundedTotal = Math.round(total * 100) / 100;
-    
-    // Calculate tax amount based on tax rate
-    const TaxTotal = Math.round(roundedTotal * (formData.taxRate / 100) * 100) / 100;
-    
-    setFormData(prev => ({
-      ...prev,
-      total: roundedTotal,
-      TaxTotal: TaxTotal
-    }));
+    // Calculate total immediately instead of using setTimeout
+    calculateTotal(updatedItems);
   };
 
   // Handle tax rate change
@@ -141,27 +121,7 @@ const InvoiceForm = () => {
     
     // Recalculate tax amount with new rate (use 0 if field is empty)
     const calcRate = newTaxRate === '' ? 0 : newTaxRate;
-    setTimeout(() => {
-      const items = formData.items;
-      const total = items.reduce((sum, item) => {
-        const count = item.count === '' ? 0 : parseFloat(item.count);
-        const cost = item.cost === '' ? 0 : parseFloat(item.cost);
-        const itemTotal = count * cost;
-        return sum + (isNaN(itemTotal) ? 0 : itemTotal);
-      }, 0);
-      
-      // Round to 2 decimal places
-      const roundedTotal = Math.round(total * 100) / 100;
-      
-      // Calculate tax amount
-      const TaxTotal = Math.round(roundedTotal * (calcRate / 100) * 100) / 100;
-      
-      setFormData(prev => ({
-        ...prev,
-        total: roundedTotal,
-        TaxTotal: TaxTotal
-      }));
-    }, 0);
+    calculateTotal(formData.items, calcRate);
   };
 
   // Add a new item
@@ -181,8 +141,8 @@ const InvoiceForm = () => {
       items: updatedItems
     }));
     
-    // Recalculate total with the new item
-    setTimeout(() => calculateTotal(updatedItems), 0);
+    // Calculate total immediately instead of using setTimeout
+    calculateTotal(updatedItems);
   };
 
   // Remove an item
@@ -197,7 +157,7 @@ const InvoiceForm = () => {
       items: updatedItems
     });
     
-    // Recalculate total
+    // Calculate total immediately instead of using setTimeout
     calculateTotal(updatedItems);
   };
 
@@ -217,7 +177,6 @@ const InvoiceForm = () => {
         cost: item.cost === '' ? 0 : parseFloat(item.cost)
       }));
       
-      // Get token from cookie instead of localStorage
       const token = getCookie('token');
       
       if (!token) {
@@ -230,30 +189,12 @@ const InvoiceForm = () => {
       }
       
       // Validate form data
-      if (!formData.invoiceId || !formData.buyer || !formData.supplier || !formData.issueDate) {
+      const requiredFields = [{key: 'invoiceId', name: 'Invoice ID'}, {key: 'buyer', name: 'Buyer'}, {key: 'supplier', name: 'Supplier'}, {key: 'issueDate', name: 'Issue Date'}, {key: 'dueDate', name: 'Due Date'}];
+      const missingFields = requiredFields.filter(field => !formData[field.key]);
+      if (missingFields.length > 0) {
         setMessage({
           type: 'error',
-          text: 'Please fill in all required fields'
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Validate tax rate if validating against Peppol
-      if (shouldValidate && (formData.taxRate === '' || formData.taxRate === 0)) {
-        setMessage({
-          type: 'error',
-          text: 'Tax rate is required for Peppol compliance. Please enter a valid tax rate.'
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Validate supplier contact information (at least one of phone or email must be provided)
-      if (shouldValidate && !formData.supplierPhone && !formData.supplierEmail) {
-        setMessage({
-          type: 'error',
-          text: 'Supplier contact information is required for Peppol compliance. Please provide at least one supplier contact method (phone or email).'
+          text: 'Please fill in all required fields: ' + missingFields.map(field => field.name).join(', ')
         });
         setIsSubmitting(false);
         return;
@@ -308,6 +249,33 @@ const InvoiceForm = () => {
           taxPercent: taxRate
         }))
       };
+
+      // Check against selected schemas
+      if (selectedSchemas.length > 0) {
+        submissionData.schemas = selectedSchemas;
+
+        // Validate against selected schemas
+        try {
+          const validationResponse = await apiClient.post(
+            `${API_URL}/${submissionData.invoiceId}/validate`,
+            { schemas: selectedSchemas }
+          );
+
+          if (validationResponse.status === 200) {
+            setMessage({
+              type: 'success',
+              text: 'Invoice created and validated successfully!'
+            });
+          } else {
+            setValidationErrors(validationResponse.data.errors);
+          }
+        } catch (error) {
+          setMessage({
+            type: 'error',
+            text: 'Something went wrong while validating the invoice: ' + error.response.data.error
+          });
+        }
+      }
       
       // Save submitted values for display
       const displayValues = {
@@ -436,21 +404,30 @@ const InvoiceForm = () => {
     setSubmittedValues(null);
     
     // Calculate totals based on the items
-    setTimeout(() => calculateTotal(formattedData.items), 0);
+    calculateTotal(formattedData.items);
+  };
+
+  const handleSchemaChange = (schema) => {
+    setSelectedSchemas((prev) => {
+      if (prev.includes(schema)) {
+        return prev.filter((s) => s !== schema);
+      }
+      return [...prev, schema];
+    });
   };
 
   // Format error message to display each error on a separate line
-  const formatErrorMessage = (errorText) => {
-    if (!errorText) return '';
+  const formatMessage = (message) => {
+    if (!message) return '';
     
-    // Ensure errorText is a string
-    const errorString = typeof errorText === 'string' ? errorText : String(errorText);
+    // Ensure message is a string
+    const text = typeof message.text === 'string' ? message.text : String(message.text);
     
     // Generic handler for error messages containing validation rules
-    if (errorString.includes('Peppol rule')) {
+    if (text.includes('Peppol rule')) {
       // Extract individual errors using regex
       const errorRegex = /Missing[^(]+ \(Peppol rule [^)]+\)/g;
-      const matches = errorString.match(errorRegex);
+      const matches = text.match(errorRegex);
       
       if (matches && matches.length > 0) {
         // Remove duplicate errors
@@ -466,9 +443,60 @@ const InvoiceForm = () => {
         );
       }
     }
+
+    // include schemas if successfully validated
+    if (message.type === 'success' && selectedSchemas.length > 0) {
+      return (
+        <>
+          <p>
+            Validation was performed against the following schemas:
+            <ul className="validation-schema-list">
+              {selectedSchemas.map((schema) => (
+                <li key={schema}>{schemaNameMap[schema]}</li>
+              ))}
+            </ul>
+          </p>
+
+          {/* include validation warnings if any */}
+          { validationWarnings.length > 0 && (
+            <p>
+              Validation warnings:
+              <ul className="validation-warnings-list">
+                {validationWarnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul> 
+            </p>
+          )}
+        </>
+      );
+    }
     
-    // For simple error messages, just return as is
-    return errorString;
+    return text;
+  };
+
+  // Calculate total from items
+  const calculateTotal = (items = formData.items, taxRate = formData.taxRate) => {
+    const total = items.reduce((sum, item) => {
+      // Make sure to convert to numbers and multiply count by cost
+      // Treat empty strings as 0 for calculation purposes
+      const count = item.count === '' ? 0 : parseFloat(item.count);
+      const cost = item.cost === '' ? 0 : parseFloat(item.cost);
+      const itemTotal = count * cost;
+      return sum + (isNaN(itemTotal) ? 0 : itemTotal);
+    }, 0);
+    
+    // Round to 2 decimal places to avoid floating point issues
+    const roundedTotal = Math.round(total * 100) / 100;
+    
+    // Calculate tax amount based on tax rate
+    const TaxTotal = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
+    
+    setFormData(prev => ({
+      ...prev,
+      total: roundedTotal,
+      TaxTotal: TaxTotal
+    }));
   };
 
   return (
@@ -490,7 +518,7 @@ const InvoiceForm = () => {
                 {wasValidated && (
                   <div className="detail-item">
                     <span className="detail-label">Validation:</span>
-                    <span className="detail-value success">{createdInvoice.validation?.status || 'Success'}</span>
+                    <span className="detail-value success">{'Successfully validated against: ' + selectedSchemas.map((schema) => schemaNameMap[schema]).join(', ')}</span>
                   </div>
                 )}
                 
@@ -514,12 +542,27 @@ const InvoiceForm = () => {
                     {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.total || 0).toFixed(2)}
                   </span>
                 </div>
+
+                { validationWarnings.length > 0 && (
+                  <div className="validation-warnings">
+                    Validation warnings:
+                    <ul className="validation-warnings-list">
+                      {validationWarnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul> 
+                  </div>
+                )}
               </div>
+
               
               <div className="form-actions">
                 <button 
                   className="form-button primary" 
                   onClick={() => {
+                    setMessage(null);
+                    setValidationWarnings([]);
+                    setSelectedSchemas([]);
                     setCreatedInvoice(null);
                     setSubmittedValues(null);
                   }}
@@ -537,7 +580,7 @@ const InvoiceForm = () => {
               
               <OrderSearch onOrderSelect={handleOrderSelect} />
               
-              <form onSubmit={handleSubmit} className="invoice-form">
+              <form className="invoice-form">
                 <div className="form-section">
                   <h3>Basic Information</h3>
                   
@@ -725,7 +768,7 @@ const InvoiceForm = () => {
                         onChange={handleChange}
                         placeholder="e.g., supplier@example.com"
                       />
-                      <div className="field-note">* At least one contact method required for Peppol validation</div>
+                      {selectedSchemas.includes('peppol') && <div className="field-note">* At least one contact method required for Peppol validation</div>}
                     </div>
                   </div>
                 </div>
@@ -770,7 +813,7 @@ const InvoiceForm = () => {
                       </div>
                       
                       <div className="form-group">
-                        <label htmlFor={`item-${index}-count`}>Count</label>
+                        <label htmlFor={`item-${index}-count`}>Count *</label>
                         <input
                           type="text"
                           id={`item-${index}-count`}
@@ -781,7 +824,7 @@ const InvoiceForm = () => {
                       </div>
                       
                       <div className="form-group">
-                        <label htmlFor={`item-${index}-cost`}>Cost</label>
+                        <label htmlFor={`item-${index}-cost`}>Cost *</label>
                         <input
                           type="text"
                           id={`item-${index}-cost`}
@@ -843,10 +886,63 @@ const InvoiceForm = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="form-section">
+                  <h3>Validation</h3>
+                  <p>Optional: Select the schemas you want to validate against</p>
+                  <div className="validation-schemas">
+                  <div 
+                    className={`schema-option ${selectedSchemas.includes('peppol') ? 'selected' : ''}`}
+                    onClick={() => handleSchemaChange('peppol')}
+                  >
+                    <input 
+                      type="checkbox" 
+                      value="peppol" 
+                      checked={selectedSchemas.includes('peppol')}
+                      onChange={() => {}} 
+                    />
+                    <label>PEPPOL (A-NZ)</label>
+                  </div>
+                  <div 
+                    className={`schema-option ${selectedSchemas.includes('fairwork') ? 'selected' : ''}`}
+                    onClick={() => handleSchemaChange('fairwork')}
+                  >
+                    <input 
+                      type="checkbox" 
+                      value="fairwork" 
+                      checked={selectedSchemas.includes('fairwork')}
+                      onChange={() => {}} 
+                    />
+                    <label>Fairwork Commission</label>
+                  </div>
+                  </div>
+                </div>
                 
                 {message && (
                   <div className={`message ${message.type}`}>
-                    {formatErrorMessage(message.text)}
+                    {formatMessage(message)}
+                  </div>
+                )}
+
+                {validationErrors.length > 0 && (
+                  <div className="validation-errors">
+                    <h5>Errors:</h5>
+                    <ul>
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {validationWarnings.length > 0 && (
+                  <div className="validation-warnings">
+                    <h5>Warnings:</h5>
+                    <ul>
+                      {validationWarnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
                 
@@ -886,32 +982,21 @@ const InvoiceForm = () => {
                             }
                           ]
                         });
+                        setMessage(null);
+                        setValidationErrors([]);
+                        setValidationWarnings([]);
+                        setSelectedSchemas([]);
+                        window.scrollTo(0, 0);
                       }
                     }}
                   >
                     Reset
                   </button>
-                  
-                  <button 
-                    type="submit" 
-                    className="form-button primary"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Invoice'}
-                  </button>
-                  
-                  <button 
-                    type="button" 
-                    className="form-button validate-button"
-                    disabled={isSubmitting}
-                    onClick={(e) => handleSubmit(e, true)}
-                  >
-                    {isSubmitting ? 'Processing...' : (
-                      <>
-                        <span className="checkmark-icon">✓</span>
-                        Create & Validate
-                      </>
-                    )}
+
+                  <button className="form-button primary" disabled={isSubmitting} onClick={(e) => handleSubmit(e, selectedSchemas.length > 0)}>
+                    {isSubmitting ? 'Creating...' : 
+                    selectedSchemas.length > 0 ? 'Create & Validate Invoice' : 
+                    'Create Invoice'}
                   </button>
                 </div>
               </form>
