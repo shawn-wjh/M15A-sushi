@@ -593,5 +593,7 @@ const invoiceController = {
     }
   }
 };
-
-module.exports = invoiceController;
+module.exports = {
+  invoiceController,
+  parseXMLSafely
+};
