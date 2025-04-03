@@ -1,4 +1,4 @@
-   /**
+/**
  * Invoice validation middleware
  * Validates the JSON input for invoice generation
  */
@@ -9,7 +9,9 @@ const countries = require('i18n-iso-countries');
 
 const validateInvoiceInput = (req, res, next) => {
   try {
-    const data = req.body;
+    // get from data from body.invoice, if not present, get from body
+    const data = req.body.invoice || req.body;
+    console.log('data: ', data);
 
     // Check required fields present
     const requiredFields = [
@@ -133,6 +135,11 @@ const validateInvoiceInput = (req, res, next) => {
 };
 
 const checkCurrencyCode = (currencyCode) => {
+  console.log('currencyCode: ', currencyCode);
+  if (!currencyCode) {
+    return false;
+  }
+
   return (
     typeof currencyCode === 'string' &&
     /^[A-Z]{3}$/.test(currencyCode.toUpperCase())
@@ -140,6 +147,10 @@ const checkCurrencyCode = (currencyCode) => {
 };
 
 const checkCountryCode = (countryCode) => {
+  if (!countryCode) {
+    return false;
+  }
+
   return (
     typeof countryCode === 'string' &&
     /^[A-Z]{2}$/.test(countryCode.toUpperCase())
@@ -462,7 +473,7 @@ const validateInvoiceStandard = (req, res, next) => {
       return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
-      error: validationResult.errors
+      error: error.message || 'Unknown error'
     });
   }
 };
@@ -825,7 +836,10 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     const ublXml = req.body.xml || req.body.invoice;
 
     if (!ublXml) {
-      throw new Error('No UBL XML provided for validation');
+      return res.status(400).json({
+        status: 'error',
+        message: 'No UBL XML provided for validation'
+      });
     }
     
     // Parse the XML to a JavaScript object
@@ -834,7 +848,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
       ignoreComment: true,
       alwaysChildren: true
     };
-    const parsedXml = xmljs.xml2js(ublXml, options);
+    const parsedXml = xmljs.xml2js(ublXml, options);  
 
     // Check if root Invoice element exists
     const invoice = parsedXml.Invoice;
@@ -891,22 +905,22 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     } else if (validationResult.valid === false) {
       return res.status(400).json({
         status: 'error',
-        message: 'Invoice does not comply with Peppol standards',
+        message: 'Invoice failed validation',
         error: validationResult.errors
       });
     } else {
       return res.status(200).json({
         status: 'success',
-        message: 'Invoice successfully validated against Peppol standards',
+        message: 'Invoice successfully validated',
         validationWarnings:
           validationResult.warnings.length > 0 ? validationResult.warnings : []
       });
     }
   } catch (error) {
-      return res.status(400).json({
+      return res.status(500).json({
       status: 'error',
-      message: 'Error validating invoice against Peppol standards',
-      error: validationResult.errors
+      message: 'Error validating invoice',
+      error: error.message || 'Unknown error'
     });
   }
 };

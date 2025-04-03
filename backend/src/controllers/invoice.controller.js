@@ -11,7 +11,7 @@ const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
 const { checkUserId } = require('../middleware/helperFunctions');
 
-// Initialize DynamoDB client
+// Initialize DynamoDB Client
 const dbClient = createDynamoDBClient();
 
 // Helper function to parse XML safely
@@ -59,7 +59,7 @@ const invoiceController = {
    * @param {Object} req - invoice object
    * @param {Object} res - Express response object
    */
-  createInvoice: async (req, res) => {
+  createInvoice: async (req, res, next) => {
     try {
       // TODO:
       // 1. Get the generated invoice from the previous middleware
@@ -67,7 +67,8 @@ const invoiceController = {
       // 3. Prepare invoice item for DynamoDB
       // 4. Store in DynamoDB
 
-      const data = req.body;
+      const data = req.body.invoice || req.body;
+      console.log('data in createInvoice: ', data);
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
 
@@ -89,7 +90,7 @@ const invoiceController = {
           timestamp,
           UserID: req.user.userId,
           invoice: ublXml,
-          valid: false,
+          valid: req.validationResult.valid || false,
           invoiceJson: data
         }
       };
@@ -97,12 +98,18 @@ const invoiceController = {
       // Store in DynamoDB
       await dbClient.send(new PutCommand(invoiceItem));
 
+      if (next) {
+        // set invoiceId for next functions
+        req.params.invoiceid = invoiceId;
+        next();
+      } else {
       return res.status(200).json({
-        status: 'success',
-        message: 'Invoice created successfully',
-        invoiceId: invoiceId,
-        invoice: ublXml
-      });
+          status: 'success',
+          message: 'Invoice created successfully',
+          invoiceId: invoiceId,
+          invoice: ublXml
+        });
+      }
     } catch (error) {
       return res.status(500).json({
         status: 'error',
@@ -424,7 +431,7 @@ const invoiceController = {
           InvoiceID: invoiceId,
           UserID: Items[0].UserID,
           invoice: ublXml,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString(), // update time last modified
           valid: false // invalidate the invoice after update by default
         }
       };
