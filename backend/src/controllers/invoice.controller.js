@@ -60,11 +60,9 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   createInvoice: async (req, res, next) => {
-    console.log('createInvoice controller called');
     try {
       // Get the invoice data from the request body
       const data = req.body.invoice || req.body;
-      console.log('data: ', data);
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
 
@@ -93,17 +91,14 @@ const invoiceController = {
 
       // Store in DynamoDB
       await dbClient.send(new PutCommand(invoiceItem));
-      console.log('item sent to dynamoDB');
 
       // Check if this is part of a middleware chain (like in create-and-validate)
       // or a direct route handler (like in /create)
       if (next && req.route && req.route.path === '/create-and-validate') {
         // Set invoiceId for next functions
-        console.log('next function called');
         req.params.invoiceid = invoiceId;
         next();
       } else {
-        console.log('returning response');
         return res.status(200).json({
           status: 'success',
           message: 'Invoice created successfully',
@@ -522,7 +517,6 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   updateValidationStatus: async (req, res, next) => {
-    console.log('updateValidationStatus controller called');
     try {
       const invoiceId = req.params.invoiceid;
       const valid = req.validationResult.valid;

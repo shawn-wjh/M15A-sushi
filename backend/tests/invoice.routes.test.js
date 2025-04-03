@@ -58,7 +58,6 @@ describe('POST /v1/invoices/create', () => {
       .post('/v1/invoices/create')
       .send(mockInvoice);
 
-    console.log('response.body: ', response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('invoiceId');
     expect(response.body).toHaveProperty('invoice');
@@ -310,7 +309,6 @@ describe('POST /v1/invoices/validate', () => {
       .post('/v1/invoices/test-invoice-id/validate')
       .send();
 
-    console.log(response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'success');
     expect(response.body).toHaveProperty('message');

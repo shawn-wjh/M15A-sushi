@@ -8,7 +8,6 @@ const currencyCodes = require('currency-codes');
 const countries = require('i18n-iso-countries');
 
 const validateInvoiceInput = (req, res, next) => {
-  console.log('validateInvoiceInput middleware called');
   try {
     // get from data from body.invoice, if not present, get from body
     const data = req.body.invoice || req.body;
@@ -478,7 +477,6 @@ const validateInvoiceStandard = (req, res, next) => {
 };
 
 const validatePeppol = (invoice, validationResult) => {
-  console.log('validatePeppol middleware called');
   if (!validationResult) {
     validationResult = {
       valid: true,
@@ -777,7 +775,6 @@ const validatePeppol = (invoice, validationResult) => {
  */
 const validateFairWorkCommission = (invoice, validationResult) => {
   // https://www.fwc.gov.au/documents/documents/resources/einvoicing-mandatory-fields.pdf?utm_source=chatgpt.com
-  console.log('validateFairWorkCommission middleware called');
   if (!validationResult) {
     validationResult = {
       valid: true,
@@ -810,7 +807,6 @@ const validateFairWorkCommission = (invoice, validationResult) => {
 };
 
 const validateInvoiceStandardv2 = (req, res, next) => {
-  console.log('validateInvoiceStandardv2 middleware called');
   let validationResult = {
     valid: true,
     errors: [],
@@ -880,7 +876,6 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     if (next) {
       // Attach validation result to request for potential later use
       req.validationResult = validationResult;
-      console.log('finished validateInvoiceStandardv2 middleware, validationResult: ', validationResult);
       next();
     } else if (validationResult.valid === false) {
       return res.status(400).json({

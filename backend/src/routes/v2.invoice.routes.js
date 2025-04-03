@@ -62,12 +62,9 @@ router.post('/create-and-validate',
   validateInvoiceInput,
   validateInvoiceStandardv2,
   (req, res, next) => {
-    console.log('checking if validation passed...');
-    console.log('req.validationResult: ', req.validationResult);
     if (req.validationResult.valid) {
       next();
     } else if (req.validationResult.valid === false) {
-      console.log('validation failed');
       return res.status(400).json({
         status: 'error',
         message: 'Invoice validation failed',

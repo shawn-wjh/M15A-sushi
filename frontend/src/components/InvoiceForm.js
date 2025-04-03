@@ -272,17 +272,14 @@ const InvoiceForm = () => {
       // Send data to backend using the apiClient
       let response;
       
-      console.log('made it to axios calls');
       if (shouldValidate) {
         response = await apiClient.post(`${API_URL}/create-and-validate`, { 
           schemas: selectedSchemas, 
           invoice: submissionData 
         });
 
-        console.log('response from create-and-validate axios call: ', response);
 
         if (response.status === 200) {
-          console.log('Invoice created & validated successfully! Data: ', submissionData);
           setMessage({
             type: 'success',
             text: 'Invoice created and validated successfully!'
@@ -308,7 +305,6 @@ const InvoiceForm = () => {
         response = await apiClient.post(`${API_URL}/create`, submissionData);
         
         if (response.status === 200) {
-          console.log('Invoice created successfully! Data: ', submissionData);
           setMessage({
             type: 'success',
             text: 'Invoice created successfully!'
@@ -362,7 +358,6 @@ const InvoiceForm = () => {
 
   // Handle order selection from OrderSearch component
   const handleOrderSelect = (orderData) => {
-    console.log('Received order data:', orderData);
 
     // Create a properly structured form data object with default values
     const formattedData = {
