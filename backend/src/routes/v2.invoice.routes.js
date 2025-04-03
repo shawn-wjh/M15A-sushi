@@ -1,12 +1,4 @@
 const express = require('express');
-
-const router = express.Router();
-
-const auth = require('../middleware/auth');
-
-// Apply auth middleware to all routes
-router.use(auth.verifyToken);
-
 const {
   createInvoice,
   getInvoice,
@@ -18,9 +10,14 @@ const {
 const { validateInvoiceStandardv2, validateInvoiceInput } = require('../middleware/invoice-validation');
 const { convertToUBL } = require('../middleware/invoice-generation');
 
+const router = express.Router();
+
+const auth = require('../middleware/auth');
+
 // Apply auth middleware to all routes
 router.use(auth.verifyToken);
 
+// call createInvoice controller without calling next
 router.post('/create', createInvoice);
 
 router.post('/:invoiceid/validate', 
@@ -65,9 +62,12 @@ router.post('/create-and-validate',
   validateInvoiceInput,
   validateInvoiceStandardv2,
   (req, res, next) => {
+    console.log('checking if validation passed...');
+    console.log('req.validationResult: ', req.validationResult);
     if (req.validationResult.valid) {
       next();
     } else if (req.validationResult.valid === false) {
+      console.log('validation failed');
       return res.status(400).json({
         status: 'error',
         message: 'Invoice validation failed',

@@ -8,10 +8,10 @@ const currencyCodes = require('currency-codes');
 const countries = require('i18n-iso-countries');
 
 const validateInvoiceInput = (req, res, next) => {
+  console.log('validateInvoiceInput middleware called');
   try {
     // get from data from body.invoice, if not present, get from body
     const data = req.body.invoice || req.body;
-    console.log('data: ', data);
 
     // Check required fields present
     const requiredFields = [
@@ -80,7 +80,7 @@ const validateInvoiceInput = (req, res, next) => {
     }
 
     // Validate optional dueDate if present
-    if (data.dueDate !== undefined) {
+    if (data.dueDate !== '') {
       if (!dateRegex.test(data.dueDate)) {
         throw new Error('Due date must be in YYYY-MM-DD format');
       }
@@ -135,7 +135,6 @@ const validateInvoiceInput = (req, res, next) => {
 };
 
 const checkCurrencyCode = (currencyCode) => {
-  console.log('currencyCode: ', currencyCode);
   if (!currencyCode) {
     return false;
   }
@@ -479,6 +478,7 @@ const validateInvoiceStandard = (req, res, next) => {
 };
 
 const validatePeppol = (invoice, validationResult) => {
+  console.log('validatePeppol middleware called');
   if (!validationResult) {
     validationResult = {
       valid: true,
@@ -768,17 +768,8 @@ const validatePeppol = (invoice, validationResult) => {
     );
   }
 
-  // append schema name to each warning and error message
-  validationResult.errors = validationResult.errors.map(error => {
-    return error + ' (PEPPOL A-NZ)';
-  });
-  validationResult.warnings = validationResult.warnings.map(warning => {
-    return warning + ' (PEPPOL A-NZ)';
-  });
-
   return validationResult;
 };
-
 
 /**
  * additional checks to comply with the fair work commision guidelines, 
@@ -786,6 +777,7 @@ const validatePeppol = (invoice, validationResult) => {
  */
 const validateFairWorkCommission = (invoice, validationResult) => {
   // https://www.fwc.gov.au/documents/documents/resources/einvoicing-mandatory-fields.pdf?utm_source=chatgpt.com
+  console.log('validateFairWorkCommission middleware called');
   if (!validationResult) {
     validationResult = {
       valid: true,
@@ -800,7 +792,7 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   if (!ID || !Name) {
     validationResult.valid = false;
     validationResult.errors.push(
-      'Missing PayeeFinancialAccount details'
+      'Missing PayeeFinancialAccount details (Fair Work Commission)'
     );
   }
 
@@ -810,22 +802,15 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   if (!FIB_ID || !FIB_Name) {
     validationResult.valid = false;
     validationResult.errors.push(
-      'Missing FinancialInstitutionBranch details'
+      'Missing FinancialInstitutionBranch details (Fair Work Commission)'
     );
   }
-
-  // append schema name to each warning and error message
-  validationResult.errors = validationResult.errors.map(error => {
-    return error + ' (Fair Work Commission)';
-  });
-  validationResult.warnings = validationResult.warnings.map(warning => {
-    return warning + ' (Fair Work Commission)';
-  });
 
   return validationResult;
 };
 
 const validateInvoiceStandardv2 = (req, res, next) => {
+  console.log('validateInvoiceStandardv2 middleware called');
   let validationResult = {
     valid: true,
     errors: [],
@@ -883,24 +868,19 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
     // perform checks
     if (schemas.includes('peppol')) {
-      const peppolResult = validatePeppol(invoice, validationResult);
-      validationResult.valid = peppolResult.valid;
-      validationResult.errors.push(...peppolResult.errors);
-      validationResult.warnings.push(...peppolResult.warnings);
+      validationResult = validatePeppol(invoice, validationResult);
     }
 
 
     if (schemas.includes('fairwork')) {
-      const fairWorkResult = validateFairWorkCommission(invoice, validationResult);
-      validationResult.valid = fairWorkResult.valid;
-      validationResult.errors.push(...fairWorkResult.errors);
-      validationResult.warnings.push(...fairWorkResult.warnings);
+      validationResult = validateFairWorkCommission(invoice, validationResult);
     }
 
     // If validation passes
     if (next) {
       // Attach validation result to request for potential later use
       req.validationResult = validationResult;
+      console.log('finished validateInvoiceStandardv2 middleware, validationResult: ', validationResult);
       next();
     } else if (validationResult.valid === false) {
       return res.status(400).json({

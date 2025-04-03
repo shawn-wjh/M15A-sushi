@@ -36,9 +36,16 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
+    console.log('response from axios call: ', response);
     return response;
   },
   (error) => {
+    // Handle case of 400 validation errors
+    if (error.response && error.response.data.validationResult) {
+      console.log('validationResult recognised in axiosconfig: ', error.response.data.validationResult);
+      return error.response;
+    }
+
     // Handle authentication errors (401)
     if (error.response && error.response.status === 401) {
       // Handle unauthorized access

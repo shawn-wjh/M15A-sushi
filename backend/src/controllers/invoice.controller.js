@@ -60,19 +60,15 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   createInvoice: async (req, res, next) => {
+    console.log('createInvoice controller called');
     try {
-      // TODO:
-      // 1. Get the generated invoice from the previous middleware
-      // 2. Create timestamp
-      // 3. Prepare invoice item for DynamoDB
-      // 4. Store in DynamoDB
-
+      // Get the invoice data from the request body
       const data = req.body.invoice || req.body;
-      console.log('data in createInvoice: ', data);
+      console.log('data: ', data);
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
 
-      // convert invoice to UBL XML
+      // Convert invoice to UBL XML
       const ublXml = convertToUBL(data);
 
       if (!checkUserId(req.user.userId)) {
@@ -90,20 +86,25 @@ const invoiceController = {
           timestamp,
           UserID: req.user.userId,
           invoice: ublXml,
-          valid: req.validationResult.valid || false,
+          valid: req.validationResult?.valid || false,
           invoiceJson: data
         }
       };
 
       // Store in DynamoDB
       await dbClient.send(new PutCommand(invoiceItem));
+      console.log('item sent to dynamoDB');
 
-      if (next) {
-        // set invoiceId for next functions
+      // Check if this is part of a middleware chain (like in create-and-validate)
+      // or a direct route handler (like in /create)
+      if (next && req.route && req.route.path === '/create-and-validate') {
+        // Set invoiceId for next functions
+        console.log('next function called');
         req.params.invoiceid = invoiceId;
         next();
       } else {
-      return res.status(200).json({
+        console.log('returning response');
+        return res.status(200).json({
           status: 'success',
           message: 'Invoice created successfully',
           invoiceId: invoiceId,
@@ -111,6 +112,7 @@ const invoiceController = {
         });
       }
     } catch (error) {
+      console.error('Error creating invoice:', error);
       return res.status(500).json({
         status: 'error',
         message: 'Failed to create invoice',
@@ -301,7 +303,6 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res, next) => {
-    console.log('in getInvoice');
     const invoiceId = req.params.invoiceid;
 
     // check if invoiceId is empty
@@ -325,9 +326,6 @@ const invoiceController = {
         throw new Error('Invoice not found');
       }
 
-      console.log('req.user.userId: ', req.user.userId);
-      console.log('Items[0]: ', Items[0]);
-      console.log('checkingUserId(req.user.userId, Items[0]): ', checkUserId(req.user.userId, Items[0]));
       // check if allowed access
       if (!checkUserId(req.user.userId, Items[0])) {
         return res.status(401).json({
@@ -524,6 +522,7 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   updateValidationStatus: async (req, res, next) => {
+    console.log('updateValidationStatus controller called');
     try {
       const invoiceId = req.params.invoiceid;
       const valid = req.validationResult.valid;

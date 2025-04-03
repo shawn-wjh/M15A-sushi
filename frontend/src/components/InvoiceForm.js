@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import apiClient from '../utils/axiosConfig';
 import './InvoiceForm.css';
 import OrderSearch from './OrderSearch';
-import { useEffect } from 'react';
 import { schemaNameMap } from './invoiceValidationResult/validationResults';
 
 // Determine base URL based on environment
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    return '/v1/invoices'; // Use relative path in production
+    return '/v2/invoices'; // Use relative path in production
   }
-  return 'http://localhost:3000/v1/invoices'; // Use full URL in development
+  return 'http://localhost:3000/v2/invoices'; // Use full URL in development
 };
 
 const API_URL = getBaseUrl();
@@ -23,38 +22,41 @@ const getCookie = (name) => {
   if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
 };
 
+// Initial form state
+const initialFormState = {
+  invoiceId: '',
+  total: 0,
+  buyer: '',
+  supplier: '',
+  issueDate: '',
+  dueDate: '',
+  currency: 'AUD',
+  buyerAddress: {
+    street: '',
+    country: 'AU'
+  },
+  supplierAddress: {
+    street: '',
+    country: 'AU'
+  },
+  buyerPhone: '',
+  supplierPhone: '',
+  supplierEmail: '',
+  taxTotal: 0,
+  taxRate: 10, // Default 10% GST for Australia
+  items: [
+    {
+      name: '',
+      count: 1,
+      cost: 0,
+      currency: 'AUD'
+    }
+  ]
+};
+
 const InvoiceForm = () => {
-  const history = useHistory();
-  const [formData, setFormData] = useState({
-    invoiceId: '',
-    total: 0,
-    buyer: '',
-    supplier: '',
-    issueDate: '',
-    dueDate: '',
-    currency: 'AUD',
-    buyerAddress: {
-      street: '',
-      country: 'AU'
-    },
-    supplierAddress: {
-      street: '',
-      country: 'AU'
-    },
-    buyerPhone: '',
-    supplierPhone: '',
-    supplierEmail: '',
-    TaxTotal: 0,
-    taxRate: 10, // Default 10% GST for Australia
-    items: [
-      {
-        name: '',
-        count: 1,
-        cost: 0,
-        currency: 'AUD'
-      }
-    ]
-  });
+  const formRef = useRef(null);
+  const [formData, setFormData] = useState(initialFormState);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -100,13 +102,17 @@ const InvoiceForm = () => {
     }
     
     // First update the items in the form data
-    setFormData(prevData => ({
-      ...prevData,
-      items: updatedItems
-    }));
-    
-    // Calculate total immediately instead of using setTimeout
-    calculateTotal(updatedItems);
+    setFormData(prevData => {
+      const newData = {
+        ...prevData,
+        items: updatedItems
+      };
+      
+      // Calculate total after state update is complete
+      setTimeout(() => calculateTotal(updatedItems), 0);
+      
+      return newData;
+    });
   };
 
   // Handle tax rate change
@@ -114,14 +120,18 @@ const InvoiceForm = () => {
     // Allow empty input field
     const newTaxRate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
     
-    setFormData(prev => ({
-      ...prev,
-      taxRate: newTaxRate
-    }));
-    
-    // Recalculate tax amount with new rate (use 0 if field is empty)
-    const calcRate = newTaxRate === '' ? 0 : newTaxRate;
-    calculateTotal(formData.items, calcRate);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        taxRate: newTaxRate
+      };
+      
+      // Recalculate tax amount with new rate (use 0 if field is empty)
+      const calcRate = newTaxRate === '' ? 0 : newTaxRate;
+      setTimeout(() => calculateTotal(formData.items, calcRate), 0);
+      
+      return newData;
+    });
   };
 
   // Add a new item
@@ -136,13 +146,17 @@ const InvoiceForm = () => {
       }
     ];
     
-    setFormData(prev => ({
-      ...prev,
-      items: updatedItems
-    }));
-    
-    // Calculate total immediately instead of using setTimeout
-    calculateTotal(updatedItems);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        items: updatedItems
+      };
+      
+      // Calculate total after state update is complete
+      setTimeout(() => calculateTotal(updatedItems), 0);
+      
+      return newData;
+    });
   };
 
   // Remove an item
@@ -152,22 +166,34 @@ const InvoiceForm = () => {
     }
     
     const updatedItems = formData.items.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      items: updatedItems
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        items: updatedItems
+      };
+      
+      // Calculate total after state update is complete
+      setTimeout(() => calculateTotal(updatedItems), 0);
+      
+      return newData;
     });
-    
-    // Calculate total immediately instead of using setTimeout
-    calculateTotal(updatedItems);
   };
 
   // Handle form submission
   const handleSubmit = async (e, shouldValidate = false) => {
     e.preventDefault();
+    
+    // Check if the all required fields are filled
+    if (!formRef.current.checkValidity()) {
+      formRef.current.reportValidity();
+      return;
+    }
+    
     setIsSubmitting(true);
     setMessage(null);
     setCreatedInvoice(null);
-    setWasValidated(shouldValidate);
+    setValidationErrors([]);
+    setValidationWarnings([]);
     
     try {
       // Convert any empty string values to numbers before validation
@@ -187,29 +213,10 @@ const InvoiceForm = () => {
         setIsSubmitting(false);
         return;
       }
-      
-      // Validate form data
-      const requiredFields = [{key: 'invoiceId', name: 'Invoice ID'}, {key: 'buyer', name: 'Buyer'}, {key: 'supplier', name: 'Supplier'}, {key: 'issueDate', name: 'Issue Date'}, {key: 'dueDate', name: 'Due Date'}];
-      const missingFields = requiredFields.filter(field => !formData[field.key]);
-      if (missingFields.length > 0) {
-        setMessage({
-          type: 'error',
-          text: 'Please fill in all required fields: ' + missingFields.map(field => field.name).join(', ')
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Validate items with normalized values
-      const invalidItems = normalizedItems.some(item => !item.name || item.count <= 0 || item.cost <= 0);
-      if (invalidItems) {
-        setMessage({
-          type: 'error',
-          text: 'All items must have a name, positive count, and positive cost'
-        });
-        setIsSubmitting(false);
-        return;
-      }
+
+      // convert dates to YYYY-MM-DD format
+      const formattedIssueDate = formData.issueDate ? new Date(formData.issueDate).toISOString().split('T')[0] : '';
+      const formattedDueDate = formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : '';
       
       // Calculate the correct total from items
       const calculatedTotal = normalizedItems.reduce((sum, item) => {
@@ -229,9 +236,11 @@ const InvoiceForm = () => {
       const submissionData = {
         ...formData,
         total: roundedTotal,
+        issueDate: formattedIssueDate,
+        dueDate: formattedDueDate,
         taxRate: taxRate,
         taxAmount: taxAmount,
-        TaxTotal: taxAmount, // Keep for backward compatibility
+        taxTotal: taxAmount, // Consistent naming
         totalWithTax: roundedTotal + taxAmount,
         supplierContact: {
           phone: formData.supplierPhone || '',
@@ -247,35 +256,8 @@ const InvoiceForm = () => {
           ...item,
           taxCategory: 'S', // Standard rate
           taxPercent: taxRate
-        }))
+        })),
       };
-
-      // Check against selected schemas
-      if (selectedSchemas.length > 0) {
-        submissionData.schemas = selectedSchemas;
-
-        // Validate against selected schemas
-        try {
-          const validationResponse = await apiClient.post(
-            `${API_URL}/${submissionData.invoiceId}/validate`,
-            { schemas: selectedSchemas }
-          );
-
-          if (validationResponse.status === 200) {
-            setMessage({
-              type: 'success',
-              text: 'Invoice created and validated successfully!'
-            });
-          } else {
-            setValidationErrors(validationResponse.data.errors);
-          }
-        } catch (error) {
-          setMessage({
-            type: 'error',
-            text: 'Something went wrong while validating the invoice: ' + error.response.data.error
-          });
-        }
-      }
       
       // Save submitted values for display
       const displayValues = {
@@ -283,75 +265,99 @@ const InvoiceForm = () => {
         subtotal: roundedTotal,
         taxAmount: taxAmount,
         taxRate: taxRate,
-        total: roundedTotal + taxAmount
+        total: roundedTotal + taxAmount,
       };
       setSubmittedValues(displayValues);
       
-      console.log('Submitting invoice with total:', roundedTotal);
-      console.log('Tax amount:', taxAmount);
-      console.log('Item costs:', normalizedItems.map(item => ({
-        name: item.name,
-        count: item.count,
-        cost: item.cost,
-        itemTotal: item.count * item.cost
-      })));
+      // Send data to backend using the apiClient
+      let response;
       
-      // Send data to backend using the apiClient (which already has auth and base URL config)
-      const endpoint = shouldValidate ? '/v2/invoices/create-and-validate' : '/v2/invoices/create';
-      const response = await apiClient.post(endpoint, submissionData);
-      
-      setMessage({
-        type: 'success',
-        text: shouldValidate ? 'Invoice created and validated successfully!' : 'Invoice created successfully!'
-      });
+      console.log('made it to axios calls');
+      if (shouldValidate) {
+        response = await apiClient.post(`${API_URL}/create-and-validate`, { 
+          schemas: selectedSchemas, 
+          invoice: submissionData 
+        });
+
+        console.log('response from create-and-validate axios call: ', response);
+
+        if (response.status === 200) {
+          console.log('Invoice created & validated successfully! Data: ', submissionData);
+          setMessage({
+            type: 'success',
+            text: 'Invoice created and validated successfully!'
+          });
+          setWasValidated(true);
+        } else if (response.status === 400) {
+          setMessage({
+            type: 'error',
+            text: 'Invoice failed validation against ' + selectedSchemas.map((schema) => schemaNameMap[schema]).join(', ')
+          });
+          setValidationErrors(response.data.validationResult.errors || []);
+          setValidationWarnings(response.data.validationResult.warnings || []);
+          setWasValidated(false);
+          setIsSubmitting(false);
+          return;
+        } else {
+          setMessage({
+            type: 'error',
+            text: 'Something went wrong while creating and validating the invoice: ' + response.data.error
+          });
+        }
+      } else {
+        response = await apiClient.post(`${API_URL}/create`, submissionData);
+        
+        if (response.status === 200) {
+          console.log('Invoice created successfully! Data: ', submissionData);
+          setMessage({
+            type: 'success',
+            text: 'Invoice created successfully!'
+          });
+        } else {
+          setMessage({
+            type: 'error',
+            text: 'Something went wrong while creating the invoice: ' + response.data.error
+          });
+        }
+      }
       
       // Store the created invoice data
       setCreatedInvoice(response.data);
       
-      // Log the response data for debugging
-      console.log('Response data from server:', response.data);
-      
       // Reset form after successful submission
-      setFormData({
-        invoiceId: '',
-        total: 0,
-        buyer: '',
-        supplier: '',
-        issueDate: '',
-        dueDate: '',
-        currency: 'AUD',
-        buyerAddress: {
-          street: '',
-          country: 'AU'
-        },
-        supplierAddress: {
-          street: '',
-          country: 'AU'
-        },
-        buyerPhone: '',
-        supplierPhone: '',
-        supplierEmail: '',
-        TaxTotal: 0,
-        taxRate: 10,
-        items: [
-          {
-            name: '',
-            count: 1,
-            cost: 0,
-            currency: 'AUD'
-          }
-        ]
-      });
+      resetForm();
       
     } catch (err) {
+      console.error('Invoice creation error:', err);
+      
+      let errorMessage = 'An error occurred while creating the invoice';
+      
+      if (err.response) {
+        errorMessage = err.response.data?.error || 
+                      err.response.data?.message || 
+                      `Server error: ${err.response.status}`;
+      } else if (err.request) {
+        errorMessage = 'No response received from server. Please check your connection.';
+      } else {
+        errorMessage = err.message || 'Request setup error';
+      }
+      
       setMessage({
         type: 'error',
-        text: err.response?.data?.error || err.response?.data?.message || 'An error occurred while creating the invoice'
+        text: errorMessage
       });
-      console.error('Invoice creation error:', err.response?.data || err);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setMessage(null);
+    setValidationErrors([]);
+    setValidationWarnings([]);
+    setSelectedSchemas([]);
   };
 
   // Handle order selection from OrderSearch component
@@ -380,7 +386,7 @@ const InvoiceForm = () => {
       buyerPhone: '',
       supplierPhone: '',
       supplierEmail: '',
-      TaxTotal: 0,
+      taxTotal: 0,
       taxRate: 10,
       // Handle empty or missing items array
       items: Array.isArray(orderData.items?.[0]) ? 
@@ -402,9 +408,11 @@ const InvoiceForm = () => {
     setCreatedInvoice(null);
     setWasValidated(false);
     setSubmittedValues(null);
+    setValidationErrors([]);
+    setValidationWarnings([]);
     
     // Calculate totals based on the items
-    calculateTotal(formattedData.items);
+    setTimeout(() => calculateTotal(formattedData.items), 0);
   };
 
   const handleSchemaChange = (schema) => {
@@ -490,12 +498,12 @@ const InvoiceForm = () => {
     const roundedTotal = Math.round(total * 100) / 100;
     
     // Calculate tax amount based on tax rate
-    const TaxTotal = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
+    const taxTotal = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
     
     setFormData(prev => ({
       ...prev,
       total: roundedTotal,
-      TaxTotal: TaxTotal
+      taxTotal: taxTotal
     }));
   };
 
@@ -580,7 +588,12 @@ const InvoiceForm = () => {
               
               <OrderSearch onOrderSelect={handleOrderSelect} />
               
-              <form className="invoice-form">
+              <form 
+                className="invoice-form" 
+                ref={formRef} 
+                noValidate
+                onSubmit={(e) => handleSubmit(e, selectedSchemas.length > 0)}
+              >
                 <div className="form-section">
                   <h3>Basic Information</h3>
                   
@@ -595,6 +608,7 @@ const InvoiceForm = () => {
                         onChange={handleChange}
                         required
                         placeholder="e.g., INV-2023-001"
+                        aria-required="true"
                       />
                     </div>
                     
@@ -624,6 +638,7 @@ const InvoiceForm = () => {
                         value={formData.issueDate}
                         onChange={handleChange}
                         required
+                        aria-required="true"
                       />
                     </div>
                     
@@ -653,6 +668,7 @@ const InvoiceForm = () => {
                       onChange={handleChange}
                       required
                       placeholder="e.g., John Smith"
+                      aria-required="true"
                     />
                   </div>
                   
@@ -711,6 +727,7 @@ const InvoiceForm = () => {
                       onChange={handleChange}
                       required
                       placeholder="e.g., ABC Company"
+                      aria-required="true"
                     />
                   </div>
                   
@@ -753,6 +770,8 @@ const InvoiceForm = () => {
                         value={formData.supplierPhone}
                         onChange={handleChange}
                         placeholder="e.g., +61 123 456 789"
+                        required
+                        aria-required="true"
                       />
                     </div>
                     
@@ -767,6 +786,8 @@ const InvoiceForm = () => {
                         value={formData.supplierEmail}
                         onChange={handleChange}
                         placeholder="e.g., supplier@example.com"
+                        required
+                        aria-required="true"
                       />
                       {selectedSchemas.includes('peppol') && <div className="field-note">* At least one contact method required for Peppol validation</div>}
                     </div>
@@ -809,6 +830,7 @@ const InvoiceForm = () => {
                           value={item.name}
                           onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                           required
+                          aria-required="true"
                         />
                       </div>
                       
@@ -820,6 +842,8 @@ const InvoiceForm = () => {
                           name={`item-${index}-count`}
                           value={item.count}
                           onChange={(e) => handleItemChange(index, 'count', e.target.value)}
+                          required
+                          aria-required="true"
                         />
                       </div>
                       
@@ -831,6 +855,8 @@ const InvoiceForm = () => {
                           name={`item-${index}-cost`}
                           value={item.cost}
                           onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
+                          required
+                          aria-required="true"
                         />
                       </div>
                     </div>
@@ -854,6 +880,8 @@ const InvoiceForm = () => {
                           min="0"
                           step="0.1"
                           className="tax-rate-field"
+                          required
+                          aria-required="true"
                         />
                         <span className="tax-rate-symbol">%</span>
                       </div>
@@ -877,12 +905,12 @@ const InvoiceForm = () => {
                       <div className="tax-rate-display">
                         <span className="summary-label">Tax ({formData.taxRate === '' ? '0' : formData.taxRate}%):</span>
                       </div>
-                      <span className="summary-value">{formData.currency} {formData.TaxTotal.toFixed(2)}</span>
+                      <span className="summary-value">{formData.currency} {formData.taxTotal.toFixed(2)}</span>
                     </div>
                     
                     <div className="summary-row total-row">
                       <span className="summary-label">Total (inc. tax):</span>
-                      <span className="summary-value total">{formData.currency} {(formData.total + formData.TaxTotal).toFixed(2)}</span>
+                      <span className="summary-value total">{formData.currency} {(formData.total + formData.taxTotal).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -899,7 +927,7 @@ const InvoiceForm = () => {
                       type="checkbox" 
                       value="peppol" 
                       checked={selectedSchemas.includes('peppol')}
-                      onChange={() => {}} 
+                      onChange={() => handleSchemaChange('peppol')} 
                     />
                     <label>PEPPOL (A-NZ)</label>
                   </div>
@@ -911,7 +939,7 @@ const InvoiceForm = () => {
                       type="checkbox" 
                       value="fairwork" 
                       checked={selectedSchemas.includes('fairwork')}
-                      onChange={() => {}} 
+                      onChange={() => handleSchemaChange('fairwork')} 
                     />
                     <label>Fairwork Commission</label>
                   </div>
@@ -952,40 +980,7 @@ const InvoiceForm = () => {
                     className="form-button secondary"
                     onClick={() => {
                       if (window.confirm('Are you sure you want to reset the form?')) {
-                        setFormData({
-                          invoiceId: '',
-                          total: 0,
-                          buyer: '',
-                          supplier: '',
-                          issueDate: '',
-                          dueDate: '',
-                          currency: 'AUD',
-                          buyerAddress: {
-                            street: '',
-                            country: 'AU'
-                          },
-                          supplierAddress: {
-                            street: '',
-                            country: 'AU'
-                          },
-                          buyerPhone: '',
-                          supplierPhone: '',
-                          supplierEmail: '',
-                          TaxTotal: 0,
-                          taxRate: 10,
-                          items: [
-                            {
-                              name: '',
-                              count: 1,
-                              cost: 0,
-                              currency: 'AUD'
-                            }
-                          ]
-                        });
-                        setMessage(null);
-                        setValidationErrors([]);
-                        setValidationWarnings([]);
-                        setSelectedSchemas([]);
+                        resetForm();
                         window.scrollTo(0, 0);
                       }
                     }}
@@ -993,7 +988,11 @@ const InvoiceForm = () => {
                     Reset
                   </button>
 
-                  <button className="form-button primary" disabled={isSubmitting} onClick={(e) => handleSubmit(e, selectedSchemas.length > 0)}>
+                  <button 
+                    type="submit" 
+                    className="form-button primary" 
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? 'Creating...' : 
                     selectedSchemas.length > 0 ? 'Create & Validate Invoice' : 
                     'Create Invoice'}
