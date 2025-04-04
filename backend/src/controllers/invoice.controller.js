@@ -15,7 +15,7 @@ const { checkUserId } = require('../middleware/helperFunctions');
 const dbClient = createDynamoDBClient();
 
 // Helper function to parse XML safely
-const parseXMLSafely = async (xmlString) => {
+const parseXML = async (xmlString) => {
   try {
     // First, check if we have valid XML
     if (!xmlString || typeof xmlString !== 'string') {
@@ -210,7 +210,7 @@ const invoiceController = {
 
       // Parse all invoices first
       const parsedInvoices = await Promise.all(allInvoices.map(async (invoice) => {
-        const parsedXML = await parseXMLSafely(invoice.invoice);
+        const parsedXML = await parseXML(invoice.invoice);
         if (!parsedXML) {
           console.error('Failed to parse invoice:', invoice.InvoiceID);
         }
@@ -381,6 +381,9 @@ const invoiceController = {
       const invoiceId = req.params.invoiceid;
       const updateData = req.body;
 
+      console.log('Updating invoice:', invoiceId);
+      console.log('Update data:', JSON.stringify(updateData, null, 2));
+
       // Check if invoiceId is provided
       if (!invoiceId) {
         return res.status(400).json({
@@ -403,7 +406,7 @@ const invoiceController = {
       if (!Items || Items.length === 0) {
         return res.status(400).json({
           status: 'error',
-          error: 'Invoice not found'
+          error: 'Invalid Invoice ID'
         });
       }
 
@@ -414,8 +417,24 @@ const invoiceController = {
         });
       }
 
+      // Ensure all numeric values are properly formatted
+      if (updateData.total) updateData.total = parseFloat(updateData.total);
+      if (updateData.taxTotal) updateData.taxTotal = parseFloat(updateData.taxTotal);
+      if (updateData.taxRate) updateData.taxRate = parseFloat(updateData.taxRate);
+      
+      // Format items
+      if (updateData.items && updateData.items.length > 0) {
+        updateData.items = updateData.items.map(item => ({
+          ...item,
+          count: parseFloat(item.count) || 0,
+          cost: parseFloat(item.cost) || 0,
+          currency: item.currency || updateData.currency || 'AUD'
+        }));
+      }
+
       // Convert updated data to UBL XML
       const ublXml = convertToUBL(updateData);
+      console.log('Generated UBL XML:', ublXml);
 
       // Update using document client
       const updateParams = {
@@ -425,11 +444,12 @@ const invoiceController = {
           UserID: Items[0].UserID,
           invoice: ublXml,
           timestamp: new Date().toISOString(), // update time last modified
-          valid: false // invalidate the invoice after update by default
+          valid: false, // invalidate the invoice after update by default
         }
       };
 
       await dbClient.send(new PutCommand(updateParams));
+      console.log('Invoice updated successfully');
 
       return res.status(200).json({
         status: 'success',
@@ -437,6 +457,7 @@ const invoiceController = {
         invoiceId: invoiceId
       });
     } catch (error) {
+      console.error('Error updating invoice:', error);
       return res.status(400).json({
         status: 'error',
         error: error.message

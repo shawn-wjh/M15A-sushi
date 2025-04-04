@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import apiClient from '../utils/axiosConfig';
 import './InvoiceForm.css';
 import OrderSearch from './OrderSearch';
 import { schemaNameMap } from './invoiceValidationResult/validationResults';
-
+import { useHistory, useLocation } from 'react-router-dom';
+import MenuBar from './MenuBar';
+import TopBar from './TopBar';
 // Determine base URL based on environment
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
@@ -54,7 +55,9 @@ const initialFormState = {
   ]
 };
 
-const InvoiceForm = () => {
+const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
+  const history = useHistory();
+  const location = useLocation();
   const formRef = useRef(null);
   const [formData, setFormData] = useState(initialFormState);
   
@@ -66,6 +69,50 @@ const InvoiceForm = () => {
   const [selectedSchemas, setSelectedSchemas] = useState([]);
   const [validationErrors, setValidationErrors] = useState([]);
   const [validationWarnings, setValidationWarnings] = useState([]);
+
+  // Initialize form with invoice data if in edit mode
+  useEffect(() => {
+    if (editMode && invoiceToEdit) {
+      // Map the invoice data to the form structure
+      const invoiceId = location.pathname.split('/').pop();
+      console.log("invoiceId in invoiceform edit mode: ", invoiceId);
+
+      // map invoice placeholer values
+      const mappedData = {
+        ...initialFormState,
+        invoiceId: invoiceToEdit.invoiceId || '',
+        total: parseFloat(invoiceToEdit.total) || 0,
+        buyer: invoiceToEdit.buyer.name || '',
+        supplier: invoiceToEdit.supplier.name || '',
+        issueDate: invoiceToEdit.issueDate || '',
+        dueDate: invoiceToEdit.dueDate || '',
+        currency: invoiceToEdit.currency || 'AUD',
+        buyerAddress: {
+          street: invoiceToEdit.buyer.address?.street || '',
+          country: invoiceToEdit.buyer.address?.country || 'AU'
+        },
+        supplierAddress: {
+          street: invoiceToEdit.supplier.address?.street || '',
+          country: invoiceToEdit.supplier.address?.country || 'AU'
+        },
+        buyerPhone: invoiceToEdit.buyer.phone || '',
+        supplierPhone: invoiceToEdit.supplier.phone || '',
+        supplierEmail: invoiceToEdit.supplier.email || '',
+        taxTotal: parseFloat(invoiceToEdit.taxTotal) || 0,
+        taxRate: parseFloat(invoiceToEdit.taxRate) || 10,
+        items: invoiceToEdit.items?.length > 0 
+          ? invoiceToEdit.items.map(item => ({
+              name: item.name || '',
+              count: parseInt(item.count) || 1,
+              cost: parseFloat(item.cost) || 0,
+              currency: item.currency || invoiceToEdit.currency || 'AUD'
+            }))
+          : initialFormState.items
+      };
+      
+      setFormData(mappedData);
+    }
+  }, [editMode, invoiceToEdit]);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -183,8 +230,8 @@ const InvoiceForm = () => {
   const handleSubmit = async (e, shouldValidate = false) => {
     e.preventDefault();
     
-    // Check if the all required fields are filled
-    if (!formRef.current.checkValidity()) {
+    // Check if the all required fields are filled (unless in edit mode)
+    if (!formRef.current.checkValidity() && !editMode) {
       formRef.current.reportValidity();
       return;
     }
@@ -232,6 +279,7 @@ const InvoiceForm = () => {
       // Calculate tax amount based on subtotal
       const taxAmount = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
       
+      console.log('formData when submitting: ', formData);
       // Create a new data object with the correct total, tax data, and normalized items
       const submissionData = {
         ...formData,
@@ -247,10 +295,7 @@ const InvoiceForm = () => {
           email: formData.supplierEmail || ''
         },
         // Add explicit tax data in the format expected by the backend
-        taxTotal: {
-          amount: taxAmount,
-          currencyID: formData.currency
-        },
+        taxTotal: taxAmount,
         // Add tax information to each line item
         items: normalizedItems.map(item => ({
           ...item,
@@ -272,12 +317,29 @@ const InvoiceForm = () => {
       // Send data to backend using the apiClient
       let response;
       
-      if (shouldValidate) {
+      if (editMode) {
+        // If in edit mode, use the update endpoint
+        const invoiceIdPath = location.pathname.split('/').pop();
+        console.log("invoiceIdPath: ", invoiceIdPath);
+        response = await apiClient.put(`${API_URL}/${invoiceIdPath}/update`, submissionData);
+        
+        if (response.status === 200) {
+          setMessage({
+            type: 'success',
+            text: 'Invoice updated successfully!'
+          });
+          
+        } else {
+          setMessage({
+            type: 'error',
+            text: 'Something went wrong while updating the invoice: ' + response.data.error
+          });
+        }
+      } else if (shouldValidate) {
         response = await apiClient.post(`${API_URL}/create-and-validate`, { 
           schemas: selectedSchemas, 
           invoice: submissionData 
         });
-
 
         if (response.status === 200) {
           setMessage({
@@ -321,7 +383,9 @@ const InvoiceForm = () => {
       setCreatedInvoice(response.data);
       
       // Reset form after successful submission
-      resetForm();
+      if (!editMode) {
+        resetForm();
+      }
       
     } catch (err) {
       console.error('Invoice creation error:', err);
@@ -504,13 +568,16 @@ const InvoiceForm = () => {
 
   return (
     <div className="dashboard-page">
-      <main className="dashboard-main">
+      <MenuBar activeSection="invoices" />
+      <div className="invoice-page-content">
+        <TopBar />
+        <main className="content-area">
         <div className="invoice-form-container">
           {createdInvoice ? (
             <div className="invoice-success">
               <div className="success-icon">✓</div>
-              <h3>Invoice Created Successfully!</h3>
-              <p>Your invoice has been {wasValidated ? 'created and validated' : 'created'}</p>
+              <h3>{editMode ? 'Invoice Updated Successfully!' : 'Invoice Created Successfully!'}</h3>
+              <p>Your invoice has been {editMode ? 'updated' : (wasValidated ? 'created and validated' : 'created')}</p>
               
               <div className="invoice-details">
                 <div className="detail-item">
@@ -560,7 +627,7 @@ const InvoiceForm = () => {
 
               
               <div className="form-actions">
-                <button 
+                {!editMode ? (<button 
                   className="form-button primary" 
                   onClick={() => {
                     setMessage(null);
@@ -571,17 +638,29 @@ const InvoiceForm = () => {
                   }}
                 >
                   Create Another Invoice
-                </button>
+                </button>) : (<button 
+                  className="form-button primary" 
+                  onClick={() => {
+                    setMessage(null);
+                    setValidationWarnings([]);
+                    setSelectedSchemas([]);
+                    setCreatedInvoice(null);
+                    setSubmittedValues(null);
+                    history.push(`/invoices/${createdInvoice.invoiceId}`);
+                  }}
+                >
+                  Back to Invoice
+                </button>)}
               </div>
             </div>
           ) : (
             <>
               <div className="welcome-banner">
-                <h2>Create New Invoice</h2>
-                <p>Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).</p>
+                <h2>{editMode ? 'Edit Invoice' : 'Create New Invoice'}</h2>
+                <p>{editMode ? 'Edit the invoice details below.' : 'Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).'}</p>
               </div>
               
-              <OrderSearch onOrderSelect={handleOrderSelect} />
+              {!editMode && <OrderSearch onOrderSelect={handleOrderSelect} />}
               
               <form 
                 className="invoice-form" 
@@ -910,11 +989,12 @@ const InvoiceForm = () => {
                   </div>
                 </div>
 
-                <div className="form-section">
-                  <h3>Validation</h3>
-                  <p>Optional: Select the schemas you want to validate against</p>
-                  <div className="validation-schemas">
-                  <div 
+                { !editMode && (
+                  <div className="form-section">
+                    <h3>Validation</h3>
+                    <p>Optional: Select the schemas you want to validate against</p>
+                    <div className="validation-schemas">
+                      <div 
                     className={`schema-option ${selectedSchemas.includes('peppol') ? 'selected' : ''}`}
                     onClick={() => handleSchemaChange('peppol')}
                   >
@@ -940,6 +1020,7 @@ const InvoiceForm = () => {
                   </div>
                   </div>
                 </div>
+                )}
                 
                 {message && (
                   <div className={`message ${message.type}`}>
@@ -983,7 +1064,7 @@ const InvoiceForm = () => {
                     Reset
                   </button>
 
-                  <button 
+                  { !editMode ? <button 
                     type="submit" 
                     className="form-button primary" 
                     disabled={isSubmitting}
@@ -991,13 +1072,20 @@ const InvoiceForm = () => {
                     {isSubmitting ? 'Creating...' : 
                     selectedSchemas.length > 0 ? 'Create & Validate Invoice' : 
                     'Create Invoice'}
-                  </button>
+                  </button> : <button 
+                    type="submit" 
+                    className="form-button primary" 
+                    disabled={isSubmitting}
+                  >
+                    Update Invoice
+                  </button>}
                 </div>
               </form>
             </>
           )}
         </div>
-      </main>
+        </main>
+        </div>
     </div>
   );
 };

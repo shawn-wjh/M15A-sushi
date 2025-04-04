@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
@@ -9,6 +9,8 @@ import InvoicePage from './components/invoiceView/InvoicePage';
 import Welcome from './components/Welcome';
 import ValidationResults from './components/invoiceValidationResult/validationResults';
 import './App.css';
+import apiClient from './utils/axiosConfig';
+import parseInvoiceXml from './utils/parseXmlHelper';
 
 // Protected route component
 const ProtectedRoute = ({ component: Component, ...rest }) => {
@@ -46,6 +48,64 @@ const PublicRoute = ({ component: Component, restricted, ...rest }) => {
   );
 };
 
+// Edit Invoice route component that passes invoice data to InvoiceForm
+const EditInvoiceRoute = (props) => {
+  const { location, match } = props;
+  const [invoice, setInvoice] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  console.log('EditInvoiceRoute rendered');
+  console.log('Location state:', location.state);
+  console.log('Match params:', match.params);
+  
+  useEffect(() => {
+    const fetchInvoice = async () => {
+      try {
+        // If invoice data is already in location state, use it
+        if (location.state?.invoice) {
+          console.log('Using invoice from location state');
+          setInvoice(location.state.invoice);
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, fetch the invoice data
+        const invoiceId = match.params.invoiceid;
+        console.log('Fetching invoice with ID:', invoiceId);
+        const response = await apiClient.get(`/v1/invoices/${invoiceId}`);
+        const invoiceData = parseInvoiceXml(response.data);
+        setInvoice(invoiceData);
+      } catch (err) {
+        console.error('Error fetching invoice:', err);
+        setError('Failed to load invoice data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoice();
+  }, [location.state, match.params.invoiceid]);
+
+  if (loading) {
+    console.log('EditInvoiceRoute: Loading state');
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    console.log('EditInvoiceRoute: Error state');
+    return <Redirect to="/dashboard" />;
+  }
+
+  if (!invoice) {
+    console.log('EditInvoiceRoute: No invoice state');
+    return <Redirect to="/dashboard" />;
+  }
+  
+  console.log('EditInvoiceRoute: Rendering InvoiceForm with invoice:', invoice);
+  return <InvoiceForm editMode={true} invoiceToEdit={invoice} />;
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -57,6 +117,8 @@ function App() {
           <PublicRoute restricted={true} path="/login" component={() => <Auth isLoginForm={true} />} />
           <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
           <ProtectedRoute path="/dashboard" component={Dashboard} />
+          <ProtectedRoute path="/invoices/create" component={InvoiceForm} />
+          <ProtectedRoute path="/invoices/edit/:invoiceid" component={EditInvoiceRoute} />
           <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
           <ProtectedRoute path="/validation-result" component={ValidationResults} />
           <ProtectedRoute path="/settings" component={Dashboard} />
