@@ -79,7 +79,7 @@ const validateInvoiceInput = (req, res, next) => {
     }
 
     // Validate optional dueDate if present
-    if (data.dueDate !== '') {
+    if (data.dueDate !== undefined && data.dueDate !== '') {
       if (!dateRegex.test(data.dueDate)) {
         throw new Error('Due date must be in YYYY-MM-DD format');
       }
@@ -452,7 +452,7 @@ const validateInvoiceStandard = (req, res, next) => {
     if (next) {
       // Attach validation result to request for potential later use
       req.validationResult = validationResult;
-      next();
+      return next();
     } else if (validationResult.valid === false) {
       return res.status(400).json({
         status: 'error',
@@ -468,7 +468,15 @@ const validateInvoiceStandard = (req, res, next) => {
       });
     }
   } catch (error) {
-      return res.status(400).json({
+    if (next) {
+      req.validationResult = {
+        valid: false,
+        errors: [error.message || 'Unknown error'],
+        warnings: []
+      };
+      return next();
+    }
+    return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
       error: error.message || 'Unknown error'
