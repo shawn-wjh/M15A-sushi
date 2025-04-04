@@ -270,7 +270,7 @@ paths:
           - items
       operationId: createInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: token
           in: cookie
@@ -411,7 +411,7 @@ paths:
         `/v1/invoices/list?limit=10&offset=0&sort=issuedate&order=asc`
       operationId: listInvoices
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: token
           in: cookie
@@ -496,7 +496,7 @@ paths:
           - These tags include: Namespaces, InvoiceTypeCode, CustomizationID, ProfileID, and OrderReference
       operationId: getInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -821,7 +821,7 @@ paths:
         This endpoint updates an existing invoice identified by its ID by inputting the a JSON object of the same format. Only allows the owner of the invoice to perform changes. 
       operationId: updateInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -966,7 +966,7 @@ paths:
         This endpoint permanantly deletes a specific invoice identified by its ID, removing it from the system. Only allows the owner of the invoice to remove it. 
       operationId: deleteInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -1032,7 +1032,7 @@ paths:
         
       operationId: validateInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -1089,7 +1089,7 @@ paths:
         Note: The invoice will still be created even if the validation fails. 
       operationId: createAndValidateInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: token
           in: cookie
