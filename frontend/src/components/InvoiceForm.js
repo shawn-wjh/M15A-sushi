@@ -1048,9 +1048,10 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                 )}
                 
                 <div className="form-actions">
-                  <button 
+                  { !editMode ? (<button 
                     type="button" 
                     className="form-button secondary"
+                    disabled={isSubmitting}
                     onClick={() => {
                       if (window.confirm('Are you sure you want to reset the form?')) {
                         resetForm();
@@ -1059,7 +1060,17 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                     }}
                   >
                     Reset
+                  </button>) : (<button 
+                    type="button" 
+                    className="form-button secondary"
+                    onClick={() => {
+                      history.push(`/invoices/${location.pathname.split('/').pop()}`);
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
                   </button>
+                  )}
 
                   { !editMode ? <button 
                     type="submit" 
