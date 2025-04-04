@@ -35,7 +35,6 @@ const exampleInvoice = {
  */
 function convertToUBL(invoice) {
   try {
-    console.log('Converting invoice to UBL:', JSON.stringify(invoice, null, 2));
 
     // Ensure numeric values are properly formatted
     const total = parseFloat(invoice.total) || 0;
@@ -219,7 +218,6 @@ function convertToUBL(invoice) {
       fullTagEmptyElement: true
     });
 
-    console.log('Generated UBL XML:', xmlBody);
     return xmlBody;
   } catch (error) {
     console.error('Error converting to UBL:', error);

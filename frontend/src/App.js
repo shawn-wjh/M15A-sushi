@@ -55,16 +55,12 @@ const EditInvoiceRoute = (props) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  console.log('EditInvoiceRoute rendered');
-  console.log('Location state:', location.state);
-  console.log('Match params:', match.params);
   
   useEffect(() => {
     const fetchInvoice = async () => {
       try {
         // If invoice data is already in location state, use it
         if (location.state?.invoice) {
-          console.log('Using invoice from location state');
           setInvoice(location.state.invoice);
           setLoading(false);
           return;
@@ -72,7 +68,6 @@ const EditInvoiceRoute = (props) => {
 
         // Otherwise, fetch the invoice data
         const invoiceId = match.params.invoiceid;
-        console.log('Fetching invoice with ID:', invoiceId);
         const response = await apiClient.get(`/v1/invoices/${invoiceId}`);
         const invoiceData = parseInvoiceXml(response.data);
         setInvoice(invoiceData);
@@ -88,21 +83,17 @@ const EditInvoiceRoute = (props) => {
   }, [location.state, match.params.invoiceid]);
 
   if (loading) {
-    console.log('EditInvoiceRoute: Loading state');
     return <div>Loading...</div>;
   }
 
   if (error) {
-    console.log('EditInvoiceRoute: Error state');
     return <Redirect to="/dashboard" />;
   }
 
   if (!invoice) {
-    console.log('EditInvoiceRoute: No invoice state');
     return <Redirect to="/dashboard" />;
   }
   
-  console.log('EditInvoiceRoute: Rendering InvoiceForm with invoice:', invoice);
   return <InvoiceForm editMode={true} invoiceToEdit={invoice} />;
 };
 

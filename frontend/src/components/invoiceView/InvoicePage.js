@@ -43,15 +43,12 @@ const InvoicePage = () => {
         const response = await apiClient.get(`${API_URL}/${invoiceId}`);
 
         // Extract invoice information from XML
-        console.log('response.data: ', response.data);
         const invoiceData = parseInvoiceXml(response.data);
 
-        console.log("Invoice: ", invoiceData);
         setInvoice(invoiceData);
         setRawXml(response.data);
         setMessage(null);
       } catch (error) {
-        console.log("error in getInvoice: (correct error) ", error);
         if (error.response?.status === 401) {
           history.push("/login");
         } else {
@@ -133,9 +130,6 @@ const InvoicePage = () => {
   };
 
   const handleEdit = () => {
-    console.log('Edit button clicked');
-    console.log('Current invoice:', invoice);
-    console.log('Current invoiceId:', invoiceId);
     
     // Redirect to InvoiceForm with the invoice data
     history.push({

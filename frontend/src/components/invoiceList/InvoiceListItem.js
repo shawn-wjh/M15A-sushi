@@ -39,7 +39,6 @@ const InvoiceListItem = ({
 
   const handleViewInvoice = (e) => {
     e.stopPropagation();
-    console.log('view invoice button clicked with invoice.InvoiceID: ', invoice.InvoiceID);
     history.push(`/invoices/${invoice.InvoiceID}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

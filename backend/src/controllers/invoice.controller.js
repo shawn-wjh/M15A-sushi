@@ -381,8 +381,6 @@ const invoiceController = {
       const invoiceId = req.params.invoiceid;
       const updateData = req.body;
 
-      console.log('Updating invoice:', invoiceId);
-      console.log('Update data:', JSON.stringify(updateData, null, 2));
 
       // Check if invoiceId is provided
       if (!invoiceId) {
@@ -434,7 +432,6 @@ const invoiceController = {
 
       // Convert updated data to UBL XML
       const ublXml = convertToUBL(updateData);
-      console.log('Generated UBL XML:', ublXml);
 
       // Update using document client
       const updateParams = {
@@ -449,7 +446,6 @@ const invoiceController = {
       };
 
       await dbClient.send(new PutCommand(updateParams));
-      console.log('Invoice updated successfully');
 
       return res.status(200).json({
         status: 'success',

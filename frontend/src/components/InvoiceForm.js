@@ -75,7 +75,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     if (editMode && invoiceToEdit) {
       // Map the invoice data to the form structure
       const invoiceId = location.pathname.split('/').pop();
-      console.log("invoiceId in invoiceform edit mode: ", invoiceId);
 
       // map invoice placeholer values
       const mappedData = {
@@ -279,7 +278,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       // Calculate tax amount based on subtotal
       const taxAmount = Math.round(roundedTotal * (taxRate / 100) * 100) / 100;
       
-      console.log('formData when submitting: ', formData);
       // Create a new data object with the correct total, tax data, and normalized items
       const submissionData = {
         ...formData,
@@ -320,7 +318,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       if (editMode) {
         // If in edit mode, use the update endpoint
         const invoiceIdPath = location.pathname.split('/').pop();
-        console.log("invoiceIdPath: ", invoiceIdPath);
         response = await apiClient.put(`${API_URL}/${invoiceIdPath}/update`, submissionData);
         
         if (response.status === 200) {
