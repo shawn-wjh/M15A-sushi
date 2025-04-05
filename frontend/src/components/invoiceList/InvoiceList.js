@@ -1,5 +1,5 @@
 import { useHistory } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../utils/axiosConfig";
 import getCookie from "../../utils/cookieHelper";
 import parseInvoiceXml from "../../utils/parseXmlHelper";
 import { useState, useEffect } from "react";
@@ -11,7 +11,7 @@ import ActionBarIcon from "./ActionBarIcon";
 import InvoicePagination from "./InvoicePagination";
 import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPopUp";
 
-const API_URL = "http://localhost:3000/v1/invoices/list";
+const API_URL = "/v1/invoices/list";
 
 const InvoiceList = () => {
   const history = useHistory();
@@ -45,13 +45,7 @@ const InvoiceList = () => {
         offset: (currentPage - 1) * filters.limit,
       }).toString();
 
-      const response = await axios.get(`${API_URL}?${queryParams}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      const response = await apiClient.get(`${API_URL}?${queryParams}`);
 
       // case where user is not logged in
       if (response.status === 401) {
@@ -173,17 +167,8 @@ const InvoiceList = () => {
     try {
       // Create an array of promises for all delete operations
       const deletePromises = Array.from(selectedInvoices).map((invoiceId) =>
-        axios.delete(`http://localhost:3000/v1/invoices/${invoiceId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        })
+        apiClient.delete(`/v1/invoices/${invoiceId}`)
       );
-
-      // Wait for all delete operations to complete
-      await Promise.all(deletePromises);
 
       // Update the UI
       setShowDeleteConfirm(false);
@@ -383,12 +368,13 @@ const InvoiceList = () => {
               Are you sure you want to delete {selectedInvoices.size} invoice
               {selectedInvoices.size !== 1 ? "s" : ""}?
             </p>
+            {message && <div className="error-message">{message.text}</div>}
             <div className="modal-buttons">
               <button
                 className="modal-button cancel"
                 onClick={handleCancelDelete}
               >
-                No
+                Cancel
               </button>
               <button
                 className="modal-button delete"

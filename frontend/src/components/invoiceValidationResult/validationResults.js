@@ -1,12 +1,13 @@
 import { useLocation, useHistory } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../utils/axiosConfig";
 import getCookie from "../../utils/cookieHelper";
 import "./validationResults.css";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { FaEdit } from "react-icons/fa";
 import MenuBar from "../MenuBar";
 import TopBar from "../TopBar";
-const API_URL = "http://localhost:3000/v2/invoices";
+
+const API_URL = "/v2/invoices";
 
 const schemaNameMap = {
   "peppol": "PEPPOL A-NZ",
@@ -23,16 +24,9 @@ async function validateInvoices(invoiceIds, schemas) {
     const validationPromises = invoiceIds.map(async (invoiceId) => {
       console.log("in validateInvoices, validating invoice with schemas: ", schemas);
       console.log("in validateInvoices, token: ", token);
-      const response = await axios.post(
+      const response = await apiClient.post(
         `${API_URL}/${invoiceId}/validate`,
-        { schemas: schemas },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
+        { schemas: schemas }
       );
 
       console.log("in validateInvoices, response: ", response);
