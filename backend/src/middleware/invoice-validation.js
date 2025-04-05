@@ -485,6 +485,8 @@ const validateInvoiceStandard = (req, res, next) => {
 };
 
 const validatePeppol = (invoice, validationResult) => {
+  console.log('invoice in validatePeppol: ', invoice);
+
   if (!validationResult) {
     validationResult = {
       valid: true,
@@ -517,7 +519,7 @@ const validatePeppol = (invoice, validationResult) => {
     'cbc:DocumentCurrencyCode',
     'cac:AccountingSupplierParty',
     'cac:AccountingCustomerParty',
-    'cbc:TaxTotal',
+    'cac:TaxTotal',
     'cac:LegalMonetaryTotal',
     'cac:InvoiceLine',
   ];
@@ -767,7 +769,7 @@ const validatePeppol = (invoice, validationResult) => {
   }
 
   // Check for tax total
-  if (!invoice['cbc:TaxTotal']?.['cbc:TaxAmount']?._text) {
+  if (!invoice['cac:TaxTotal']?.['cbc:TaxAmount']?._text) {
     validationResult.valid = false;
     validationResult.errors.push(
       'Missing TaxTotal (Peppol rule BR-XX)'
@@ -841,6 +843,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
     // Check if root Invoice element exists
     const invoice = parsedXml.Invoice;
+    console.log('invoice: ', invoice);
     if (!invoice) {
       validationResult.valid = false;
       validationResult.errors.push('Missing Invoice root element');
