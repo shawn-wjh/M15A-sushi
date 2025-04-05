@@ -1,3 +1,7 @@
+:root {
+  --accent-orange: #ffa500;
+}
+
 .validation-container {
   background-color: var(--gray);
   border-radius: 12px;
@@ -141,6 +145,7 @@
   padding: 10px;
   background-color: rgba(255, 59, 48, 0.1);
   border-radius: 4px;
+  border-left: 4px solid var(--accent-red);
 }
 
 .validation-warnings {
@@ -149,11 +154,17 @@
   padding: 10px;
   background-color: rgba(255, 149, 0, 0.1);
   border-radius: 4px;
+  border-left: 4px solid var(--accent-orange);
 }
 
-.validation-errors h5,
+.validation-errors h5 {
+  color: var(--accent-red);
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
 .validation-warnings h5 {
-  color: var(--white);
+  color: var(--accent-orange);
   margin-bottom: 5px;
   font-size: 14px;
 }
@@ -165,9 +176,15 @@
   margin: 0;
 }
 
-.validation-errors li,
+.validation-errors li {
+  color: var(--accent-red);
+  font-size: 13px;
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
 .validation-warnings li {
-  color: var(--light-gray);
+  color: var(--accent-orange);
   font-size: 13px;
   margin-bottom: 3px;
   line-height: 1.4;

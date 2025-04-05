@@ -9,7 +9,7 @@ import TopBar from "../TopBar";
 
 const API_URL = "/v2/invoices";
 
-const schemaNameMap = {
+export const schemaNameMap = {
   "peppol": "PEPPOL A-NZ",
   "fairwork": "Fair Work Commision",
 }
@@ -22,8 +22,6 @@ async function validateInvoices(invoiceIds, schemas) {
 
   try {
     const validationPromises = invoiceIds.map(async (invoiceId) => {
-      console.log("in validateInvoices, validating invoice with schemas: ", schemas);
-      console.log("in validateInvoices, token: ", token);
       const response = await apiClient.post(
         `${API_URL}/${invoiceId}/validate`,
         { schemas: schemas }

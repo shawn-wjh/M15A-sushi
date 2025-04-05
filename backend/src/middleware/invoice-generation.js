@@ -35,6 +35,20 @@ const exampleInvoice = {
  */
 function convertToUBL(invoice) {
   try {
+
+    // Ensure numeric values are properly formatted
+    const total = parseFloat(invoice.total) || 0;
+    const taxTotal = parseFloat(invoice.taxTotal) || 0;
+    const taxRate = parseFloat(invoice.taxRate) || 0;
+
+    // Format items if they exist
+    const formattedItems = invoice.items ? invoice.items.map(item => ({
+      ...item,
+      count: parseFloat(item.count) || 0,
+      cost: parseFloat(item.cost) || 0,
+      taxRate: parseFloat(item.taxRate) || taxRate || 0
+    })) : [];
+
     // Create base XML structure with required fields
     const ublXML = {
       _declaration: {
@@ -156,18 +170,18 @@ function convertToUBL(invoice) {
         'cac:LegalMonetaryTotal': {
           'cbc:PayableAmount': {
             _attributes: { currencyID: invoice.currency || 'AUD' },
-            _text: invoice.total ? invoice.total.toString() : '0'
+            _text: total.toString()
           }
         },
 
         // Optional Invoice Line Items
-        'cac:InvoiceLine': invoice.items ? invoice.items.map((item, index) => ({
+        'cac:InvoiceLine': formattedItems.map((item, index) => ({
           'cbc:ID': { _text: (index + 1).toString() },
           'cac:Item': {
             'cbc:Name': { _text: item.name },
             'cac:ClassifiedTaxCategory': {
-              'cbc:ID': { _text: item.taxCategory || 'S' }, // either S = Standard rate or Z = Zero rated goods
-              'cbc:Percent': { _text: (item.taxPercent || invoice.taxRate || 0).toString() }
+              'cbc:ID': { _text: item.taxCategory || 'S' },
+              'cbc:Percent': { _text: item.taxRate.toString() }
             }
           },
           'cac:Price': {
@@ -182,16 +196,17 @@ function convertToUBL(invoice) {
               _text: item.count.toString()
             }
           }
-        })) : [],
+        })),
         
         // Add TaxTotal element
-        'cbc:TaxTotal': {
+        'cac:TaxTotal': {
           'cbc:TaxAmount': {
             _attributes: {
               currencyID: invoice.currency || 'AUD'
             },
-            _text: (invoice.taxTotal?.amount || invoice.taxAmount || 0).toString()
-          }
+            _text: taxTotal.toString()
+          },
+          'cbc:Percent': { _text: taxRate.toString() }
         }
       }
     };
@@ -205,6 +220,7 @@ function convertToUBL(invoice) {
 
     return xmlBody;
   } catch (error) {
+    console.error('Error converting to UBL:', error);
     throw new Error(`Failed to convert to UBL invoice: ${error.message}`);
   }
 }
