@@ -485,7 +485,6 @@ const validateInvoiceStandard = (req, res, next) => {
 };
 
 const validatePeppol = (invoice, validationResult) => {
-  console.log('invoice in validatePeppol: ', invoice);
 
   if (!validationResult) {
     validationResult = {
@@ -843,7 +842,6 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
     // Check if root Invoice element exists
     const invoice = parsedXml.Invoice;
-    console.log('invoice: ', invoice);
     if (!invoice) {
       validationResult.valid = false;
       validationResult.errors.push('Missing Invoice root element');
