@@ -8,11 +8,7 @@ const auth = require('../middleware/auth');
 router.use(auth.verifyToken);
 
 const {
-  createInvoice,
-  getInvoice,
-  updateValidationStatus,
-  updateInvoice,
-  deleteInvoice
+  invoiceController
 } = require('../controllers/invoice.controller');
 
 const { validateInvoiceStandardv2, validateInvoiceInput } = require('../middleware/invoice-validation');
@@ -20,12 +16,12 @@ const { validateInvoiceStandardv2, validateInvoiceInput } = require('../middlewa
 // Apply auth middleware to all routes
 router.use(auth.verifyToken);
 
-router.post('/create', createInvoice);
+router.post('/create', invoiceController.createInvoice);
 
 router.post('/:invoiceid/validate', 
-  getInvoice,
+  invoiceController.getInvoice,
   validateInvoiceStandardv2,
-  updateValidationStatus,
+  invoiceController.updateValidationStatus,
   (req, res) => {
     if (req.status === 'success') {
       return res.status(200).json({
@@ -72,7 +68,7 @@ router.post('/create-and-validate',
       };
 
       // Call the createInvoice controller
-      await createInvoice(req, res, next);
+      await invoiceController.createInvoice(req, res, next);
     } catch (error) {
       next(error);
     }
@@ -130,12 +126,12 @@ router.post('/create-and-validate',
 
 router.post('/:invoiceid/update', 
   // to add user validation
-  updateInvoice
+  invoiceController.updateInvoice
 );
 
 router.delete('/:invoiceid', 
   // to add user validation
-  deleteInvoice
+  invoiceController.deleteInvoice
 );
 
 module.exports = router;
