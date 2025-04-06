@@ -614,5 +614,5 @@ const invoiceController = {
 
 module.exports = {
   invoiceController,
-  parseXMLSafely
+  parseXML
 };

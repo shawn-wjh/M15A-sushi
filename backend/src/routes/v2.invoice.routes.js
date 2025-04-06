@@ -10,7 +10,7 @@ const router = express.Router();
 
 const auth = require('../middleware/auth');
 
-
+router.use(auth.verifyToken);
 
 router.post('/create', invoiceController.createInvoice);
 
@@ -42,34 +42,6 @@ router.post('/:invoiceid/validate',
  * @returns {object} 200 - Combined invoice and validation report
  */
 router.post('/create-and-validate',
-  validateInvoiceInput,
-  async (req, res, next) => {
-    try {
-      // Store the original json method
-      const originalJson = res.json;
-
-      // Override the json method to capture the invoice data
-      res.json = function (data) {
-        // Store the invoice data in the request
-        req.invoiceData = data;
-
-        // Restore the original json method
-        res.json = originalJson;
-
-        // Continue to validation
-        next();
-
-        // Return res to allow chaining
-        return res;
-      };
-
-      // Call the createInvoice controller
-      await invoiceController.createInvoice(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  },
-  // This middleware will prepare for validation
   (req, res, next) => {
     if (req.body.invoice) {
       req.body.xml = convertToUBL(req.body.invoice);
@@ -94,8 +66,8 @@ router.post('/create-and-validate',
       });
     }
   },
-  createInvoice,
-  updateValidationStatus,
+  invoiceController.createInvoice,
+  invoiceController.updateValidationStatus,
   (req, res) => {
     if (req.status === 'success') {
       return res.status(200).json({
@@ -112,7 +84,6 @@ router.post('/create-and-validate',
     }
   }
 );
-
 
 module.exports = router;
 

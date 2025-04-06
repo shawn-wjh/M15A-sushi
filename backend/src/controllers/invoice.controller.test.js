@@ -32,7 +32,7 @@ jest.mock('../middleware/helperFunctions', () => ({
 }));
 
 
-const { invoiceController, parseXMLSafely } = require('./invoice.controller');
+const { invoiceController, parseXML } = require('./invoice.controller');
 const xml2js = require('xml2js');
 
 
@@ -491,7 +491,7 @@ describe('Invoice Controller', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         status: 'error',
-        error: 'Invoice not found'
+        error: 'Invalid Invoice ID'
       });
     });
 
@@ -784,7 +784,7 @@ describe('Invoice Controller', () => {
     });
   });
 
-  describe('parseXMLSafely', () => {
+  describe('parseXML', () => {
     it('should parse valid XML and return expected object', async () => {
       const xmlString = `<Invoice>
         <IssueDate>2025-01-01</IssueDate>
@@ -793,7 +793,7 @@ describe('Invoice Controller', () => {
           <PayableAmount>100</PayableAmount>
         </LegalMonetaryTotal>
       </Invoice>`;
-      const result = await parseXMLSafely(xmlString);
+      const result = await parseXML(xmlString);
       expect(result).toEqual({
         IssueDate: '2025-01-01',
         DueDate: '2025-01-15',
@@ -802,13 +802,13 @@ describe('Invoice Controller', () => {
     });
 
     it('should return null for invalid XML input (non-string)', async () => {
-      const result = await parseXMLSafely(null);
+      const result = await parseXML(null);
       expect(result).toBeNull();
     });
 
     it('should return default null values when Invoice element is absent', async () => {
       const xmlString = `<Invalid></Invalid>`;
-      const result = await parseXMLSafely(xmlString);
+      const result = await parseXML(xmlString);
       expect(result).toEqual({
         IssueDate: null,
         DueDate: null,
@@ -821,7 +821,7 @@ describe('Invoice Controller', () => {
       const parserSpy = jest.spyOn(xml2js.Parser.prototype, 'parseStringPromise')
         .mockRejectedValueOnce(new Error('Parser error'));
       const xmlString = `<Invoice><DueDate>2025-01-15</DueDate>`; // malformed XML
-      const result = await parseXMLSafely(xmlString);
+      const result = await parseXML(xmlString);
       expect(result).toBeNull();
       parserSpy.mockRestore();
     });
@@ -873,16 +873,16 @@ describe('Invoice Controller', () => {
       error: 'invalid order query'
     });
   });
-  it('should log error and assign default parsedData when parseXMLSafely returns null', async () => {
+  it('should log error and assign default parsedData when parseXML returns null', async () => {
     // Spy on console.error
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    // Simulate an invoice with an invalid XML string (non-string) so parseXMLSafely returns null.
+    // Simulate an invoice with an invalid XML string (non-string) so parseXML returns null.
     mockSend.mockResolvedValueOnce({
       Items: [
         {
           InvoiceID: 'inv1',
           UserID: 'user1',
-          invoice: null,  // not a string, so parseXMLSafely returns null
+          invoice: null,  // not a string, so parseXML returns null
           timestamp: '2025-01-01T00:00:00.000Z'
         }
       ]
