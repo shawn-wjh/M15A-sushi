@@ -16,7 +16,19 @@ jest.mock('../middleware/invoice-generation', () => ({
 
 const { checkUserId } = require('../middleware/helperFunctions');
 jest.mock('../middleware/helperFunctions', () => ({
-  checkUserId: jest.fn(() => true)
+  checkUserId: jest.fn((userId, invoice) => {
+    // If no userId, return false
+    if (!userId) {
+      return false;
+    }
+    
+    // If invoice is given, check if userId matches
+    if (invoice) {
+      return invoice.UserID === userId;
+    }
+    
+    return true;
+  })
 }));
 
 
@@ -701,10 +713,18 @@ describe('Invoice Controller', () => {
     });
 
     it('should update validation status and call next if provided', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
       mockSend.mockResolvedValueOnce({}); // Simulate UpdateCommand success
       const req = {
         params: { invoiceid: 'invoice-1' },
-        validationResult: { valid: true }
+        validationResult: { valid: true },
+        user: { userId: 'user1' }
       };
       const res = createRes();
       const next = jest.fn();
@@ -716,10 +736,18 @@ describe('Invoice Controller', () => {
     });
 
     it('should update validation status and send response if next is not provided', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
       mockSend.mockResolvedValueOnce({}); // Simulate UpdateCommand success
       const req = {
         params: { invoiceid: 'invoice-1' },
-        validationResult: { valid: false }
+        validationResult: { valid: false },
+        user: { userId: 'user1' }
       };
       const res = createRes();
       await invoiceController.updateValidationStatus(req, res);
@@ -732,11 +760,19 @@ describe('Invoice Controller', () => {
     });
 
     it('should return 500 if UpdateCommand fails in updateValidationStatus', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
       const error = new Error('UpdateCommand error');
       mockSend.mockRejectedValueOnce(error);
       const req = {
         params: { invoiceid: 'invoice-1' },
-        validationResult: { valid: true }
+        validationResult: { valid: true },
+        user: { userId: 'user1' }
       };
       const res = createRes();
       await invoiceController.updateValidationStatus(req, res);

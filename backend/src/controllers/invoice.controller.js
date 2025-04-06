@@ -323,6 +323,7 @@ const invoiceController = {
       console.log('checkingUserId(req.user.userId, Items[0]): ', checkUserId(req.user.userId, Items[0]));
       // check if allowed access
       if (!checkUserId(req.user.userId, Items[0])) {
+        console.log('Unauthorised Access');
         return res.status(401).json({
           status: 'error',
           error: 'Unauthorised Access'
