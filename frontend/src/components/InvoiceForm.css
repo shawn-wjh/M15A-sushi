@@ -539,6 +539,18 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
+.banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.banner-header h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+
 .welcome-banner::before {
   content: '';
   position: absolute;
@@ -764,3 +776,7 @@
   color: var(--light-gray);
   font-style: italic;
 } 
+
+.padding-bottom {
+  padding-bottom: 10px;
+}
