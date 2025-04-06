@@ -1,105 +1,848 @@
-const invoiceController = require('../../src/controllers/invoice.controller');
-const { createDynamoDBClient } = require('../config/database');
+const mockSend = jest.fn();
+jest.mock('../config/database', () => ({
+  createDynamoDBClient: () => ({
+    send: mockSend
+  }),
+  Tables: { INVOICES: 'InvoicesTable' }
+}));
 
-const dbClient = createDynamoDBClient();
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'test-uuid')
+}));
 
-jest.mock('../../src/middleware/helperFunctions', () => {
-  return {
-    checkUserId: jest.fn(() => true),
-  };
-});
+jest.mock('../middleware/invoice-generation', () => ({
+  convertToUBL: jest.fn(() => '<Invoice>UBL XML</Invoice>')
+}));
 
-describe('createInvoice', () => {
-  // it('should return 200 when creating a new invoice', async () => {
-  //     const request = httpMocks.createRequest({
-  //         body: mockInvoice
-  //     });
-  //     const response = httpMocks.createResponse();
-  //     await createInvoice(request, response);
-  //     expect(response.statusCode).toBe(200);
-  // });
-
-  it('fix the issue above', () => {
-    expect(1).toBe(1);
-  });
-  // add tests using getInvoice to check if the invoice was created
-});
-jest.mock('../config/database', () => {
-  const send = jest.fn();
-  return {
-    createDynamoDBClient: () => ({
-      send
-    }),
-    Tables: {
-      INVOICES: 'Invoices'
+const { checkUserId } = require('../middleware/helperFunctions');
+jest.mock('../middleware/helperFunctions', () => ({
+  checkUserId: jest.fn((userId, invoice) => {
+    // If no userId, return false
+    if (!userId) {
+      return false;
     }
-  };
+    
+    // If invoice is given, check if userId matches
+    if (invoice) {
+      return invoice.UserID === userId;
+    }
+    
+    return true;
+  })
+}));
+
+
+const { invoiceController, parseXML } = require('./invoice.controller');
+const xml2js = require('xml2js');
+
+
+const createRes = () => ({
+  status: jest.fn().mockReturnThis(),
+  json: jest.fn(),
+  send: jest.fn(),
+  set: jest.fn().mockReturnThis()
 });
 
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.set = jest.fn().mockReturnValue(res);
-  res.send = jest.fn().mockReturnValue(res);
-  return res;
-}
+beforeEach(() => {
+  jest.clearAllMocks();
+});
 
-describe('invoiceController.listInvoices', () => {
-  let req;
-  let res;
+describe('Invoice Controller', () => {
+  describe('createInvoice', () => {
+    it('should return 401 if checkUserId returns false', async () => {
+      checkUserId.mockReturnValueOnce(false);
+      const req = {
+        body: { some: 'data' },
+        user: { userId: 'invalid-user' }
+      };
+      const res = createRes();
+      await invoiceController.createInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'No user ID provided'
+      });
+    });
 
-  beforeEach(() => {
-    req = { query: {}, user: { userId: 'test-user' } };
-    res = createRes();
+    it('should create invoice successfully', async () => {
+      checkUserId.mockReturnValueOnce(true);
+      mockSend.mockResolvedValueOnce({}); // Simulate PutCommand success
+      const req = {
+        body: { some: 'data' },
+        user: { userId: 'valid-user' }
+      };
+      const res = createRes();
+      await invoiceController.createInvoice(req, res);
+      expect(mockSend).toHaveBeenCalled(); // PutCommand was sent
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        message: 'Invoice created successfully',
+        invoiceId: 'test-uuid',
+        invoice: '<Invoice>UBL XML</Invoice>'
+      });
+    });
 
-    dbClient.send.mockReset();
-  });
-
-  test('should return an empty list when no invoices exist', async () => {
-    dbClient.send.mockResolvedValueOnce({ Items: [] });
-
-    await invoiceController.listInvoices(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      status: 'success',
-      data: {
-        count: 0,
-        invoices: []
-      }
+    it('should return 500 if PutCommand fails in createInvoice', async () => {
+      checkUserId.mockReturnValueOnce(true);
+      const error = new Error('PutCommand error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        body: { some: 'data' },
+        user: { userId: 'valid-user' }
+      };
+      const res = createRes();
+      await invoiceController.createInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Failed to create invoice',
+        details: 'PutCommand error'
+      });
     });
   });
 
-  test('should return 400 for invalid limit (less than 0)', async () => {
-    req.query.limit = '-1';
+  describe('listInvoices', () => {
+    it('should return error for invalid limit (outer block)', async () => {
+      // Use a negative limit so that parseInt returns -1 and outer block catches it.
+      const req = {
+        query: { limit: '-1', offset: '0' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'limit must be greater than 0'
+      });
+    });
 
-    await invoiceController.listInvoices(req, res);
+    it('should return error for invalid offset (outer block)', async () => {
+      const req = {
+        query: { limit: '10', offset: '-5' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'offset must be at least 0'
+      });
+    });
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      status: 'error',
-      error: 'limit must be greater than 0'
+    it('should return error for invalid sort field', async () => {
+      const req = {
+        query: { limit: '10', offset: '0', sort: 'invalid', order: 'asc' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'invalid sort query'
+      });
+    });
+
+    it('should return error for invalid order query', async () => {
+      const req = {
+        query: { limit: '10', offset: '0', sort: 'issuedate', order: 'invalid' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'invalid order query'
+      });
+    });
+
+   /* it('should return 500 if db scan fails', async () => {
+      const error = new Error('db scan error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        query: { limit: '10', offset: '0' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Failed to list invoices',
+        details: 'db scan error'
+      });
+    });*/
+
+    it('should list invoices with proper pagination and sorting (issuedate)', async () => {
+      const validInvoiceXML = `<Invoice>
+        <IssueDate>2025-01-01</IssueDate>
+        <DueDate>2025-01-15</DueDate>
+        <LegalMonetaryTotal>
+          <PayableAmount>100</PayableAmount>
+        </LegalMonetaryTotal>
+      </Invoice>`;
+      mockSend.mockResolvedValueOnce({
+        Items: [
+          {
+            InvoiceID: '1',
+            UserID: 'user1',
+            invoice: validInvoiceXML,
+            timestamp: '2025-01-01T00:00:00.000Z'
+          },
+          {
+            InvoiceID: '2',
+            UserID: 'user1',
+            invoice: validInvoiceXML,
+            timestamp: '2025-01-02T00:00:00.000Z'
+          }
+        ]
+      });
+      const req = {
+        query: { limit: '1', offset: '0', sort: 'issuedate', order: 'asc' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      const jsonResponse = res.json.mock.calls[0][0];
+      expect(jsonResponse.status).toBe('success');
+      expect(jsonResponse.data.count).toBe(2);
+      expect(jsonResponse.data.invoices.length).toBe(1);
+      // Verify that the temporary "parsedData" is removed
+      expect(jsonResponse.data.invoices[0]).not.toHaveProperty('parsedData');
+    });
+
+    it('should adjust offset when offset > total invoices', async () => {
+      // Only one invoice exists, but offset is provided greater than count.
+      const validInvoiceXML = `<Invoice>
+        <IssueDate>2025-01-01</IssueDate>
+        <DueDate>2025-01-15</DueDate>
+        <LegalMonetaryTotal>
+          <PayableAmount>100</PayableAmount>
+        </LegalMonetaryTotal>
+      </Invoice>`;
+      mockSend.mockResolvedValueOnce({
+        Items: [
+          {
+            InvoiceID: '1',
+            UserID: 'user1',
+            invoice: validInvoiceXML,
+            timestamp: '2025-01-01T00:00:00.000Z'
+          }
+        ]
+      });
+      // Provide offset higher than total items (1) with limit 5.
+      const req = {
+        query: { limit: '5', offset: '10' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      const jsonResponse = res.json.mock.calls[0][0];
+      expect(jsonResponse.data.count).toBe(1);
+      expect(jsonResponse.data.invoices.length).toBe(1);
+    });
+
+    it('should sort invoices by total (ascending and descending)', async () => {
+      // Create two invoices with TotalPayableAmount as an object with "_" property.
+      const xmlWithAttributes1 = `<Invoice>
+        <IssueDate>2025-01-01</IssueDate>
+        <DueDate>2025-01-15</DueDate>
+        <LegalMonetaryTotal>
+          <PayableAmount attr="x">100</PayableAmount>
+        </LegalMonetaryTotal>
+      </Invoice>`;
+      const xmlWithAttributes2 = `<Invoice>
+        <IssueDate>2025-01-02</IssueDate>
+        <DueDate>2025-01-16</DueDate>
+        <LegalMonetaryTotal>
+          <PayableAmount attr="x">50</PayableAmount>
+        </LegalMonetaryTotal>
+      </Invoice>`;
+      const items = [
+        {
+          InvoiceID: '1',
+          UserID: 'user1',
+          invoice: xmlWithAttributes1,
+          timestamp: '2025-01-01T00:00:00.000Z'
+        },
+        {
+          InvoiceID: '2',
+          UserID: 'user1',
+          invoice: xmlWithAttributes2,
+          timestamp: '2025-01-02T00:00:00.000Z'
+        }
+      ];
+      // For ascending order
+      mockSend.mockResolvedValueOnce({ Items: items });
+      const reqAsc = {
+        query: { limit: '10', offset: '0', sort: 'total', order: 'asc' },
+        user: { userId: 'user1' }
+      };
+      const resAsc = createRes();
+      await invoiceController.listInvoices(reqAsc, resAsc);
+      const ascResponse = resAsc.json.mock.calls[0][0];
+      expect(ascResponse.data.invoices[0].InvoiceID).toBe('2');
+
+      // For descending order, set the mock response again.
+      mockSend.mockResolvedValueOnce({ Items: items });
+      const reqDesc = {
+        query: { limit: '10', offset: '0', sort: 'total', order: 'desc' },
+        user: { userId: 'user1' }
+      };
+      const resDesc = createRes();
+      await invoiceController.listInvoices(reqDesc, resDesc);
+      const descResponse = resDesc.json.mock.calls[0][0];
+      expect(descResponse.data.invoices[0].InvoiceID).toBe('1');
+    });
+
+    // --- Extra tests to cover inner block validations using parseInt spying ---
+
+    it('should return error from inner block if limit < 1 (inner block override)', async () => {
+      // Here we force the outer block to see a valid limit, then inside try force an invalid limit.
+      const originalParseInt = global.parseInt;
+      const spy = jest.spyOn(global, 'parseInt')
+        // Outer block: for req.query.limit "-1", return 10 (valid)
+        .mockImplementationOnce((val, base) => (val === "-1" ? 10 : originalParseInt(val, base)))
+        // Outer block: for offset "0", return 1 (valid)
+        .mockImplementationOnce((val, base) => (val === "0" ? 1 : originalParseInt(val, base)))
+        // Inner block: for limit "-1", return -1 (invalid)
+        .mockImplementationOnce((val, base) => (val === "-1" ? -1 : originalParseInt(val, base)))
+        // Inner block: for offset "0", return 1 (valid)
+        .mockImplementationOnce((val, base) => (val === "0" ? 1 : originalParseInt(val, base)));
+      
+      const req = {
+        query: { limit: "-1", offset: "0" },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'limit must be greater than 0'
+      });
+      spy.mockRestore();
+    });
+
+    it('should return error from inner block if offset < 0 (inner block override)', async () => {
+      // Force outer block to have valid values, then inner block returns invalid offset.
+      const originalParseInt = global.parseInt;
+      const spy = jest.spyOn(global, 'parseInt')
+        // Outer block: for limit "10", return 10 (valid)
+        .mockImplementationOnce((val, base) => (val === "10" ? 10 : originalParseInt(val, base)))
+        // Outer block: for offset "0", return 1 (valid)
+        .mockImplementationOnce((val, base) => (val === "0" ? 1 : originalParseInt(val, base)))
+        // Inner block: for limit "10", return 10 (valid)
+        .mockImplementationOnce((val, base) => (val === "10" ? 10 : originalParseInt(val, base)))
+        // Inner block: for offset "0", return -1 (invalid)
+        .mockImplementationOnce((val, base) => (val === "0" ? -1 : originalParseInt(val, base)));
+      
+      const req = {
+        query: { limit: "10", offset: "0" },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.listInvoices(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'offset must be at least 0'
+      });
+      spy.mockRestore();
     });
   });
 
-  test('should return 400 for invalid offset (less than 0)', async () => {
-    req.query.offset = '-1'; // invalid offset
+  describe('getInvoice', () => {
+    it('should throw an error if invoice ID is missing', async () => {
+      const req = {
+        params: {},
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await expect(invoiceController.getInvoice(req, res)).rejects.toThrow('Missing invoice ID');
+    });
 
-    await invoiceController.listInvoices(req, res);
+    it('should return error if invoice not found', async () => {
+      mockSend.mockResolvedValueOnce({ Items: [] });
+      const req = {
+        params: { invoiceid: 'nonexistent' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.getInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Invoice not found'
+      });
+    });
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      status: 'error',
-      error: 'offset must be at least 0'
+    it('should return 401 if unauthorized', async () => {
+      checkUserId.mockReturnValueOnce(false);
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'otherUser',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.getInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Unauthorised Access'
+      });
+    });
+
+    it('should return invoice XML if authorized', async () => {
+      checkUserId.mockReturnValueOnce(true);
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.getInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.set).toHaveBeenCalledWith('Content-Type', 'application/xml');
+      expect(res.send).toHaveBeenCalledWith('<Invoice>UBL XML</Invoice>');
+    });
+
+    it('should call next if provided', async () => {
+      checkUserId.mockReturnValueOnce(true);
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' },
+        body: {}
+      };
+      const res = createRes();
+      const next = jest.fn();
+      await invoiceController.getInvoice(req, res, next);
+      expect(req.body.xml).toEqual('<Invoice>UBL XML</Invoice>');
+      expect(next).toHaveBeenCalled();
+    });
+
+    it('should return 400 if db query fails in getInvoice', async () => {
+      const error = new Error('db query error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.getInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'db query error'
+      });
     });
   });
 
-  test('should return 400 for invalid sort field', async () => {
-    req.query.sort = 'invalidfield';
+  describe('updateInvoice', () => {
+    it('should return error if invoice ID is missing', async () => {
+      const req = {
+        params: {},
+        body: { some: 'data' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Missing invoice ID'
+      });
+    });
 
+    it('should return error if invoice not found', async () => {
+      mockSend.mockResolvedValueOnce({ Items: [] });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        body: { some: 'data' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Invalid Invoice ID'
+      });
+    });
+
+    it('should return error if unauthorized', async () => {
+      checkUserId.mockReturnValueOnce(false);
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'otherUser',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        body: { some: 'data' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Unauthorised Access'
+      });
+    });
+
+    it('should update invoice successfully', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>Old XML</Invoice>'
+        }]
+      });
+      mockSend.mockResolvedValueOnce({}); // Simulate PutCommand success
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        body: { updated: 'data' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateInvoice(req, res);
+      expect(mockSend).toHaveBeenCalledTimes(2);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        message: 'Invoice updated successfully',
+        invoiceId: 'invoice-1'
+      });
+    });
+
+    it('should return 400 if db query fails in updateInvoice', async () => {
+      const error = new Error('db query error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        body: { updated: 'data' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'db query error'
+      });
+    });
+
+    it('should return 400 if PutCommand fails in updateInvoice', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>Old XML</Invoice>'
+        }]
+      });
+      const error = new Error('PutCommand error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        body: { updated: 'data' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'PutCommand error'
+      });
+    });
+  });
+
+  describe('deleteInvoice', () => {
+    it('should return error if invoice ID is missing', async () => {
+      const req = {
+        params: {},
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.deleteInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Missing invoice ID'
+      });
+    });
+
+    it('should return error if invoice not found', async () => {
+      mockSend.mockResolvedValueOnce({ Items: [] });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.deleteInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Invoice not found'
+      });
+    });
+
+    it('should return 401 if unauthorized', async () => {
+      checkUserId.mockReturnValueOnce(false);
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'otherUser'
+        }]
+      });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.deleteInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Unauthorised Access'
+      });
+    });
+
+    it('should delete invoice successfully', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1'
+        }]
+      });
+      mockSend.mockResolvedValueOnce({}); // Simulate DeleteCommand success
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.deleteInvoice(req, res);
+      expect(mockSend).toHaveBeenCalledTimes(2);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        message: 'Invoice deleted successfully'
+      });
+    });
+
+    it('should return 500 if db query fails in deleteInvoice', async () => {
+      const error = new Error('db query error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.deleteInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'db query error'
+      });
+    });
+
+    it('should return 500 if DeleteCommand fails in deleteInvoice', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1'
+        }]
+      });
+      const error = new Error('DeleteCommand error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.deleteInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'DeleteCommand error'
+      });
+    });
+  });
+
+  describe('updateValidationStatus', () => {
+    it('should return error if invoice ID or valid status is missing', async () => {
+      const req = {
+        params: {},
+        validationResult: {} // missing valid field
+      };
+      const res = createRes();
+      await invoiceController.updateValidationStatus(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'Missing invoice ID or valid status'
+      });
+    });
+
+    it('should update validation status and call next if provided', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      mockSend.mockResolvedValueOnce({}); // Simulate UpdateCommand success
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        validationResult: { valid: true },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      const next = jest.fn();
+      await invoiceController.updateValidationStatus(req, res, next);
+      expect(mockSend).toHaveBeenCalled();
+      expect(req.status).toBe('success');
+      expect(req.message).toBe('Validation status successfully updated to true');
+      expect(next).toHaveBeenCalled();
+    });
+
+    it('should update validation status and send response if next is not provided', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      mockSend.mockResolvedValueOnce({}); // Simulate UpdateCommand success
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        validationResult: { valid: false },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateValidationStatus(req, res);
+      expect(mockSend).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        message: 'Validation status successfully updated to false'
+      });
+    });
+
+    it('should return 500 if UpdateCommand fails in updateValidationStatus', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'user1',
+          invoice: '<Invoice>UBL XML</Invoice>'
+        }]
+      });
+      const error = new Error('UpdateCommand error');
+      mockSend.mockRejectedValueOnce(error);
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        validationResult: { valid: true },
+        user: { userId: 'user1' }
+      };
+      const res = createRes();
+      await invoiceController.updateValidationStatus(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        error: 'UpdateCommand error'
+      });
+    });
+  });
+
+  describe('parseXML', () => {
+    it('should parse valid XML and return expected object', async () => {
+      const xmlString = `<Invoice>
+        <IssueDate>2025-01-01</IssueDate>
+        <DueDate>2025-01-15</DueDate>
+        <LegalMonetaryTotal>
+          <PayableAmount>100</PayableAmount>
+        </LegalMonetaryTotal>
+      </Invoice>`;
+      const result = await parseXML(xmlString);
+      expect(result).toEqual({
+        IssueDate: '2025-01-01',
+        DueDate: '2025-01-15',
+        TotalPayableAmount: '100'
+      });
+    });
+
+    it('should return null for invalid XML input (non-string)', async () => {
+      const result = await parseXML(null);
+      expect(result).toBeNull();
+    });
+
+    it('should return default null values when Invoice element is absent', async () => {
+      const xmlString = `<Invalid></Invalid>`;
+      const result = await parseXML(xmlString);
+      expect(result).toEqual({
+        IssueDate: null,
+        DueDate: null,
+        TotalPayableAmount: null
+      });
+    });
+
+    it('should catch errors thrown by the XML parser and return null', async () => {
+      // Spy on parseStringPromise and force it to throw an error
+      const parserSpy = jest.spyOn(xml2js.Parser.prototype, 'parseStringPromise')
+        .mockRejectedValueOnce(new Error('Parser error'));
+      const xmlString = `<Invoice><DueDate>2025-01-15</DueDate>`; // malformed XML
+      const result = await parseXML(xmlString);
+      expect(result).toBeNull();
+      parserSpy.mockRestore();
+    });
+  });
+  it('should return error for invalid sort query in inner block override', async () => {
+    let sortCallCount = 0;
+    const req = {
+      query: {
+        limit: "10",
+        offset: "0",
+        // First read returns a valid value; second read returns an invalid value.
+        get sort() {
+          sortCallCount++;
+          return sortCallCount === 1 ? "issuedate" : "invalid";
+        },
+        order: "asc"
+      },
+      user: { userId: 'user1' }
+    };
+    const res = createRes();
     await invoiceController.listInvoices(req, res);
-
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       status: 'error',
@@ -107,73 +850,124 @@ describe('invoiceController.listInvoices', () => {
     });
   });
 
-  test('should return 400 for invalid order query', async () => {
-    req.query.order = 'invalidorder';
-
+  it('should return error for invalid order query in inner block override', async () => {
+    let orderCallCount = 0;
+    const req = {
+      query: {
+        limit: "10",
+        offset: "0",
+        sort: "issuedate",
+        // First read returns a valid value; second read returns an invalid value.
+        get order() {
+          orderCallCount++;
+          return orderCallCount === 1 ? "asc" : "invalid";
+        }
+      },
+      user: { userId: 'user1' }
+    };
+    const res = createRes();
     await invoiceController.listInvoices(req, res);
-
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       status: 'error',
       error: 'invalid order query'
     });
   });
-
-  test('should return paginated and sorted invoices', async () => {
-    const variables = [
-      { issueDate: '2025-03-15', dueDate: '2025-03-15', total: 100 },
-      { issueDate: '2025-03-16', dueDate: '2025-03-16', total: 200 },
-      { issueDate: '2025-03-17', dueDate: '2025-03-17', total: 300 },
-      { issueDate: '2025-03-18', dueDate: '2025-03-18', total: 400 },
-      { issueDate: '2025-03-19', dueDate: '2025-03-19', total: 500 }
-    ];
-
-    const invoices = variables.map((invoice, index) => ({
-      InvoiceID: `${index + 1}`,
-      UserID: '123',
-      invoice: `<Invoice>
-        <IssueDate>${invoice.issueDate}</IssueDate>
-        <DueDate>${invoice.dueDate}</DueDate>
-        <LegalMonetaryTotal>
-          <PayableAmount>${invoice.total}</PayableAmount>
-        </LegalMonetaryTotal>
-      </Invoice>`
-    }));
-
-    dbClient.send.mockResolvedValueOnce({ Items: invoices });
-
-    req.query.limit = '2';
-    req.query.offset = '10';
-    req.query.sort = 'issuedate';
-    req.query.order = 'asc';
-
-    await invoiceController.listInvoices(req, res);
-
-    const expectedInvoices = invoices.slice(3, 5);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      status: 'success',
-      data: {
-        count: invoices.length,
-        invoices: expectedInvoices
-      }
+  it('should log error and assign default parsedData when parseXML returns null', async () => {
+    // Spy on console.error
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    // Simulate an invoice with an invalid XML string (non-string) so parseXML returns null.
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          InvoiceID: 'inv1',
+          UserID: 'user1',
+          invoice: null,  // not a string, so parseXML returns null
+          timestamp: '2025-01-01T00:00:00.000Z'
+        }
+      ]
     });
+    const req = {
+      query: { limit: '10', offset: '0' },
+      user: { userId: 'user1' }
+    };
+    const res = createRes();
+    await invoiceController.listInvoices(req, res);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to parse invoice:', 'inv1');
+    // Final response should still return the invoice, but without the parsedData property.
+    const jsonResponse = res.json.mock.calls[0][0];
+    expect(jsonResponse.data.invoices[0]).not.toHaveProperty('parsedData');
+    consoleSpy.mockRestore();
+  });
+
+  it('should sort invoices by duedate (ascending)', async () => {
+    // Create two invoices with different DueDates
+    const xmlDueDate1 = `<Invoice>
+      <DueDate>2025-02-01</DueDate>
+    </Invoice>`;
+    const xmlDueDate2 = `<Invoice>
+      <DueDate>2025-01-15</DueDate>
+    </Invoice>`;
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          InvoiceID: 'inv1',
+          UserID: 'user1',
+          invoice: xmlDueDate1,
+          timestamp: '2025-01-01T00:00:00.000Z'
+        },
+        {
+          InvoiceID: 'inv2',
+          UserID: 'user1',
+          invoice: xmlDueDate2,
+          timestamp: '2025-01-02T00:00:00.000Z'
+        }
+      ]
+    });
+    const req = {
+      query: { limit: '10', offset: '0', sort: 'duedate', order: 'asc' },
+      user: { userId: 'user1' }
+    };
+    const res = createRes();
+    await invoiceController.listInvoices(req, res);
+    const jsonResponse = res.json.mock.calls[0][0];
+    // Expect the invoice with the earlier DueDate (inv2) to come first
+    expect(jsonResponse.data.invoices[0].InvoiceID).toBe('inv2');
+  });
+
+  it('should sort invoices by duedate (descending)', async () => {
+    // Create two invoices with different DueDates
+    const xmlDueDate1 = `<Invoice>
+      <DueDate>2025-02-01</DueDate>
+    </Invoice>`;
+    const xmlDueDate2 = `<Invoice>
+      <DueDate>2025-01-15</DueDate>
+    </Invoice>`;
+    // For descending order, set the Items in the second call.
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          InvoiceID: 'inv1',
+          UserID: 'user1',
+          invoice: xmlDueDate1,
+          timestamp: '2025-01-01T00:00:00.000Z'
+        },
+        {
+          InvoiceID: 'inv2',
+          UserID: 'user1',
+          invoice: xmlDueDate2,
+          timestamp: '2025-01-02T00:00:00.000Z'
+        }
+      ]
+    });
+    const req = {
+      query: { limit: '10', offset: '0', sort: 'duedate', order: 'desc' },
+      user: { userId: 'user1' }
+    };
+    const res = createRes();
+    await invoiceController.listInvoices(req, res);
+    const jsonResponse = res.json.mock.calls[0][0];
+    // In descending order, the invoice with the later DueDate (inv1) should come first.
+    expect(jsonResponse.data.invoices[0].InvoiceID).toBe('inv1');
   });
 });
-
-// describe('getInvoice', () => {
-//   it('should return 200 when getting an existing invoice', async () => {
-//     const createRes = await request(app).post('/v1/invoices').send({mockInvoice});
-//     const getRes = await request(app).get(`/v1/invoices/${createRes.body.invoiceId}`).send();
-
-//     console.log(getRes.body);
-//     expect(getRes.statusCode).toBe(200);
-//   });
-
-//   it('should return 400 when given an invalid invoiceId', async () => {
-//     const res = request(app).get(`/v1/invoices/${undefined}`).send();
-
-//     expect(res.statusCode).toBe(400);
-//   });
-// });

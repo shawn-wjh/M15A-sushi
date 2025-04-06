@@ -1,9 +1,13 @@
 const httpMocks = require('node-mocks-http');
 const {
   validateInvoiceInput,
-  validateInvoiceStandard
+  validateInvoiceStandard,
+  validateInvoiceStandardv2,
+  validatePeppol,
+  validateFairWorkCommission
 } = require('./invoice-validation');
 const mockInvoice = require('./mockInvoice');
+const xmljs = require('xml-js');
 
 // Mock dependencies
 jest.mock('fs');
@@ -503,4 +507,898 @@ describe('POST /v1/invoices/validate', () => {
       expect(responseData.error).toBeTruthy();
     }
   );
+});
+
+describe('validateInvoiceStandardv2', () => {
+  // it('should validate a valid invoice XML with peppol schema', async () => {
+  //   const req = httpMocks.createRequest({ 
+  //     body: { 
+  //       xml: validXml,
+  //       schemas: ['peppol']
+  //     } 
+  //   });
+  //   const res = httpMocks.createResponse();
+  //   const next = jest.fn();
+
+  //   await validateInvoiceStandardv2(req, res, next);
+
+  //   expect(next).toHaveBeenCalled();
+  //   expect(req.validationResult).toBeDefined();
+  //   expect(req.validationResult.valid).toBe(true);
+  // });
+
+  // it('should validate a valid invoice XML with fairwork schema', async () => {
+  //   const validXmlWithFairWork = validXml.replace(
+  //     '<cac:PaymentMeans>',
+  //     `<cac:PaymentMeans>
+  //       <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
+  //       <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
+  //       <cac:PayeeFinancialAccount>
+  //         <cbc:ID>123456789</cbc:ID>
+  //         <cbc:Name>Test Account</cbc:Name>
+  //         <cac:FinancialInstitutionBranch>
+  //           <cbc:BIC>TESTBIC</cbc:BIC>
+  //           <cbc:Name>Test Bank</cbc:Name>
+  //         </cac:FinancialInstitutionBranch>
+  //       </cac:PayeeFinancialAccount>
+  //     </cac:PaymentMeans>`
+  //   );
+    
+  //   const req = httpMocks.createRequest({ 
+  //     body: { 
+  //       xml: validXmlWithFairWork,
+  //       schemas: ['fairwork']
+  //     } 
+  //   });
+  //   const res = httpMocks.createResponse();
+  //   const next = jest.fn();
+
+  //   await validateInvoiceStandardv2(req, res, next);
+
+  //   expect(next).toHaveBeenCalled();
+  //   expect(req.validationResult).toBeDefined();
+  //   expect(req.validationResult.valid).toBe(true);
+  // });
+
+  // it('should validate a valid invoice XML with both schemas', async () => {
+  //   const validXmlWithFairWork = validXml.replace(
+  //     '<cac:PaymentMeans>',
+  //     `<cac:PaymentMeans>
+  //       <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
+  //       <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
+  //       <cac:PayeeFinancialAccount>
+  //         <cbc:ID>123456789</cbc:ID>
+  //         <cbc:Name>Test Account</cbc:Name>
+  //         <cac:FinancialInstitutionBranch>
+  //           <cbc:BIC>TESTBIC</cbc:BIC>
+  //           <cbc:Name>Test Bank</cbc:Name>
+  //         </cac:FinancialInstitutionBranch>
+  //       </cac:PayeeFinancialAccount>
+  //     </cac:PaymentMeans>`
+  //   );
+    
+  //   const req = httpMocks.createRequest({ 
+  //     body: { 
+  //       xml: validXmlWithFairWork,
+  //       schemas: ['peppol', 'fairwork']
+  //     } 
+  //   });
+  //   const res = httpMocks.createResponse();
+  //   const next = jest.fn();
+
+  //   await validateInvoiceStandardv2(req, res, next);
+
+  //   expect(next).toHaveBeenCalled();
+  //   expect(req.validationResult).toBeDefined();
+  //   expect(req.validationResult.valid).toBe(true);
+  // });
+
+  it('should return 400 if no schemas are provided', async () => {
+    const req = httpMocks.createRequest({ 
+      body: { 
+        xml: validXml
+      } 
+    });
+    const res = httpMocks.createResponse();
+
+    await validateInvoiceStandardv2(req, res, false);
+
+    expect(res.statusCode).toBe(400);
+    const responseData = JSON.parse(res._getData());
+    expect(responseData.status).toBe('error');
+    expect(responseData.message).toBe('No schemas provided for validation');
+  });
+
+  it('should return 400 if invalid schema is provided', async () => {
+    const req = httpMocks.createRequest({ 
+      body: { 
+        xml: validXml,
+        schemas: ['invalid_schema']
+      } 
+    });
+    const res = httpMocks.createResponse();
+
+    await validateInvoiceStandardv2(req, res, false);
+
+    expect(res.statusCode).toBe(400);
+    const responseData = JSON.parse(res._getData());
+    expect(responseData.status).toBe('error');
+    expect(responseData.message).toBe('Invalid schema(s) provided');
+  });
+
+  it('should fail Fair Work Commission validation when PayeeFinancialAccount details are missing', async () => {
+    const invalidXmlMissingPayeeDetails = validXml.replace(
+      '<cac:PaymentMeans>',
+      `<cac:PaymentMeans>
+        <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
+        <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
+      </cac:PaymentMeans>`
+    );
+    
+    const req = httpMocks.createRequest({ 
+      body: { 
+        xml: invalidXmlMissingPayeeDetails,
+        schemas: ['fairwork']
+      } 
+    });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    await validateInvoiceStandardv2(req, res, next);
+
+    const responseData = JSON.parse(res._getData());
+    expect(responseData).toHaveProperty('status');
+    expect(responseData.status).toBe('error');
+    expect(responseData).toHaveProperty('error');
+  });
+
+  it('should fail Fair Work Commission validation when FinancialInstitutionBranch details are missing', async () => {
+    const invalidXmlMissingFIBDetails = validXml.replace(
+      '<cac:PaymentMeans>',
+      `<cac:PaymentMeans>
+        <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
+        <cbc:PaymentID>INV-TEST-002</cbc:PaymentID>
+        <cac:PayeeFinancialAccount>
+          <cbc:ID>123456789</cbc:ID>
+          <cbc:Name>Test Account</cbc:Name>
+        </cac:PayeeFinancialAccount>
+      </cac:PaymentMeans>`
+    );
+    
+    const req = httpMocks.createRequest({ 
+      body: { 
+        xml: invalidXmlMissingFIBDetails,
+        schemas: ['fairwork']
+      } 
+    });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    await validateInvoiceStandardv2(req, res, next);
+
+    const responseData = JSON.parse(res._getData());
+    expect(responseData).toHaveProperty('status');
+    expect(responseData.status).toBe('error');
+    expect(responseData).toHaveProperty('error');
+  });
+
+  it('should attach validation result to request when next is provided', async () => {
+    const req = httpMocks.createRequest({ 
+      body: { 
+        xml: validXml,
+        schemas: ['peppol']
+      } 
+    });
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    await validateInvoiceStandardv2(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(req.validationResult).toBeDefined();
+  });
+});
+
+describe('validatePeppol', () => {
+  it('should validate a valid invoice against Peppol standards', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    if (!invoice['cbc:TaxTotal']) {
+      invoice['cbc:TaxTotal'] = {
+        'cbc:TaxAmount': { _text: '15.00', _attributes: { currencyID: 'AUD' } }
+      };
+    }
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(true);
+    expect(validationResult.errors.length).toBe(0);
+  });
+  
+  it('should fail validation when UBL namespace is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice._attributes.xmlns;
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when required elements are missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cbc:ID'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should add warning when invoice type code is not 380', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cbc:InvoiceTypeCode']._text = '381';
+    
+    if (!invoice['cbc:TaxTotal']) {
+      invoice['cbc:TaxTotal'] = {
+        'cbc:TaxAmount': { _text: '15.00', _attributes: { currencyID: 'AUD' } }
+      };
+    }
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(true);
+    expect(validationResult.warnings.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when supplier name is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingSupplierParty']['cac:Party']['cac:PartyName']['cbc:Name'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when customer name is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PartyName']['cbc:Name'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when supplier contact details are missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingSupplierParty']['cac:Party']['cac:Contact'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when customer contact details are missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingCustomerParty']['cac:Party']['cac:Contact'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when supplier street address is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingSupplierParty']['cac:Party']['cac:PostalAddress']['cbc:StreetName'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when supplier country code is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingSupplierParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when customer street address is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:StreetName'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when customer country code is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when currency code is invalid', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']._attributes.currencyID = 'INVALID';
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when document currency code is invalid', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cbc:DocumentCurrencyCode']._text = 'INVALID';
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when supplier country code is invalid', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:AccountingSupplierParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode']._text = 'INVALID';
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when customer country code is invalid', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode']._text = 'INVALID';
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when invoice lines are missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:InvoiceLine'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when invoice lines array is empty', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:InvoiceLine'] = [];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when line ID is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:InvoiceLine'][0]['cbc:ID'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when item name is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:InvoiceLine'][0]['cac:Item']['cbc:Name'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when price information is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:InvoiceLine'][0]['cac:Price'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when price amount is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:InvoiceLine'][0]['cac:Price']['cbc:PriceAmount'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should add warning when line currency does not match document currency', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:InvoiceLine'][0]['cac:Price']['cbc:PriceAmount']._attributes.currencyID = 'USD';
+    
+    if (!invoice['cbc:TaxTotal']) {
+      invoice['cbc:TaxTotal'] = {
+        'cbc:TaxAmount': { _text: '15.00', _attributes: { currencyID: 'AUD' } }
+      };
+    }
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(true);
+    expect(validationResult.warnings.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when quantity is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:InvoiceLine'][0]['cac:Price']['cbc:BaseQuantity'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when payable amount is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount'];
+    
+    if (!invoice['cbc:TaxTotal']) {
+      invoice['cbc:TaxTotal'] = {
+        'cbc:TaxAmount': { _text: '15.00', _attributes: { currencyID: 'AUD' } }
+      };
+    }
+    
+    jest.spyOn(require('currency-codes'), 'code').mockImplementation(() => true);
+    
+    const validationResult = validatePeppol(invoice);
+    
+    jest.restoreAllMocks();
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when CustomizationID is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cbc:CustomizationID'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when ProfileID is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cbc:ProfileID'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when OrderReference ID is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:OrderReference']['cbc:ID'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  // it('should fail validation when InvoiceDocumentReference ID is missing', () => {
+  //   const options = {
+  //     compact: true,
+  //     ignoreComment: true,
+  //     alwaysChildren: true
+  //   };
+  //   const parsedXml = xmljs.xml2js(validXml, options);
+  //   const invoice = parsedXml.Invoice;
+    
+  //   delete invoice['cac:InvoiceDocumentReference']['cbc:ID'];
+    
+  //   if (!invoice['cbc:TaxTotal']) {
+  //     invoice['cbc:TaxTotal'] = {
+  //       'cbc:TaxAmount': { _text: '15.00', _attributes: { currencyID: 'AUD' } }
+  //     };
+  //   }
+    
+  //   jest.spyOn(require('currency-codes'), 'code').mockImplementation(() => true);
+    
+  //   const validationResult = validatePeppol(invoice);
+    
+  //   jest.restoreAllMocks();
+    
+  //   expect(validationResult).toHaveProperty('valid');
+  //   expect(validationResult).toHaveProperty('errors');
+  //   expect(validationResult.valid).toBe(false);
+  //   expect(validationResult.errors).toContain('Missing InvoiceDocumentReference ID (Peppol rule BR-XX) (PEPPOL A-NZ)');
+  // });
+  
+  it('should fail validation when TaxTotal is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    delete invoice['cac:TaxTotal'];
+    
+    const validationResult = validatePeppol(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+});
+
+describe('validateFairWorkCommission', () => {
+  it('should fail validation when PayeeFinancialAccount details are missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:PaymentMeans'] = {
+      'cbc:PaymentMeansCode': { _text: '30' },
+      'cbc:PaymentID': { _text: 'INV-TEST-002' }
+    };
+    
+    const validationResult = validateFairWorkCommission(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when PayeeFinancialAccount ID is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:PaymentMeans'] = {
+      'cbc:PaymentMeansCode': { _text: '30' },
+      'cbc:PaymentID': { _text: 'INV-TEST-002' },
+      'cac:PayeeFinancialAccount': {
+        'cbc:Name': { _text: 'Test Account' },
+        'cac:FinancialInstitutionBranch': {
+          'cbc:BIC': { _text: 'TESTBIC' },
+          'cbc:Name': { _text: 'Test Bank' }
+        }
+      }
+    };
+    
+    const validationResult = validateFairWorkCommission(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when PayeeFinancialAccount Name is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:PaymentMeans'] = {
+      'cbc:PaymentMeansCode': { _text: '30' },
+      'cbc:PaymentID': { _text: 'INV-TEST-002' },
+      'cac:PayeeFinancialAccount': {
+        'cbc:ID': { _text: '123456789' },
+        'cac:FinancialInstitutionBranch': {
+          'cbc:BIC': { _text: 'TESTBIC' },
+          'cbc:Name': { _text: 'Test Bank' }
+        }
+      }
+    };
+    
+    const validationResult = validateFairWorkCommission(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when FinancialInstitutionBranch details are missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:PaymentMeans'] = {
+      'cbc:PaymentMeansCode': { _text: '30' },
+      'cbc:PaymentID': { _text: 'INV-TEST-002' },
+      'cac:PayeeFinancialAccount': {
+        'cbc:ID': { _text: '123456789' },
+        'cbc:Name': { _text: 'Test Account' }
+      }
+    };
+    
+    const validationResult = validateFairWorkCommission(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when FinancialInstitutionBranch BIC is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:PaymentMeans'] = {
+      'cbc:PaymentMeansCode': { _text: '30' },
+      'cbc:PaymentID': { _text: 'INV-TEST-002' },
+      'cac:PayeeFinancialAccount': {
+        'cbc:ID': { _text: '123456789' },
+        'cbc:Name': { _text: 'Test Account' },
+        'cac:FinancialInstitutionBranch': {
+          'cbc:Name': { _text: 'Test Bank' }
+        }
+      }
+    };
+    
+    const validationResult = validateFairWorkCommission(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
+  
+  it('should fail validation when FinancialInstitutionBranch Name is missing', () => {
+    const options = {
+      compact: true,
+      ignoreComment: true,
+      alwaysChildren: true
+    };
+    const parsedXml = xmljs.xml2js(validXml, options);
+    const invoice = parsedXml.Invoice;
+    
+    invoice['cac:PaymentMeans'] = {
+      'cbc:PaymentMeansCode': { _text: '30' },
+      'cbc:PaymentID': { _text: 'INV-TEST-002' },
+      'cac:PayeeFinancialAccount': {
+        'cbc:ID': { _text: '123456789' },
+        'cbc:Name': { _text: 'Test Account' },
+        'cac:FinancialInstitutionBranch': {
+          'cbc:BIC': { _text: 'TESTBIC' }
+        }
+      }
+    };
+    
+    const validationResult = validateFairWorkCommission(invoice);
+    
+    expect(validationResult.valid).toBe(false);
+    expect(validationResult.errors.length).toBeGreaterThan(0);
+  });
 });

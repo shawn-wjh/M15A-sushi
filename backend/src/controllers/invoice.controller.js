@@ -323,6 +323,7 @@ const invoiceController = {
 
       // check if allowed access
       if (!checkUserId(req.user.userId, Items[0])) {
+        console.log('Unauthorised Access');
         return res.status(401).json({
           status: 'error',
           error: 'Unauthorised Access'
@@ -611,4 +612,7 @@ const invoiceController = {
   }
 };
 
-module.exports = invoiceController;
+module.exports = {
+  invoiceController,
+  parseXML
+};

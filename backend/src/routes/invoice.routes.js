@@ -10,12 +10,7 @@ const {
 
 // Import controllers (more needs to be added)
 const {
-  createInvoice,
-  listInvoices,
-  getInvoice,
-  // downloadInvoice,
-  updateInvoice,
-  deleteInvoice
+  invoiceController
 } = require('../controllers/invoice.controller');
 
 const auth = require('../middleware/auth');
@@ -32,7 +27,7 @@ router.use(auth.verifyToken);
 router.post(
   '/create',
   validateInvoiceInput, // Validate invoice input
-  createInvoice // Outputs the UBL 2.4 XML to the user and stores it in the database
+  invoiceController.createInvoice // Outputs the UBL 2.4 XML to the user and stores it in the database
 );
 
 /**
@@ -43,7 +38,7 @@ router.post(
  */
 router.post(
   '/:invoiceid/validate',
-  getInvoice,
+  invoiceController.getInvoice,
   async (req, res) => {
     await validateInvoiceStandard(req, res, false);
   }
@@ -79,7 +74,7 @@ router.post(
       };
 
       // Call the createInvoice controller
-      await createInvoice(req, res, next);
+      await invoiceController.createInvoice(req, res, next);
     } catch (error) {
       next(error);
     }
@@ -179,7 +174,7 @@ router.post(
  * @route GET /v1/invoices
  * @returns {object} 200 - Array of invocies
  */
-router.get('/list', listInvoices);
+router.get('/list', invoiceController.listInvoices);
 
 /**
  * Get specific invoice
@@ -189,7 +184,7 @@ router.get('/list', listInvoices);
  */
 router.get('/:invoiceid', 
   async (req, res) => {
-    await getInvoice(req, res, false);
+    await invoiceController.getInvoice(req, res, false);
   }
 );
 
@@ -199,7 +194,7 @@ router.get('/:invoiceid',
  * @param {string} invoiceid.path.required - Invoice ID
  * @returns {object} 200 - Invoice details
  */
-router.put('/:invoiceid', updateInvoice);
+router.put('/:invoiceid', invoiceController.updateInvoice);
 
 /**
  * Delete invoice
@@ -207,6 +202,6 @@ router.put('/:invoiceid', updateInvoice);
  * @param {string} invoiceId.path.required - Invoice ID
  * @returns {object} 200 - Success message
  */
-router.delete('/:invoiceid', deleteInvoice);
+router.delete('/:invoiceid', invoiceController.deleteInvoice);
 
 module.exports = router;
