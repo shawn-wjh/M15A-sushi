@@ -804,16 +804,6 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
 
     put:
       summary: Update an invoice
@@ -949,16 +939,6 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
 
     delete:
       summary: Delete an invoice
@@ -993,16 +973,6 @@ paths:
                     example: Specific error message
         "401":
           description: Invalid token
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
-        "403":
-          description: Unauthorised access
           content: 
             application/json:
               schema:
@@ -1070,16 +1040,7 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
+
   /v1/invoices/create-and-validate:
     post:
       summary: Create and validate an invoice
@@ -1447,20 +1408,29 @@ paths:
                       type: string
                     example: ["Warning: Invoice type code is not standard"]
         "400":
-          description: Invalid details or validation failed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                    example: false
-                  validationErrors:
-                    type: array
-                    items:
-                      type: string
-                    example: ["Missing supplier name", "Invalid currency code"]
+            description: Invalid details or validation failed
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                    - type: object
+                      properties:
+                        valid:
+                          type: boolean
+                          example: false
+                        validationErrors:
+                          type: array
+                          items:
+                            type: string
+                          example: ["Missing supplier name", "Invalid currency code"]
+                    - type: object
+                      properties:
+                        status:
+                          type: string
+                          example: error
+                        error:
+                          type: string
+                          example: "Invoice not found"
         "401":
           description: Invalid token
           content:
@@ -1471,16 +1441,6 @@ paths:
                   error:
                     type: string
                     example: "Invalid authentication token"
-        "403":
-          description: Unauthorised access
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unauthorized access to this invoice"
 
   /v2/invoices/create-and-validate:
     post:
@@ -1811,14 +1771,3 @@ paths:
                   error:
                     type: string
                     example: "e.g. Invalid authentication token"
-        "403":
-          description: Unauthorised access
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "e.g. Unauthorized access to this invoice"
-
