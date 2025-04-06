@@ -585,4 +585,182 @@
 }
 
 /* Removing the .invoice-page-content section that was added at the bottom of the file */
-/* The margin-left is now handled by AppLayout's CSS */ 
+/* The margin-left is now handled by AppLayout's CSS */
+
+/* Currency conversion styles */
+.currency-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-loading {
+  position: absolute;
+  right: 10px;
+  font-size: 0.8rem;
+  color: var(--accent-red);
+  animation: pulse 1s infinite ease-in-out;
+}
+
+.currency-conversion-info {
+  margin-top: 5px;
+  font-style: italic;
+  color: var(--light-gray);
+}
+
+.currency-conversion-info small {
+  font-size: 0.7rem;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* Item currency conversion styles */
+.cost-input-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cost-input {
+  flex: 1;
+}
+
+.currency-toggle-button {
+  background-color: var(--dark-gray);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.currency-toggle-button:hover {
+  background-color: rgba(255, 59, 48, 0.1);
+  border-color: var(--accent-red);
+}
+
+.currency-conversion-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  animation: fadeIn 0.3s ease;
+}
+
+.currency-conversion-inputs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.currency-select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.currency-amount-input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: var(--dark-gray);
+  color: var(--white);
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.currency-amount-input:focus {
+  border-color: var(--accent-red);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+}
+
+.convert-button {
+  width: 100%;
+  background-color: var(--accent-red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+}
+
+.convert-button:hover {
+  background-color: #ff1f14;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+.convert-button:disabled {
+  background-color: rgba(255, 59, 48, 0.5);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Add styling for the item-specific conversion info */
+.item-conversion-info {
+  margin-top: 8px;
+  font-style: italic;
+  color: var(--accent-green);
+  background-color: rgba(76, 217, 100, 0.1);
+  border-radius: 4px;
+  padding: 6px 10px;
+  border-left: 2px solid var(--accent-green);
+}
+
+.item-conversion-info small {
+  font-size: 0.8rem;
+  line-height: 1.2;
+  display: block;
+}
+
+/* Add styling for item-specific error messages */
+.item-error-message {
+  margin-top: 8px;
+  font-style: italic;
+  color: var(--accent-red);
+  background-color: rgba(255, 59, 48, 0.1);
+  border-radius: 4px;
+  padding: 6px 10px;
+  border-left: 2px solid var(--accent-red);
+}
+
+.item-error-message small {
+  font-size: 0.8rem;
+  line-height: 1.2;
+  display: block;
+}
+
+/* Currency note styling */
+.currency-note {
+  margin-bottom: 15px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--accent-red);
+}
+
+.currency-note small {
+  color: var(--light-gray);
+  font-style: italic;
+} 

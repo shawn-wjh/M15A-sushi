@@ -68,6 +68,12 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
   const [selectedSchemas, setSelectedSchemas] = useState([]);
   const [validationErrors, setValidationErrors] = useState([]);
   const [validationWarnings, setValidationWarnings] = useState([]);
+  const [availableCurrencies, setAvailableCurrencies] = useState(['AUD', 'USD', 'EUR', 'GBP']);
+  const [itemCurrencySelections, setItemCurrencySelections] = useState([]);
+  const [itemCurrencyInputs, setItemCurrencyInputs] = useState([]);
+  const [showCurrencyInputs, setShowCurrencyInputs] = useState([]);
+  const [itemConversionInfo, setItemConversionInfo] = useState([]);
+  const [itemErrorMessages, setItemErrorMessages] = useState([]);
 
   // Initialize form with invoice data if in edit mode
   useEffect(() => {
@@ -109,10 +115,18 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       };
       
       setFormData(mappedData);
+      
+      // Initialize currency selections for items in edit mode
+      const itemCount = mappedData.items.length;
+      setItemCurrencySelections(Array(itemCount).fill('USD'));
+      setItemCurrencyInputs(Array(itemCount).fill(''));
+      setShowCurrencyInputs(Array(itemCount).fill(false));
+      setItemConversionInfo(Array(itemCount).fill(null));
+      setItemErrorMessages(Array(itemCount).fill(null));
     }
   }, [editMode, invoiceToEdit]);
 
-  // Handle form field changes
+  // Modify handleChange to clear conversion info when currency changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -132,6 +146,13 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
         ...formData,
         [name]: name === 'total' ? parseFloat(value) || 0 : value
       });
+      
+      // Clear conversion info and errors if currency is changed
+      if (name === 'currency') {
+        setItemConversionInfo(itemConversionInfo.map(() => null));
+        setShowCurrencyInputs(showCurrencyInputs.map(() => false));
+        setItemErrorMessages(itemErrorMessages.map(() => null));
+      }
     }
   };
 
@@ -191,6 +212,13 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       }
     ];
     
+    // Initialize for the new item
+    setItemCurrencySelections([...itemCurrencySelections, 'USD']);
+    setItemCurrencyInputs([...itemCurrencyInputs, '']);
+    setShowCurrencyInputs([...showCurrencyInputs, false]);
+    setItemConversionInfo([...itemConversionInfo, null]);
+    setItemErrorMessages([...itemErrorMessages, null]);
+    
     setFormData(prev => {
       const newData = {
         ...prev,
@@ -211,6 +239,20 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     }
     
     const updatedItems = formData.items.filter((_, i) => i !== index);
+    
+    // Update related state arrays
+    const newItemCurrencySelections = itemCurrencySelections.filter((_, i) => i !== index);
+    const newItemCurrencyInputs = itemCurrencyInputs.filter((_, i) => i !== index);
+    const newShowCurrencyInputs = showCurrencyInputs.filter((_, i) => i !== index);
+    const newItemConversionInfo = itemConversionInfo.filter((_, i) => i !== index);
+    const newItemErrorMessages = itemErrorMessages.filter((_, i) => i !== index);
+    
+    setItemCurrencySelections(newItemCurrencySelections);
+    setItemCurrencyInputs(newItemCurrencyInputs);
+    setShowCurrencyInputs(newShowCurrencyInputs);
+    setItemConversionInfo(newItemConversionInfo);
+    setItemErrorMessages(newItemErrorMessages);
+    
     setFormData(prev => {
       const newData = {
         ...prev,
@@ -418,7 +460,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
 
   // Handle order selection from OrderSearch component
   const handleOrderSelect = (orderData) => {
-
     // Create a properly structured form data object with default values
     const formattedData = {
       // Map the received data to form fields
@@ -458,6 +499,14 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
 
     // Update form with the properly structured data
     setFormData(formattedData);
+    
+    // Initialize currency selections for items from the order
+    const itemCount = formattedData.items.length;
+    setItemCurrencySelections(Array(itemCount).fill('USD'));
+    setItemCurrencyInputs(Array(itemCount).fill(''));
+    setShowCurrencyInputs(Array(itemCount).fill(false));
+    setItemConversionInfo(Array(itemCount).fill(null));
+    setItemErrorMessages(Array(itemCount).fill(null));
     
     // Reset any previous submission state
     setCreatedInvoice(null);
@@ -561,6 +610,159 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       taxTotal: taxTotal
     }));
   };
+
+  // Add new function to handle item currency selection
+  const handleItemCurrencySelect = (index, currency) => {
+    const newItemCurrencySelections = [...itemCurrencySelections];
+    newItemCurrencySelections[index] = currency;
+    setItemCurrencySelections(newItemCurrencySelections);
+  };
+
+  // Add new function to handle item currency input change
+  const handleItemCurrencyInputChange = (index, value) => {
+    const newItemCurrencyInputs = [...itemCurrencyInputs];
+    newItemCurrencyInputs[index] = value;
+    setItemCurrencyInputs(newItemCurrencyInputs);
+  };
+
+  // Add new function to toggle currency input visibility
+  const toggleCurrencyInput = (index) => {
+    const newShowCurrencyInputs = [...showCurrencyInputs];
+    newShowCurrencyInputs[index] = !newShowCurrencyInputs[index];
+    setShowCurrencyInputs(newShowCurrencyInputs);
+    
+    // Clear any error messages when toggling
+    if (!newShowCurrencyInputs[index]) {
+      const newItemErrorMessages = [...itemErrorMessages];
+      newItemErrorMessages[index] = null;
+      setItemErrorMessages(newItemErrorMessages);
+    }
+  };
+
+  // Update the convertItemCurrency function to ensure it always uses the current currency
+  const convertItemCurrency = async (index) => {
+    try {
+      const sourceCurrency = itemCurrencySelections[index];
+      const sourceAmount = parseFloat(itemCurrencyInputs[index]) || 0;
+      const targetCurrency = formData.currency;
+      
+      // Clear any previous error messages for this item
+      const newItemErrorMessages = [...itemErrorMessages];
+      newItemErrorMessages[index] = null;
+      setItemErrorMessages(newItemErrorMessages);
+      
+      if (!sourceCurrency || !sourceAmount) {
+        // Show error message for validation errors
+        setMessage({
+          type: 'error',
+          text: 'Please enter a valid amount and select a currency'
+        });
+        return;
+      }
+      
+      // Check if source and target currencies are the same
+      if (sourceCurrency === targetCurrency) {
+        // Set an item-specific error message instead of using the global message
+        const newItemErrorMessages = [...itemErrorMessages];
+        newItemErrorMessages[index] = "Source currency is the same as invoice currency. No conversion needed.";
+        setItemErrorMessages(newItemErrorMessages);
+        return;
+      }
+      
+      // Show loading state
+      const updatedItems = [...formData.items];
+      updatedItems[index].isConverting = true;
+      setFormData({
+        ...formData,
+        items: updatedItems
+      });
+      
+      // Call the API to convert the currency
+      const response = await apiClient.post('/v1/currency/convert', {
+        invoice: {
+          currency: sourceCurrency,
+          total: sourceAmount
+        },
+        targetCurrency: targetCurrency
+      });
+      
+      if (response.data && response.data.status === 'success') {
+        const convertedAmount = response.data.data.conversionInfo.convertedTotal;
+        const exchangeRate = response.data.data.conversionInfo.exchangeRate;
+        
+        // Update the item cost with the converted amount
+        handleItemChange(index, 'cost', convertedAmount);
+        
+        // Store conversion info for this item
+        const newItemConversionInfo = [...itemConversionInfo];
+        newItemConversionInfo[index] = {
+          fromAmount: sourceAmount,
+          fromCurrency: sourceCurrency,
+          toAmount: convertedAmount,
+          toCurrency: targetCurrency,
+          rate: exchangeRate
+        };
+        setItemConversionInfo(newItemConversionInfo);
+        
+        // Reset currency input visibility
+        const newShowCurrencyInputs = [...showCurrencyInputs];
+        newShowCurrencyInputs[index] = false;
+        setShowCurrencyInputs(newShowCurrencyInputs);
+      }
+    } catch (error) {
+      console.error('Currency conversion error:', error);
+      
+      // Set item-specific error message instead of global message
+      const newItemErrorMessages = [...itemErrorMessages];
+      newItemErrorMessages[index] = "Error converting currency. Please try again.";
+      setItemErrorMessages(newItemErrorMessages);
+    } finally {
+      // Clear loading state
+      const updatedItems = [...formData.items];
+      updatedItems[index].isConverting = false;
+      setFormData({
+        ...formData,
+        items: updatedItems
+      });
+    }
+  };
+
+  // Modify the useEffect to include formData.items in the dependency array
+  useEffect(() => {
+    // Initialize currency selections for existing items
+    const initialSelections = formData.items.map(() => 'USD');
+    const initialInputs = formData.items.map(() => '');
+    const initialVisibility = formData.items.map(() => false);
+    const initialConversionInfo = formData.items.map(() => null);
+    const initialErrorMessages = formData.items.map(() => null);
+    
+    setItemCurrencySelections(initialSelections);
+    setItemCurrencyInputs(initialInputs);
+    setShowCurrencyInputs(initialVisibility);
+    setItemConversionInfo(initialConversionInfo);
+    setItemErrorMessages(initialErrorMessages);
+  }, [formData.items.length]); // Add dependency on items array length
+
+  // Add this useEffect back, but only for item currency conversion
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await apiClient.get('/v1/currency/rates');
+        if (response.data && response.data.status === 'success') {
+          // Extract currency codes from exchange rates
+          const currencies = Object.keys(response.data.data);
+          // Filter to common currencies for simplicity
+          const commonCurrencies = ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'JPY', 'CNY', 'NZD'];
+          const filteredCurrencies = currencies.filter(curr => commonCurrencies.includes(curr));
+          setAvailableCurrencies(filteredCurrencies);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rates:', error);
+      }
+    };
+
+    fetchExchangeRates();
+  }, []);
 
   return (
     <AppLayout activeSection="createInvoice">
@@ -684,12 +886,21 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                       id="currency"
                       name="currency"
                       value={formData.currency}
-                      onChange={handleChange}
+                      onChange={handleChange} 
                     >
-                      <option value="AUD">Australian Dollar (AUD)</option>
-                      <option value="USD">US Dollar (USD)</option>
-                      <option value="EUR">Euro (EUR)</option>
-                      <option value="GBP">British Pound (GBP)</option>
+                      {availableCurrencies.map(curr => (
+                        <option key={curr} value={curr}>
+                          {curr === 'AUD' ? 'Australian Dollar (AUD)' :
+                           curr === 'USD' ? 'US Dollar (USD)' :
+                           curr === 'EUR' ? 'Euro (EUR)' :
+                           curr === 'GBP' ? 'British Pound (GBP)' :
+                           curr === 'CAD' ? 'Canadian Dollar (CAD)' :
+                           curr === 'JPY' ? 'Japanese Yen (JPY)' :
+                           curr === 'CNY' ? 'Chinese Yuan (CNY)' :
+                           curr === 'NZD' ? 'New Zealand Dollar (NZD)' :
+                           curr}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -872,6 +1083,10 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                   </button>
                 </div>
                 
+                <div className="currency-note">
+                  <small>All item costs are stored in {formData.currency}. For costs in other currencies, use the "Enter in different currency" option.</small>
+                </div>
+                
                 {formData.items.map((item, index) => (
                   <div key={index} className="item-container">
                     <div className="item-header">
@@ -914,16 +1129,82 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor={`item-${index}-cost`}>Cost *</label>
-                      <input
-                        type="text"
-                        id={`item-${index}-cost`}
-                        name={`item-${index}-cost`}
-                        value={item.cost}
-                        onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
-                        required
-                        aria-required="true"
-                      />
+                      <label htmlFor={`item-${index}-cost`}>Cost ({formData.currency}) *</label>
+                      <div className="cost-input-container">
+                        <input
+                          type="text"
+                          id={`item-${index}-cost`}
+                          name={`item-${index}-cost`}
+                          value={item.cost}
+                          onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
+                          required
+                          aria-required="true"
+                          className="cost-input"
+                        />
+                        <button
+                          type="button"
+                          className="currency-toggle-button"
+                          onClick={() => toggleCurrencyInput(index)}
+                        >
+                          {showCurrencyInputs[index] ? 'Cancel' : 'Enter in different currency'}
+                        </button>
+                      </div>
+                      
+                      {showCurrencyInputs[index] && (
+                        <div className="currency-conversion-container">
+                          <div className="currency-conversion-inputs">
+                            <select
+                              value={itemCurrencySelections[index] || 'USD'}
+                              onChange={(e) => handleItemCurrencySelect(index, e.target.value)}
+                              className="currency-select"
+                            >
+                              {availableCurrencies.map(curr => (
+                                <option key={curr} value={curr}>
+                                  {curr === 'AUD' ? 'Australian Dollar (AUD)' :
+                                   curr === 'USD' ? 'US Dollar (USD)' :
+                                   curr === 'EUR' ? 'Euro (EUR)' :
+                                   curr === 'GBP' ? 'British Pound (GBP)' :
+                                   curr === 'CAD' ? 'Canadian Dollar (CAD)' :
+                                   curr === 'JPY' ? 'Japanese Yen (JPY)' :
+                                   curr === 'CNY' ? 'Chinese Yuan (CNY)' :
+                                   curr === 'NZD' ? 'New Zealand Dollar (NZD)' :
+                                   curr}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              placeholder={`Amount in ${itemCurrencySelections[index] || 'USD'}`}
+                              value={itemCurrencyInputs[index] || ''}
+                              onChange={(e) => handleItemCurrencyInputChange(index, e.target.value)}
+                              className="currency-amount-input"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className="convert-button"
+                            onClick={() => convertItemCurrency(index)}
+                            disabled={item.isConverting}
+                          >
+                            {item.isConverting ? 'Converting...' : `Convert to ${formData.currency}`}
+                          </button>
+                        </div>
+                      )}
+                      
+                      {!showCurrencyInputs[index] && itemConversionInfo[index] && (
+                        <div className="item-conversion-info">
+                          <small>
+                            Converted {itemConversionInfo[index].fromAmount} {itemConversionInfo[index].fromCurrency} to {itemConversionInfo[index].toAmount.toFixed(2)} {itemConversionInfo[index].toCurrency} 
+                            (exchange rate: {itemConversionInfo[index].rate.toFixed(4)})
+                          </small>
+                        </div>
+                      )}
+                      
+                      {itemErrorMessages[index] && (
+                        <div className="item-error-message">
+                          <small>{itemErrorMessages[index]}</small>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
