@@ -1072,6 +1072,16 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                   </button>
                   )}
 
+                  <button 
+                    className="form-button secondary" 
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      alert('This feature is not yet implemented');
+                    }}
+                  >
+                    Save as Draft
+                  </button>
+
                   { !editMode ? <button 
                     type="submit" 
                     className="form-button primary" 
