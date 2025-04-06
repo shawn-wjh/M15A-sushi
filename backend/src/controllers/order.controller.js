@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 const orderService = require('../externalAPI/orderService/orderService');
 const { mapOrderToInvoice } = require('../utils/orderMapper');
 

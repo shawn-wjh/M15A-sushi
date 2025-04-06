@@ -123,15 +123,6 @@ router.post('/create-and-validate',
   }
 );
 
-router.post('/:invoiceid/update', 
-  // to add user validation
-  invoiceController.updateInvoice
-);
-
-router.delete('/:invoiceid', 
-  // to add user validation
-  invoiceController.deleteInvoice
-);
 
 module.exports = router;
 

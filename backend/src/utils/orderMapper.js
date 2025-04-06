@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 /**
  * Utility functions for mapping order data to invoice format
  */

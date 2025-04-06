@@ -914,5 +914,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 module.exports = {
   validateInvoiceInput,
   validateInvoiceStandard,
-  validateInvoiceStandardv2
+  validateInvoiceStandardv2,
+  validatePeppol,
+  validateFairWorkCommission
 };
