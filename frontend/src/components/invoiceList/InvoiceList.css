@@ -352,7 +352,7 @@
   gap: 0.5rem;
 }
 
-.detail-label {
+.list-detail-label {
   font-size: 0.875rem;
   color: var(--light-gray);
   font-weight: 500;

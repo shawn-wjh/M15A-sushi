@@ -270,7 +270,7 @@ paths:
           - items
       operationId: createInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: token
           in: cookie
@@ -411,7 +411,7 @@ paths:
         `/v1/invoices/list?limit=10&offset=0&sort=issuedate&order=asc`
       operationId: listInvoices
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: token
           in: cookie
@@ -496,7 +496,7 @@ paths:
           - These tags include: Namespaces, InvoiceTypeCode, CustomizationID, ProfileID, and OrderReference
       operationId: getInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -804,16 +804,6 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
 
     put:
       summary: Update an invoice
@@ -821,7 +811,7 @@ paths:
         This endpoint updates an existing invoice identified by its ID by inputting the a JSON object of the same format. Only allows the owner of the invoice to perform changes. 
       operationId: updateInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -949,16 +939,6 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
 
     delete:
       summary: Delete an invoice
@@ -966,7 +946,7 @@ paths:
         This endpoint permanantly deletes a specific invoice identified by its ID, removing it from the system. Only allows the owner of the invoice to remove it. 
       operationId: deleteInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -1001,16 +981,6 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
 
   /v1/invoices/{invoiceid}/validate:
     post:
@@ -1032,7 +1002,7 @@ paths:
         
       operationId: validateInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: invoiceid
           in: path
@@ -1070,16 +1040,7 @@ paths:
                   error: 
                     type: string
                     example: Specific error message
-        "403":
-          description: Unauthorised access
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties: 
-                  error: 
-                    type: string
-                    example: Specific error message
+
   /v1/invoices/create-and-validate:
     post:
       summary: Create and validate an invoice
@@ -1089,7 +1050,7 @@ paths:
         Note: The invoice will still be created even if the validation fails. 
       operationId: createAndValidateInvoice
       tags:
-        - Invoices
+        - Invoice v1
       parameters:
         - name: token
           in: cookie
@@ -1232,3 +1193,581 @@ paths:
         "200":
           description: API is running
           
+  /v2/invoices/create:
+    post:
+      summary: Create a new invoice
+      operationId: createInvoiceV2
+      description: |
+        This endpoint allows a new user to register by providing their email, name, and password. The email must be unique, and the password must meet the specified complexity requirements. 
+        
+        The main differences between the v1 endpoint and this version are:
+        - users can now create an invoice with no required fields and our system marks it as **'invalid'** for later validation.
+        - this allows users to save incomplete invoices or **draft invoices** and update/finish them later at their convenience.
+        
+        New fields that have been added include:
+        - **taxRate** - the tax rate charged for the invoice.
+        - **taxTotal** - the tax amount charged for the invoice. 
+      tags:
+        - Invoice v2
+      parameters:
+        - name: token
+          in: cookie
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invoiceId:
+                  type: string
+                  example: TEST-INVOICE-ID
+                supplier:
+                  type: string
+                  example: supplier name
+                buyer:
+                  type: string
+                  example: buyer name
+                total:
+                  type: number
+                  format: double
+                  example: 9.99
+                  description: Must be equal the sum of the item cost(s)
+                taxRate:
+                  type: number
+                  format: double
+                  example: "10"
+                  description: Must be a number between 0 and 100
+                taxTotal:
+                  type: number
+                  format: double
+                  example: "1.00"
+                  description: Must be equal to the total * taxRate
+                currency:
+                  type: string
+                  description: Must be a valid 3 letter currency code (ISO 4217)
+                  example: "AUD"
+                issueDate:
+                  type: string
+                  format: date
+                  description: Must be a past date and be of the format YYYY-MM-DD
+                dueDate:
+                  type: string
+                  format: date
+                  description: Must be on or after the issue date and be of the format YYYY-MM-DD
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name: 
+                        type: string
+                      count:
+                        type: number
+                        example: 1
+                        description: Must be greater than 0
+                      cost:
+                        type: number
+                        format: double
+                        example: 9.99
+                buyerAddress:                                    
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the buyer
+                    country:
+                      type: string
+                      description: Country code of the buyer (ISO 3166-1 alpha-2)
+                      example: "AU"
+                buyerEmail:
+                  type: string
+                  format: email
+                  description: Email address of the buyer
+                buyerPhone:
+                  type: string
+                  description: Phone number of the buyer
+                supplierAddress:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the supplier
+                    country:
+                      type: string
+                      description: Country code of the supplier (ISO 3166-1 alpha-2)
+                      example: "AU"
+                supplierEmail:
+                  type: string
+                  format: email
+                  description: Email address of the supplier
+                supplierPhone:
+                  type: string
+                  description: Phone number of the supplier
+                paymentAccountId:
+                  type: string
+                  description: Bank account number
+                paymentAccountName:
+                  type: string
+                  description: Account name
+                financialInstitutionBranchId:
+                  type: string
+                  description: Branch identifier such as BSB
+      responses:
+        "200":
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoiceId:
+                    type: string
+                    example: "e.g. INV-12345"
+        "400":
+          description: Invalid details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "e.g. Invalid invoice details"
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "e.g. Invalid authentication token"
+
+  /v2/invoices/{invoiceid}/validate:
+    post:
+      summary: Validate invoice against selected standards
+      operationId: validateInvoiceV2
+      description: |
+        This endpoint allows users to validate the invoices they have created. This new version of validation **keeps track of which of your invoices are valid/invalid** and allows users to **choose which schemas/rules** they want to validate their invoice against.
+        
+        ### Currently these are the available options (must include at least one):
+        - **"peppol"** - the [Peppol International (PINT) Specifications for Australia & New Zealand](https://docs.peppol.eu/poac/aunz/pint-aunz/trn-invoice/syntax/ubl-Invoice/)
+        - **"fairwork"** - [The Fairwork Commission (AUS) einvoicing guidelines](https://www.fwc.gov.au/documents/documents/resources/einvoicing-mandatory-fields.pdf)
+        - **More on their way!**
+        
+        The response body has also been updated to provide a **more comprehensive report** on the validation. Now including validation warnings as well as errors. 
+        - **Warnings** are helpful suggestions on your invoice but won't prevent you from validating it
+        - **Errors** need to be fixed for the invoice to be validated
+        
+        _Note: the fairwork validation schema should be used in conjunction with the peppol schema._
+      tags:
+        - Invoice v2
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: cookie
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemas:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["peppol", "fairwork"]
+                  description: List of validation schemas to apply
+      responses:
+        "200":
+          description: Invoice validated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+                  validationWarnings:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Warning: Invoice type code is not standard"]
+        "400":
+            description: Invalid details or validation failed
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                    - type: object
+                      properties:
+                        valid:
+                          type: boolean
+                          example: false
+                        validationErrors:
+                          type: array
+                          items:
+                            type: string
+                          example: ["Missing supplier name", "Invalid currency code"]
+                    - type: object
+                      properties:
+                        status:
+                          type: string
+                          example: error
+                        error:
+                          type: string
+                          example: "Invoice not found"
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid authentication token"
+
+  /v2/invoices/create-and-validate:
+    post:
+      summary: Create and validate an invoice with selected standards
+      operationId: createAndValidateInvoiceV2
+      description: |
+        This endpoint allows users to create and validate an invoice simultaneously given the **invoice data**, and **schemas** it should validate against. 
+        - The invoice request body format is the same as the one in *v2/invoices/create*.
+        - and the possible schemas are the same as those in */v2/invoices/validate* **(at least one is required)**
+        
+        The request will be put through validation and **only be uploaded if it passes**. Else it will respond similarly to how the validate endpoint would. 
+      tags:
+        - Invoice v2
+      parameters:
+        - name: token
+          in: cookie
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invoice:
+                  type: object
+                  properties:
+                    invoiceId:
+                      type: string
+                      example: TEST-INVOICE-ID
+                    supplier:
+                      type: string
+                      example: supplier name
+                    buyer:
+                      type: string
+                      example: buyer name
+                    total:
+                      type: number
+                      format: double
+                      example: 9.99
+                      description: Must be equal the sum of the item cost(s)
+                    taxRate:
+                      type: number
+                      format: double
+                      example: "10"
+                      description: Must be a number between 0 and 100
+                    taxTotal:
+                      type: number
+                      format: double
+                      example: "1.00"
+                      description: Must be equal to the total * taxRate
+                    currency:
+                      type: string
+                      description: Must be a valid 3 letter currency code (ISO 4217)
+                      example: "AUD"
+                    issueDate:
+                      type: string
+                      format: date
+                      description: Must be a past date and be of the format YYYY-MM-DD
+                    dueDate:
+                      type: string
+                      format: date
+                      description: Must be on or after the issue date and be of the format YYYY-MM-DD
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name: 
+                            type: string
+                          count:
+                            type: number
+                            example: 1
+                            description: Must be greater than 0
+                          cost:
+                            type: number
+                            format: double
+                            example: 9.99
+                    buyerAddress:                                    
+                      type: object
+                      properties:
+                        street:
+                          type: string
+                          description: Street address of the buyer
+                        country:
+                          type: string
+                          description: Country code of the buyer (ISO 3166-1 alpha-2)
+                          example: "AU"
+                    buyerEmail:
+                      type: string
+                      format: email
+                      description: Email address of the buyer
+                    buyerPhone:
+                      type: string
+                      description: Phone number of the buyer
+                    supplierAddress:
+                      type: object
+                      properties:
+                        street:
+                          type: string
+                          description: Street address of the supplier
+                        country:
+                          type: string
+                          description: Country code of the supplier (ISO 3166-1 alpha-2)
+                          example: "AU"
+                    supplierEmail:
+                      type: string
+                      format: email
+                      description: Email address of the supplier
+                    supplierPhone:
+                      type: string
+                      description: Phone number of the supplier
+                    paymentAccountId:
+                      type: string
+                      description: Bank account number
+                    paymentAccountName:
+                      type: string
+                      description: Account name
+                    financialInstitutionBranchId:
+                      type: string
+                      description: Branch identifier such as BSB
+                schemas:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["peppol", "fairwork"]
+                  description: List of validation schemas to apply
+      responses:
+        "200":
+          description: Invoice created and validated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoiceId:
+                    type: string
+                    example: "INV-12345"
+                  valid:
+                    type: boolean
+                    example: true
+                  validationWarnings:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Warning: Invoice type code is not standard"]
+        "400":
+          description: Creation or validation failure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoiceId:
+                    type: string
+                    example: "INV-12345"
+                  valid:
+                    type: boolean
+                    example: false
+                  validationErrors:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Missing supplier name", "Invalid currency code"]
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid authentication token"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+
+  /v2/invoices/{invoiceid}/update:
+    put:
+      summary: Update an invoice
+      operationId: updateInvoiceV2
+      description: |
+        This endpoint allows users to update an invoice's details given the data in the request body. There are **no required fields** and fields can also be removed.
+        
+        **Performing an update on an invoice will invalidate it and will need to be validated again.**
+      tags:
+        - Invoice v2
+      parameters:
+        - name: invoiceid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: cookie
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invoiceId:
+                  type: string
+                  example: TEST-INVOICE-ID
+                supplier:
+                  type: string
+                  example: supplier name
+                buyer:
+                  type: string
+                  example: buyer name
+                total:
+                  type: number
+                  format: double
+                  example: 9.99
+                  description: Must be equal the sum of the item cost(s)
+                currency:
+                  type: string
+                  description: Must be a valid 3 letter currency code (ISO 4217)
+                  example: "AUD"
+                issueDate:
+                  type: string
+                  format: date
+                  description: Must be a past date and be of the format YYYY-MM-DD
+                dueDate:
+                  type: string
+                  format: date
+                  description: Must be on or after the issue date and be of the format YYYY-MM-DD
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name: 
+                        type: string
+                      count:
+                        type: number
+                        example: 1
+                        description: Must be greater than 0
+                      cost:
+                        type: number
+                        format: double
+                        example: 9.99
+                buyerAddress:                                    
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the buyer
+                    country:
+                      type: string
+                      description: Country code of the buyer (ISO 3166-1 alpha-2)
+                      example: "AU"
+                buyerEmail:
+                  type: string
+                  format: email
+                  description: Email address of the buyer
+                buyerPhone:
+                  type: string
+                  description: Phone number of the buyer
+                supplierAddress:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                      description: Street address of the supplier
+                    country:
+                      type: string
+                      description: Country code of the supplier (ISO 3166-1 alpha-2)
+                      example: "AU"
+                supplierEmail:
+                  type: string
+                  format: email
+                  description: Email address of the supplier
+                supplierPhone:
+                  type: string
+                  description: Phone number of the supplier
+                paymentAccountId:
+                  type: string
+                  description: Bank account number
+                paymentAccountName:
+                  type: string
+                  description: Account name
+                financialInstitutionBranchId:
+                  type: string
+                  description: Branch identifier such as BSB
+      responses:
+        "200":
+          description: Invoice updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoiceId:
+                    type: string
+                    example: "e.g. INV-12345"
+        "400":
+          description: Invalid details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "e.g. Invalid invoice details"
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "e.g. Invalid authentication token"

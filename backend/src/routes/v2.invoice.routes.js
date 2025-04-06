@@ -1,17 +1,14 @@
 const express = require('express');
-
-const router = express.Router();
-
-const auth = require('../middleware/auth');
-
-// Apply auth middleware to all routes
-router.use(auth.verifyToken);
-
 const {
   invoiceController
 } = require('../controllers/invoice.controller');
 
 const { validateInvoiceStandardv2, validateInvoiceInput } = require('../middleware/invoice-validation');
+const { convertToUBL } = require('../middleware/invoice-generation');
+
+const router = express.Router();
+
+const auth = require('../middleware/auth');
 
 
 
@@ -74,52 +71,45 @@ router.post('/create-and-validate',
   },
   // This middleware will prepare for validation
   (req, res, next) => {
-    // Get the UBL XML from the invoice data
-    if (req.invoiceData && req.invoiceData.invoice) {
-      req.body.xml = req.invoiceData.invoice;
-      
-      // If no schemas specified, default to peppol
-      if (!req.body.schemas) {
-        req.body.schemas = ['peppol'];
-      }
+    if (req.body.invoice) {
+      req.body.xml = convertToUBL(req.body.invoice);
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No invoice provided'
+      });
     }
     next();
   },
+  validateInvoiceInput,
   validateInvoiceStandardv2,
-  // Final handler to combine invoice and validation results
-  (req, res) => {
-    // If validation failed
-    if (!req.validationResult.valid) {
+  (req, res, next) => {
+    if (req.validationResult.valid) {
+      next();
+    } else if (req.validationResult.valid === false) {
       return res.status(400).json({
         status: 'error',
         message: 'Invoice validation failed',
-        error: req.validationResult.errors,
-        validationWarnings: req.validationResult.warnings,
-        appliedStandards: req.body.schemas,
-        invoiceId: req.invoiceData?.invoiceId
+        validationResult: req.validationResult
       });
     }
-
-    // If we have both invoice data and validation results
-    if (req.invoiceData && req.validationResult) {
+  },
+  createInvoice,
+  updateValidationStatus,
+  (req, res) => {
+    if (req.status === 'success') {
       return res.status(200).json({
-        ...req.invoiceData,
-        validation: {
-          status: 'success',
-          message: 'Invoice successfully validated',
-          appliedStandards: req.body.schemas,
-          warnings: req.validationResult.warnings.length > 0 
-            ? req.validationResult.warnings 
-            : []
-        }
+        status: 'success',
+        message: 'Invoice created and validated successfully',
+        invoiceId: req.params.invoiceid,
+        validationWarnings: req.validationResult.warnings
+      });
+    } else {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to create invoice',
       });
     }
-
-    // If something went wrong
-    return res.status(500).json({
-      status: 'error',
-      message: 'Failed to create and validate invoice'
-    });
   }
 );
 

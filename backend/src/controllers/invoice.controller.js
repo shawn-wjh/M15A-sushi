@@ -11,11 +11,11 @@ const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
 const { checkUserId } = require('../middleware/helperFunctions');
 
-// Initialize DynamoDB client
+// Initialize DynamoDB Client
 const dbClient = createDynamoDBClient();
 
 // Helper function to parse XML safely
-const parseXMLSafely = async (xmlString) => {
+const parseXML = async (xmlString) => {
   try {
     // First, check if we have valid XML
     if (!xmlString || typeof xmlString !== 'string') {
@@ -59,19 +59,14 @@ const invoiceController = {
    * @param {Object} req - invoice object
    * @param {Object} res - Express response object
    */
-  createInvoice: async (req, res) => {
+  createInvoice: async (req, res, next) => {
     try {
-      // TODO:
-      // 1. Get the generated invoice from the previous middleware
-      // 2. Create timestamp
-      // 3. Prepare invoice item for DynamoDB
-      // 4. Store in DynamoDB
-
-      const data = req.body;
+      // Get the invoice data from the request body
+      const data = req.body.invoice || req.body;
       const timestamp = new Date().toISOString();
       const invoiceId = uuidv4();
 
-      // convert invoice to UBL XML
+      // Convert invoice to UBL XML
       const ublXml = convertToUBL(data);
 
       if (!checkUserId(req.user.userId)) {
@@ -89,7 +84,7 @@ const invoiceController = {
           timestamp,
           UserID: req.user.userId,
           invoice: ublXml,
-          valid: false,
+          valid: req.validationResult?.valid || false,
           invoiceJson: data
         }
       };
@@ -97,13 +92,22 @@ const invoiceController = {
       // Store in DynamoDB
       await dbClient.send(new PutCommand(invoiceItem));
 
-      return res.status(200).json({
-        status: 'success',
-        message: 'Invoice created successfully',
-        invoiceId: invoiceId,
-        invoice: ublXml
-      });
+      // Check if this is part of a middleware chain (like in create-and-validate)
+      // or a direct route handler (like in /create)
+      if (next && req.route && req.route.path === '/create-and-validate') {
+        // Set invoiceId for next functions
+        req.params.invoiceid = invoiceId;
+        next();
+      } else {
+        return res.status(200).json({
+          status: 'success',
+          message: 'Invoice created successfully',
+          invoiceId: invoiceId,
+          invoice: ublXml
+        });
+      }
     } catch (error) {
+      console.error('Error creating invoice:', error);
       return res.status(500).json({
         status: 'error',
         message: 'Failed to create invoice',
@@ -206,7 +210,7 @@ const invoiceController = {
 
       // Parse all invoices first
       const parsedInvoices = await Promise.all(allInvoices.map(async (invoice) => {
-        const parsedXML = await parseXMLSafely(invoice.invoice);
+        const parsedXML = await parseXML(invoice.invoice);
         if (!parsedXML) {
           console.error('Failed to parse invoice:', invoice.InvoiceID);
         }
@@ -294,7 +298,6 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res, next) => {
-    console.log('in getInvoice');
     const invoiceId = req.params.invoiceid;
 
     // check if invoiceId is empty
@@ -318,9 +321,6 @@ const invoiceController = {
         throw new Error('Invoice not found');
       }
 
-      console.log('req.user.userId: ', req.user.userId);
-      console.log('Items[0]: ', Items[0]);
-      console.log('checkingUserId(req.user.userId, Items[0]): ', checkUserId(req.user.userId, Items[0]));
       // check if allowed access
       if (!checkUserId(req.user.userId, Items[0])) {
         console.log('Unauthorised Access');
@@ -382,6 +382,7 @@ const invoiceController = {
       const invoiceId = req.params.invoiceid;
       const updateData = req.body;
 
+
       // Check if invoiceId is provided
       if (!invoiceId) {
         return res.status(400).json({
@@ -404,7 +405,7 @@ const invoiceController = {
       if (!Items || Items.length === 0) {
         return res.status(400).json({
           status: 'error',
-          error: 'Invoice not found'
+          error: 'Invalid Invoice ID'
         });
       }
 
@@ -413,6 +414,21 @@ const invoiceController = {
           status: 'error',
           error: 'Unauthorised Access'
         });
+      }
+
+      // Ensure all numeric values are properly formatted
+      if (updateData.total) updateData.total = parseFloat(updateData.total);
+      if (updateData.taxTotal) updateData.taxTotal = parseFloat(updateData.taxTotal);
+      if (updateData.taxRate) updateData.taxRate = parseFloat(updateData.taxRate);
+      
+      // Format items
+      if (updateData.items && updateData.items.length > 0) {
+        updateData.items = updateData.items.map(item => ({
+          ...item,
+          count: parseFloat(item.count) || 0,
+          cost: parseFloat(item.cost) || 0,
+          currency: item.currency || updateData.currency || 'AUD'
+        }));
       }
 
       // Convert updated data to UBL XML
@@ -425,8 +441,8 @@ const invoiceController = {
           InvoiceID: invoiceId,
           UserID: Items[0].UserID,
           invoice: ublXml,
-          timestamp: new Date().toISOString(),
-          valid: false // invalidate the invoice after update by default
+          timestamp: new Date().toISOString(), // update time last modified
+          valid: false, // invalidate the invoice after update by default
         }
       };
 
@@ -438,6 +454,7 @@ const invoiceController = {
         invoiceId: invoiceId
       });
     } catch (error) {
+      console.error('Error updating invoice:', error);
       return res.status(400).json({
         status: 'error',
         error: error.message
