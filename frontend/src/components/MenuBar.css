@@ -13,6 +13,54 @@
   --menu-transition-speed: 0.3s;
 }
 
+/* Logo animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 5px rgba(255, 59, 48, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 59, 48, 0.8);
+  }
+  100% {
+    text-shadow: 0 0 5px rgba(255, 59, 48, 0.5);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
 /* Menu Sidebar Layout */
 .menu-sidebar {
   width: 250px;
@@ -39,21 +87,74 @@
   letter-spacing: -0.5px;
   display: flex;
   align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.animated-logo {
+  position: relative;
+  padding: 5px;
+  border-radius: 8px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.animated-logo:hover {
+  transform: scale(1.05);
+  background-color: rgba(255, 59, 48, 0.1);
+}
+
+.animated-logo:active {
+  animation: bounce 0.5s ease;
+}
+
+.logo-clicked {
+  animation: bounce 0.5s ease;
+}
+
+.logo-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(255, 59, 48, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .menu-logo-text {
   color: #ffffff;
+  transition: color 0.3s ease;
+}
+
+.animated-logo:hover .menu-logo-text {
+  color: var(--menu-primary-light);
 }
 
 .menu-logo-dot {
   color: var(--menu-primary-color);
   font-size: 1.8rem;
   margin: 0 2px;
+  transition: color 0.3s ease;
+}
+
+.animated-logo:hover .menu-logo-dot {
+  animation: pulse 1s infinite;
+  color: var(--menu-primary-light);
 }
 
 .menu-logo-invoice {
   color: var(--menu-text-muted);
   font-weight: 400;
+  transition: color 0.3s ease;
+}
+
+.animated-logo:hover .menu-logo-invoice {
+  color: var(--menu-text-dark);
 }
 
 .menu-create-invoice-button-container {

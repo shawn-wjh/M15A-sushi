@@ -6,6 +6,7 @@ import './Dashboard.css';
 // If not available, we'll need to add the package
 import InvoiceForm from './InvoiceForm';
 import InvoiceList from './invoiceList/InvoiceList';
+import AppLayout from './AppLayout';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -302,87 +303,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard-container">
-      {/* Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <div className="dashboard-logo">
-            <span className="logo-text">Sushi</span>
-            <span className="logo-dot">.</span>
-            <span className="logo-invoice">Invoice</span>
-          </div>
-        </div>
-        
-        <div className="create-invoice-button-container">
-          <button className="create-invoice-button" onClick={handleCreateInvoice}>
-            <span className="plus-icon">+</span>
-            Create Invoice
-          </button>
-        </div>
-        
-        <nav className="sidebar-nav">
-          <ul>
-            <li 
-              className={activeSection === 'profile' ? 'active' : ''} 
-              onClick={() => setActiveSection('profile')}
-            >
-              <div className="nav-icon profile-icon"></div>
-              <span>Profile</span>
-            </li>
-            <li 
-              className={activeSection === 'overview' ? 'active' : ''} 
-              onClick={() => setActiveSection('overview')}
-            >
-              <div className="nav-icon overview-icon"></div>
-              <span>Overview</span>
-            </li>
-            <li 
-              className={activeSection === 'invoices' ? 'active' : ''} 
-              onClick={() => setActiveSection('invoices')}
-            >
-              <div className="nav-icon invoices-icon"></div>
-              <span>View Invoices</span>
-            </li>
-            <li 
-              className={activeSection === 'settings' ? 'active' : ''} 
-              onClick={() => setActiveSection('settings')}
-            >
-              <div className="nav-icon settings-icon"></div>
-              <span>Settings</span>
-            </li>
-          </ul>
-        </nav>
-        
-        <div className="sidebar-footer">
-          <button className="logout-button" onClick={handleLogout}>
-            <div className="nav-icon logout-icon"></div>
-            <span>Logout</span>
-          </button>
-        </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="main-content">
-        <div className="topbar">
-          <div className="search-bar">
-            <input type="text" placeholder="Search..." />
-          </div>
-          <div className="user-menu">
-            <div className="notification-icon"></div>
-            <div className="user-info">
-              <span className="user-name">{user?.name || user?.email}</span>
-              <div className="user-avatar">
-                {user?.name ? user.name[0].toUpperCase() : user?.email[0].toUpperCase()}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="content-area">
-          {renderActiveSectionContent()}
-        </div>
-      </div>
-    </div>
+    <AppLayout activeSection={activeSection}>
+      {renderActiveSectionContent()}
+    </AppLayout>
   );
 };
 

@@ -4,8 +4,7 @@ import './InvoiceForm.css';
 import OrderSearch from './OrderSearch';
 import { schemaNameMap } from './invoiceValidationResult/validationResults';
 import { useHistory, useLocation } from 'react-router-dom';
-import MenuBar from './MenuBar';
-import TopBar from './TopBar';
+import AppLayout from './AppLayout';
 // Determine base URL based on environment
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
@@ -564,262 +563,200 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
   };
 
   return (
-    <div className="dashboard-page">
-      <MenuBar activeSection="invoices" />
-      <div className="invoice-page-content">
-        <TopBar />
-        <main className="content-area">
-        <div className="invoice-form-container">
-          {createdInvoice ? (
-            <div className="invoice-success">
-              <div className="success-icon">✓</div>
-              <h3>{editMode ? 'Invoice Updated Successfully!' : 'Invoice Created Successfully!'}</h3>
-              <p>Your invoice has been {editMode ? 'updated' : (wasValidated ? 'created and validated' : 'created')}</p>
+    <AppLayout activeSection="createInvoice">
+      <div className="invoice-form-container">
+        {createdInvoice ? (
+          <div className="invoice-success">
+            <div className="success-icon">✓</div>
+            <h3>{editMode ? 'Invoice Updated Successfully!' : 'Invoice Created Successfully!'}</h3>
+            <p>Your invoice has been {editMode ? 'updated' : (wasValidated ? 'created and validated' : 'created')}</p>
+            
+            <div className="invoice-details">
+              <div className="detail-item">
+                <span className="detail-label">Invoice ID:</span>
+                <span className="detail-value">{createdInvoice.invoiceId}</span>
+              </div>
               
-              <div className="invoice-details">
+              {wasValidated && (
                 <div className="detail-item">
-                  <span className="detail-label">Invoice ID:</span>
-                  <span className="detail-value">{createdInvoice.invoiceId}</span>
+                  <span className="detail-label">Validation:</span>
+                  <span className="detail-value success">{'Successfully validated against: ' + selectedSchemas.map((schema) => schemaNameMap[schema]).join(', ')}</span>
                 </div>
-                
-                {wasValidated && (
-                  <div className="detail-item">
-                    <span className="detail-label">Validation:</span>
-                    <span className="detail-value success">{'Successfully validated against: ' + selectedSchemas.map((schema) => schemaNameMap[schema]).join(', ')}</span>
-                  </div>
-                )}
-                
-                <div className="detail-item">
-                  <span className="detail-label">Subtotal:</span>
-                  <span className="detail-value">
-                    {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.subtotal || 0).toFixed(2)}
-                  </span>
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-label">Tax ({parseFloat(submittedValues?.taxRate || 0).toFixed(1)}%):</span>
-                  <span className="detail-value">
-                    {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.taxAmount || 0).toFixed(2)}
-                  </span>
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-label">Total Amount:</span>
-                  <span className="detail-value total">
-                    {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.total || 0).toFixed(2)}
-                  </span>
-                </div>
-
-                { validationWarnings.length > 0 && (
-                  <div className="validation-warnings">
-                    Validation warnings:
-                    <ul className="validation-warnings-list">
-                      {validationWarnings.map((warning, index) => (
-                        <li key={index}>{warning}</li>
-                      ))}
-                    </ul> 
-                  </div>
-                )}
+              )}
+              
+              <div className="detail-item">
+                <span className="detail-label">Subtotal:</span>
+                <span className="detail-value">
+                  {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.subtotal || 0).toFixed(2)}
+                </span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="detail-label">Tax ({parseFloat(submittedValues?.taxRate || 0).toFixed(1)}%):</span>
+                <span className="detail-value">
+                  {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.taxAmount || 0).toFixed(2)}
+                </span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="detail-label">Total Amount:</span>
+                <span className="detail-value total">
+                  {submittedValues?.currency || createdInvoice.currency} {parseFloat(submittedValues?.total || 0).toFixed(2)}
+                </span>
               </div>
 
-              
-              <div className="form-actions">
-                {!editMode ? (<button 
-                  className="form-button primary" 
-                  onClick={() => {
-                    setMessage(null);
-                    setValidationWarnings([]);
-                    setSelectedSchemas([]);
-                    setCreatedInvoice(null);
-                    setSubmittedValues(null);
-                  }}
-                >
-                  Create Another Invoice
-                </button>) : (<button 
-                  className="form-button primary" 
-                  onClick={() => {
-                    setMessage(null);
-                    setValidationWarnings([]);
-                    setSelectedSchemas([]);
-                    setCreatedInvoice(null);
-                    setSubmittedValues(null);
-                    history.push(`/invoices/${createdInvoice.invoiceId}`);
-                  }}
-                >
-                  Back to Invoice
-                </button>)}
-              </div>
+              { validationWarnings.length > 0 && (
+                <div className="validation-warnings">
+                  Validation warnings:
+                  <ul className="validation-warnings-list">
+                    {validationWarnings.map((warning, index) => (
+                      <li key={index}>{warning}</li>
+                    ))}
+                  </ul> 
+                </div>
+              )}
             </div>
-          ) : (
-            <>
-              <div className="welcome-banner">
-                <h2>{editMode ? 'Edit Invoice' : 'Create New Invoice'}</h2>
-                <p>{editMode ? 'Edit the invoice details below.' : 'Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).'}</p>
+
+            
+            <div className="form-actions">
+              {!editMode ? (<button 
+                className="form-button primary" 
+                onClick={() => {
+                  setMessage(null);
+                  setValidationWarnings([]);
+                  setSelectedSchemas([]);
+                  setCreatedInvoice(null);
+                  setSubmittedValues(null);
+                }}
+              >
+                Create Another Invoice
+              </button>) : (<button 
+                className="form-button primary" 
+                onClick={() => {
+                  setMessage(null);
+                  setValidationWarnings([]);
+                  setSelectedSchemas([]);
+                  setCreatedInvoice(null);
+                  setSubmittedValues(null);
+                  history.push(`/invoices/${createdInvoice.invoiceId}`);
+                }}
+              >
+                Back to Invoice
+              </button>)}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="welcome-banner">
+              <h2>{editMode ? 'Edit Invoice' : 'Create New Invoice'}</h2>
+              <p>{editMode ? 'Edit the invoice details below.' : 'Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).'}</p>
+            </div>
+            
+            {!editMode && <OrderSearch onOrderSelect={handleOrderSelect} />}
+            
+            <form 
+              className="invoice-form" 
+              ref={formRef} 
+              noValidate
+              onSubmit={(e) => handleSubmit(e, selectedSchemas.length > 0)}
+            >
+              <div className="form-section">
+                <h3>Basic Information</h3>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="invoiceId">Invoice ID *</label>
+                    <input
+                      type="text"
+                      id="invoiceId"
+                      name="invoiceId"
+                      value={formData.invoiceId}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g., INV-2023-001"
+                      aria-required="true"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="currency">Currency</label>
+                    <select
+                      id="currency"
+                      name="currency"
+                      value={formData.currency}
+                      onChange={handleChange}
+                    >
+                      <option value="AUD">Australian Dollar (AUD)</option>
+                      <option value="USD">US Dollar (USD)</option>
+                      <option value="EUR">Euro (EUR)</option>
+                      <option value="GBP">British Pound (GBP)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="issueDate">Issue Date *</label>
+                    <input
+                      type="date"
+                      id="issueDate"
+                      name="issueDate"
+                      value={formData.issueDate}
+                      onChange={handleChange}
+                      required
+                      aria-required="true"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="dueDate">Due Date</label>
+                    <input
+                      type="date"
+                      id="dueDate"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
               </div>
               
-              {!editMode && <OrderSearch onOrderSelect={handleOrderSelect} />}
-              
-              <form 
-                className="invoice-form" 
-                ref={formRef} 
-                noValidate
-                onSubmit={(e) => handleSubmit(e, selectedSchemas.length > 0)}
-              >
-                <div className="form-section">
-                  <h3>Basic Information</h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="invoiceId">Invoice ID *</label>
-                      <input
-                        type="text"
-                        id="invoiceId"
-                        name="invoiceId"
-                        value={formData.invoiceId}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g., INV-2023-001"
-                        aria-required="true"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label htmlFor="currency">Currency</label>
-                      <select
-                        id="currency"
-                        name="currency"
-                        value={formData.currency}
-                        onChange={handleChange}
-                      >
-                        <option value="AUD">Australian Dollar (AUD)</option>
-                        <option value="USD">US Dollar (USD)</option>
-                        <option value="EUR">Euro (EUR)</option>
-                        <option value="GBP">British Pound (GBP)</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="issueDate">Issue Date *</label>
-                      <input
-                        type="date"
-                        id="issueDate"
-                        name="issueDate"
-                        value={formData.issueDate}
-                        onChange={handleChange}
-                        required
-                        aria-required="true"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label htmlFor="dueDate">Due Date</label>
-                      <input
-                        type="date"
-                        id="dueDate"
-                        name="dueDate"
-                        value={formData.dueDate}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
+              <div className="form-section">
+                <h3>Buyer Information</h3>
+                
+                <div className="form-group">
+                  <label htmlFor="buyer">Buyer Name *</label>
+                  <input
+                    type="text"
+                    id="buyer"
+                    name="buyer"
+                    value={formData.buyer}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g., John Smith"
+                    aria-required="true"
+                  />
                 </div>
                 
-                <div className="form-section">
-                  <h3>Buyer Information</h3>
-                  
-                  <div className="form-group">
-                    <label htmlFor="buyer">Buyer Name *</label>
-                    <input
-                      type="text"
-                      id="buyer"
-                      name="buyer"
-                      value={formData.buyer}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g., John Smith"
-                      aria-required="true"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="buyerAddress.street">Street Address</label>
-                    <input
-                      type="text"
-                      id="buyerAddress.street"
-                      name="buyerAddress.street"
-                      value={formData.buyerAddress.street}
-                      onChange={handleChange}
-                      placeholder="e.g., 123 Main St"
-                    />
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="buyerAddress.country">Country</label>
-                      <select
-                        id="buyerAddress.country"
-                        name="buyerAddress.country"
-                        value={formData.buyerAddress.country}
-                        onChange={handleChange}
-                      >
-                        <option value="AU">Australia</option>
-                        <option value="US">United States</option>
-                        <option value="GB">United Kingdom</option>
-                        <option value="NZ">New Zealand</option>
-                      </select>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label htmlFor="buyerPhone">Phone Number</label>
-                      <input
-                        type="tel"
-                        id="buyerPhone"
-                        name="buyerPhone"
-                        value={formData.buyerPhone}
-                        onChange={handleChange}
-                        placeholder="e.g., +61 123 456 789"
-                      />
-                    </div>
-                  </div>
+                <div className="form-group">
+                  <label htmlFor="buyerAddress.street">Street Address</label>
+                  <input
+                    type="text"
+                    id="buyerAddress.street"
+                    name="buyerAddress.street"
+                    value={formData.buyerAddress.street}
+                    onChange={handleChange}
+                    placeholder="e.g., 123 Main St"
+                  />
                 </div>
                 
-                <div className="form-section">
-                  <h3>Supplier Information</h3>
-                  
+                <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="supplier">Supplier Name *</label>
-                    <input
-                      type="text"
-                      id="supplier"
-                      name="supplier"
-                      value={formData.supplier}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g., ABC Company"
-                      aria-required="true"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="supplierAddress.street">Street Address</label>
-                    <input
-                      type="text"
-                      id="supplierAddress.street"
-                      name="supplierAddress.street"
-                      value={formData.supplierAddress.street}
-                      onChange={handleChange}
-                      placeholder="e.g., 456 Business Ave"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="supplierAddress.country">Country</label>
+                    <label htmlFor="buyerAddress.country">Country</label>
                     <select
-                      id="supplierAddress.country"
-                      name="supplierAddress.country"
-                      value={formData.supplierAddress.country}
+                      id="buyerAddress.country"
+                      name="buyerAddress.country"
+                      value={formData.buyerAddress.country}
                       onChange={handleChange}
                     >
                       <option value="AU">Australia</option>
@@ -829,282 +766,338 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                     </select>
                   </div>
                   
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="supplierPhone">
-                        Phone Number <span className="required-note">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        id="supplierPhone"
-                        name="supplierPhone"
-                        value={formData.supplierPhone}
-                        onChange={handleChange}
-                        placeholder="e.g., +61 123 456 789"
-                        required
-                        aria-required="true"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label htmlFor="supplierEmail">
-                        Email Address <span className="required-note">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        id="supplierEmail"
-                        name="supplierEmail"
-                        value={formData.supplierEmail}
-                        onChange={handleChange}
-                        placeholder="e.g., supplier@example.com"
-                        required
-                        aria-required="true"
-                      />
-                      {selectedSchemas.includes('peppol') && <div className="field-note">* At least one contact method required for Peppol validation</div>}
-                    </div>
+                  <div className="form-group">
+                    <label htmlFor="buyerPhone">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="buyerPhone"
+                      name="buyerPhone"
+                      value={formData.buyerPhone}
+                      onChange={handleChange}
+                      placeholder="e.g., +61 123 456 789"
+                    />
                   </div>
                 </div>
+              </div>
+              
+              <div className="form-section">
+                <h3>Supplier Information</h3>
                 
-                <div className="form-section">
-                  <div className="section-header">
-                    <h3>Invoice Items</h3>
-                    <button 
-                      type="button" 
-                      className="add-item-button"
-                      onClick={addItem}
-                    >
-                      + Add Item
-                    </button>
+                <div className="form-group">
+                  <label htmlFor="supplier">Supplier Name *</label>
+                  <input
+                    type="text"
+                    id="supplier"
+                    name="supplier"
+                    value={formData.supplier}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g., ABC Company"
+                    aria-required="true"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="supplierAddress.street">Street Address</label>
+                  <input
+                    type="text"
+                    id="supplierAddress.street"
+                    name="supplierAddress.street"
+                    value={formData.supplierAddress.street}
+                    onChange={handleChange}
+                    placeholder="e.g., 456 Business Ave"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="supplierAddress.country">Country</label>
+                  <select
+                    id="supplierAddress.country"
+                    name="supplierAddress.country"
+                    value={formData.supplierAddress.country}
+                    onChange={handleChange}
+                  >
+                    <option value="AU">Australia</option>
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="NZ">New Zealand</option>
+                  </select>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="supplierPhone">
+                      Phone Number <span className="required-note">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="supplierPhone"
+                      name="supplierPhone"
+                      value={formData.supplierPhone}
+                      onChange={handleChange}
+                      placeholder="e.g., +61 123 456 789"
+                      required
+                      aria-required="true"
+                    />
                   </div>
                   
-                  {formData.items.map((item, index) => (
-                    <div key={index} className="item-container">
-                      <div className="item-header">
-                        <h4>Item {index + 1}</h4>
-                        {formData.items.length > 1 && (
-                          <button 
-                            type="button" 
-                            className="remove-item-button"
-                            onClick={() => removeItem(index)}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                      
-                      <div className="form-group">
-                        <label htmlFor={`item-${index}-name`}>Item Name *</label>
-                        <input
-                          type="text"
-                          id={`item-${index}-name`}
-                          name={`item-${index}-name`}
-                          value={item.name}
-                          onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                          required
-                          aria-required="true"
-                        />
-                      </div>
-                      
-                      <div className="form-group">
-                        <label htmlFor={`item-${index}-count`}>Count *</label>
-                        <input
-                          type="text"
-                          id={`item-${index}-count`}
-                          name={`item-${index}-count`}
-                          value={item.count}
-                          onChange={(e) => handleItemChange(index, 'count', e.target.value)}
-                          required
-                          aria-required="true"
-                        />
-                      </div>
-                      
-                      <div className="form-group">
-                        <label htmlFor={`item-${index}-cost`}>Cost *</label>
-                        <input
-                          type="text"
-                          id={`item-${index}-cost`}
-                          name={`item-${index}-cost`}
-                          value={item.cost}
-                          onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
-                          required
-                          aria-required="true"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="form-section">
-                  <h3>Tax Information</h3>
-                  <div className="tax-configuration">
-                    <div className="form-group">
-                      <label htmlFor="taxRate">
-                        Tax Rate (%) <span className="required-indicator">*</span>
-                      </label>
-                      <div className="tax-rate-input">
-                        <input
-                          type="number"
-                          id="taxRate"
-                          name="taxRate"
-                          value={formData.taxRate}
-                          onChange={handleTaxRateChange}
-                          min="0"
-                          step="0.1"
-                          className="tax-rate-field"
-                          required
-                          aria-required="true"
-                        />
-                        <span className="tax-rate-symbol">%</span>
-                      </div>
-                      <div className="tax-rate-help">
-                        Enter the applicable tax rate (e.g., 10 for 10% GST in Australia). 
-                        Required for Peppol validation.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="form-section totals-section">
-                  <h3>Invoice Summary</h3>
-                  <div className="invoice-summary">
-                    <div className="summary-row">
-                      <span className="summary-label">Subtotal:</span>
-                      <span className="summary-value">{formData.currency} {formData.total.toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="summary-row tax-row">
-                      <div className="tax-rate-display">
-                        <span className="summary-label">Tax ({formData.taxRate === '' ? '0' : formData.taxRate}%):</span>
-                      </div>
-                      <span className="summary-value">{formData.currency} {formData.taxTotal.toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="summary-row total-row">
-                      <span className="summary-label">Total (inc. tax):</span>
-                      <span className="summary-value total">{formData.currency} {(formData.total + formData.taxTotal).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                { !editMode && (
-                  <div className="form-section">
-                    <h3>Validation</h3>
-                    <p>Optional: Select the schemas you want to validate against</p>
-                    <div className="validation-schemas">
-                      <div 
-                    className={`schema-option ${selectedSchemas.includes('peppol') ? 'selected' : ''}`}
-                    onClick={() => handleSchemaChange('peppol')}
-                  >
-                    <input 
-                      type="checkbox" 
-                      value="peppol" 
-                      checked={selectedSchemas.includes('peppol')}
-                      onChange={() => handleSchemaChange('peppol')} 
+                  <div className="form-group">
+                    <label htmlFor="supplierEmail">
+                      Email Address <span className="required-note">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="supplierEmail"
+                      name="supplierEmail"
+                      value={formData.supplierEmail}
+                      onChange={handleChange}
+                      placeholder="e.g., supplier@example.com"
+                      required
+                      aria-required="true"
                     />
-                    <label>PEPPOL (A-NZ)</label>
-                  </div>
-                  <div 
-                    className={`schema-option ${selectedSchemas.includes('fairwork') ? 'selected' : ''}`}
-                    onClick={() => handleSchemaChange('fairwork')}
-                  >
-                    <input 
-                      type="checkbox" 
-                      value="fairwork" 
-                      checked={selectedSchemas.includes('fairwork')}
-                      onChange={() => handleSchemaChange('fairwork')} 
-                    />
-                    <label>Fairwork Commission</label>
-                  </div>
+                    {selectedSchemas.includes('peppol') && <div className="field-note">* At least one contact method required for Peppol validation</div>}
                   </div>
                 </div>
-                )}
-                
-                {message && (
-                  <div className={`message ${message.type}`}>
-                    {formatMessage(message)}
-                  </div>
-                )}
-
-                {validationErrors.length > 0 && (
-                  <div className="validation-errors">
-                    <h5>Errors:</h5>
-                    <ul>
-                      {validationErrors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {validationWarnings.length > 0 && (
-                  <div className="validation-warnings">
-                    <h5>Warnings:</h5>
-                    <ul>
-                      {validationWarnings.map((warning, index) => (
-                        <li key={index}>{warning}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                <div className="form-actions">
-                  { !editMode ? (<button 
-                    type="button" 
-                    className="form-button secondary"
-                    disabled={isSubmitting}
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to reset the form?')) {
-                        resetForm();
-                        window.scrollTo(0, 0);
-                      }
-                    }}
-                  >
-                    Reset
-                  </button>) : (<button 
-                    type="button" 
-                    className="form-button secondary"
-                    onClick={() => {
-                      history.push(`/invoices/${location.pathname.split('/').pop()}`);
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </button>
-                  )}
-
+              </div>
+              
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>Invoice Items</h3>
                   <button 
-                    className="form-button secondary" 
-                    disabled={isSubmitting}
-                    onClick={() => {
-                      alert('This feature is not yet implemented');
-                    }}
+                    type="button" 
+                    className="add-item-button"
+                    onClick={addItem}
                   >
-                    Save as Draft
+                    + Add Item
                   </button>
-
-                  { !editMode ? <button 
-                    type="submit" 
-                    className="form-button primary" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Creating...' : 
-                    selectedSchemas.length > 0 ? 'Create & Validate Invoice' : 
-                    'Create Invoice'}
-                  </button> : <button 
-                    type="submit" 
-                    className="form-button primary" 
-                    disabled={isSubmitting}
-                  >
-                    Update Invoice
-                  </button>}
                 </div>
-              </form>
-            </>
-          )}
-        </div>
-        </main>
-        </div>
-    </div>
+                
+                {formData.items.map((item, index) => (
+                  <div key={index} className="item-container">
+                    <div className="item-header">
+                      <h4>Item {index + 1}</h4>
+                      {formData.items.length > 1 && (
+                        <button 
+                          type="button" 
+                          className="remove-item-button"
+                          onClick={() => removeItem(index)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor={`item-${index}-name`}>Item Name *</label>
+                      <input
+                        type="text"
+                        id={`item-${index}-name`}
+                        name={`item-${index}-name`}
+                        value={item.name}
+                        onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                        required
+                        aria-required="true"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor={`item-${index}-count`}>Count *</label>
+                      <input
+                        type="text"
+                        id={`item-${index}-count`}
+                        name={`item-${index}-count`}
+                        value={item.count}
+                        onChange={(e) => handleItemChange(index, 'count', e.target.value)}
+                        required
+                        aria-required="true"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor={`item-${index}-cost`}>Cost *</label>
+                      <input
+                        type="text"
+                        id={`item-${index}-cost`}
+                        name={`item-${index}-cost`}
+                        value={item.cost}
+                        onChange={(e) => handleItemChange(index, 'cost', e.target.value)}
+                        required
+                        aria-required="true"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="form-section">
+                <h3>Tax Information</h3>
+                <div className="tax-configuration">
+                  <div className="form-group">
+                    <label htmlFor="taxRate">
+                      Tax Rate (%) <span className="required-indicator">*</span>
+                    </label>
+                    <div className="tax-rate-input">
+                      <input
+                        type="number"
+                        id="taxRate"
+                        name="taxRate"
+                        value={formData.taxRate}
+                        onChange={handleTaxRateChange}
+                        min="0"
+                        step="0.1"
+                        className="tax-rate-field"
+                        required
+                        aria-required="true"
+                      />
+                      <span className="tax-rate-symbol">%</span>
+                    </div>
+                    <div className="tax-rate-help">
+                      Enter the applicable tax rate (e.g., 10 for 10% GST in Australia). 
+                      Required for Peppol validation.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="form-section totals-section">
+                <h3>Invoice Summary</h3>
+                <div className="invoice-summary">
+                  <div className="summary-row">
+                    <span className="summary-label">Subtotal:</span>
+                    <span className="summary-value">{formData.currency} {formData.total.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="summary-row tax-row">
+                    <div className="tax-rate-display">
+                      <span className="summary-label">Tax ({formData.taxRate === '' ? '0' : formData.taxRate}%):</span>
+                    </div>
+                    <span className="summary-value">{formData.currency} {formData.taxTotal.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="summary-row total-row">
+                    <span className="summary-label">Total (inc. tax):</span>
+                    <span className="summary-value total">{formData.currency} {(formData.total + formData.taxTotal).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              { !editMode && (
+                <div className="form-section">
+                  <h3>Validation</h3>
+                  <p>Optional: Select the schemas you want to validate against</p>
+                  <div className="validation-schemas">
+                    <div 
+                      className={`schema-option ${selectedSchemas.includes('peppol') ? 'selected' : ''}`}
+                      onClick={() => handleSchemaChange('peppol')}
+                    >
+                      <input 
+                        type="checkbox" 
+                        value="peppol" 
+                        checked={selectedSchemas.includes('peppol')}
+                        onChange={() => handleSchemaChange('peppol')} 
+                      />
+                      <label>PEPPOL (A-NZ)</label>
+                    </div>
+                    <div 
+                      className={`schema-option ${selectedSchemas.includes('fairwork') ? 'selected' : ''}`}
+                      onClick={() => handleSchemaChange('fairwork')}
+                    >
+                      <input 
+                        type="checkbox" 
+                        value="fairwork" 
+                        checked={selectedSchemas.includes('fairwork')}
+                        onChange={() => handleSchemaChange('fairwork')} 
+                      />
+                      <label>Fairwork Commission</label>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {message && (
+                <div className={`message ${message.type}`}>
+                  {formatMessage(message)}
+                </div>
+              )}
+
+              {validationErrors.length > 0 && (
+                <div className="validation-errors">
+                  <h5>Errors:</h5>
+                  <ul>
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {validationWarnings.length > 0 && (
+                <div className="validation-warnings">
+                  <h5>Warnings:</h5>
+                  <ul>
+                    {validationWarnings.map((warning, index) => (
+                      <li key={index}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="form-actions">
+                { !editMode ? (<button 
+                  type="button" 
+                  className="form-button secondary"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to reset the form?')) {
+                      resetForm();
+                      window.scrollTo(0, 0);
+                    }
+                  }}
+                >
+                  Reset
+                </button>) : (<button 
+                  type="button" 
+                  className="form-button secondary"
+                  onClick={() => {
+                    history.push(`/invoices/${location.pathname.split('/').pop()}`);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                )}
+
+                <button 
+                  className="form-button secondary" 
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    alert('This feature is not yet implemented');
+                  }}
+                >
+                  Save as Draft
+                </button>
+
+                { !editMode ? <button 
+                  type="submit" 
+                  className="form-button primary" 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Creating...' : 
+                  selectedSchemas.length > 0 ? 'Create & Validate Invoice' : 
+                  'Create Invoice'}
+                </button> : <button 
+                  type="submit" 
+                  className="form-button primary" 
+                  disabled={isSubmitting}
+                >
+                  Update Invoice
+                </button>}
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </AppLayout>
   );
 };
 
