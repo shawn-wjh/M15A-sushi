@@ -57,54 +57,50 @@ const currencyService = {
    * @returns {Promise<Object>} Converted amount and exchange rate
    */
   convertCurrency: async (amount, sourceCurrency, targetCurrency) => {
-    try {
-      // Get exchange rates with AUD as base
-      const exchangeRates = await currencyService.getExchangeRates();
-      
-      // If source is already AUD, simple conversion
-      if (sourceCurrency === 'AUD') {
-        const rate = exchangeRates[targetCurrency];
-        const convertedAmount = amount * rate;
-        
-        return {
-          originalAmount: amount,
-          originalCurrency: sourceCurrency,
-          convertedAmount,
-          convertedCurrency: targetCurrency,
-          exchangeRate: rate
-        };
-      }
-      
-      // If source is not AUD, need to convert to AUD first, then to target
-      const sourceToAUDRate = 1 / exchangeRates[sourceCurrency]; // Invert rate to get X to AUD
-      const amountInAUD = amount * sourceToAUDRate;
-      
-      // If target is AUD, we're done
-      if (targetCurrency === 'AUD') {
-        return {
-          originalAmount: amount,
-          originalCurrency: sourceCurrency,
-          convertedAmount: amountInAUD,
-          convertedCurrency: targetCurrency,
-          exchangeRate: sourceToAUDRate
-        };
-      }
-      
-      // Otherwise, convert from AUD to target
-      const AUDToTargetRate = exchangeRates[targetCurrency];
-      const convertedAmount = amountInAUD * AUDToTargetRate;
+    // Get exchange rates with AUD as base
+    const exchangeRates = await currencyService.getExchangeRates();
+    
+    // If source is already AUD, simple conversion
+    if (sourceCurrency === 'AUD') {
+      const rate = exchangeRates[targetCurrency];
+      const convertedAmount = amount * rate;
       
       return {
         originalAmount: amount,
         originalCurrency: sourceCurrency,
         convertedAmount,
         convertedCurrency: targetCurrency,
-        // Calculate direct exchange rate between source and target
-        exchangeRate: sourceToAUDRate * AUDToTargetRate
+        exchangeRate: rate
       };
-    } catch (error) {
-      throw error;
     }
+    
+    // If source is not AUD, need to convert to AUD first, then to target
+    const sourceToAUDRate = 1 / exchangeRates[sourceCurrency]; // Invert rate to get X to AUD
+    const amountInAUD = amount * sourceToAUDRate;
+    
+    // If target is AUD, we're done
+    if (targetCurrency === 'AUD') {
+      return {
+        originalAmount: amount,
+        originalCurrency: sourceCurrency,
+        convertedAmount: amountInAUD,
+        convertedCurrency: targetCurrency,
+        exchangeRate: sourceToAUDRate
+      };
+    }
+    
+    // Otherwise, convert from AUD to target
+    const AUDToTargetRate = exchangeRates[targetCurrency];
+    const convertedAmount = amountInAUD * AUDToTargetRate;
+    
+    return {
+      originalAmount: amount,
+      originalCurrency: sourceCurrency,
+      convertedAmount,
+      convertedCurrency: targetCurrency,
+      // Calculate direct exchange rate between source and target
+      exchangeRate: sourceToAUDRate * AUDToTargetRate
+    };
   }
 };
 
