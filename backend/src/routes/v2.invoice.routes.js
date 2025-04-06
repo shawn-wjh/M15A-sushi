@@ -13,8 +13,7 @@ const {
 
 const { validateInvoiceStandardv2, validateInvoiceInput } = require('../middleware/invoice-validation');
 
-// Apply auth middleware to all routes
-router.use(auth.verifyToken);
+
 
 router.post('/create', invoiceController.createInvoice);
 
