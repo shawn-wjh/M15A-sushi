@@ -67,7 +67,7 @@ const Dashboard = () => {
       case 'invoices':
         return renderInvoiceListSection();
       case 'createInvoice':
-        return renderCreateInvoiceSection();
+        history.push('/invoices/create');
       case 'settings':
         return renderSettingsSection();
       default:

@@ -29,21 +29,6 @@
   color: #ffffff;
 }
 
-.form-group input {
-  padding: 0.75rem;
-  border: 1px solid #333;
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: #2a2a2a;
-  color: #ffffff;
-}
-
-.form-group input:focus {
-  border-color: #ff0000;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
-}
-
 .button-group {
   display: flex;
   gap: 1rem;

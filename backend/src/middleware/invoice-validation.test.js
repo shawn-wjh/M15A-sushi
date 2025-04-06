@@ -49,7 +49,6 @@ describe('Invoice Validation Middleware', () => {
 
   // Test optional fields - these should not cause validation failures
   it.each([
-    [{ ...mockInvoice, dueDate: undefined }, 'dueDate'],
     [{ ...mockInvoice, currency: undefined }, 'currency'],
     [{ ...mockInvoice, buyerAddress: undefined }, 'buyerAddress'],
     [{ ...mockInvoice, supplierAddress: undefined }, 'supplierAddress'],

@@ -1,4 +1,4 @@
-   /**
+/**
  * Invoice validation middleware
  * Validates the JSON input for invoice generation
  */
@@ -9,7 +9,8 @@ const countries = require('i18n-iso-countries');
 
 const validateInvoiceInput = (req, res, next) => {
   try {
-    const data = req.body;
+    // get from data from body.invoice, if not present, get from body
+    const data = req.body.invoice || req.body;
 
     // Check required fields present
     const requiredFields = [
@@ -78,7 +79,7 @@ const validateInvoiceInput = (req, res, next) => {
     }
 
     // Validate optional dueDate if present
-    if (data.dueDate !== undefined) {
+    if (data.dueDate !== undefined && data.dueDate !== '') {
       if (!dateRegex.test(data.dueDate)) {
         throw new Error('Due date must be in YYYY-MM-DD format');
       }
@@ -133,6 +134,10 @@ const validateInvoiceInput = (req, res, next) => {
 };
 
 const checkCurrencyCode = (currencyCode) => {
+  if (!currencyCode) {
+    return false;
+  }
+
   return (
     typeof currencyCode === 'string' &&
     /^[A-Z]{3}$/.test(currencyCode.toUpperCase())
@@ -140,6 +145,10 @@ const checkCurrencyCode = (currencyCode) => {
 };
 
 const checkCountryCode = (countryCode) => {
+  if (!countryCode) {
+    return false;
+  }
+
   return (
     typeof countryCode === 'string' &&
     /^[A-Z]{2}$/.test(countryCode.toUpperCase())
@@ -443,7 +452,7 @@ const validateInvoiceStandard = (req, res, next) => {
     if (next) {
       // Attach validation result to request for potential later use
       req.validationResult = validationResult;
-      next();
+      return next();
     } else if (validationResult.valid === false) {
       return res.status(400).json({
         status: 'error',
@@ -459,15 +468,24 @@ const validateInvoiceStandard = (req, res, next) => {
       });
     }
   } catch (error) {
-      return res.status(400).json({
+    if (next) {
+      req.validationResult = {
+        valid: false,
+        errors: [error.message || 'Unknown error'],
+        warnings: []
+      };
+      return next();
+    }
+    return res.status(400).json({
       status: 'error',
       message: 'Error validating invoice against Peppol standards',
-      error: validationResult.errors
+      error: error.message || 'Unknown error'
     });
   }
 };
 
 const validatePeppol = (invoice, validationResult) => {
+
   if (!validationResult) {
     validationResult = {
       valid: true,
@@ -500,7 +518,7 @@ const validatePeppol = (invoice, validationResult) => {
     'cbc:DocumentCurrencyCode',
     'cac:AccountingSupplierParty',
     'cac:AccountingCustomerParty',
-    'cbc:TaxTotal',
+    'cac:TaxTotal',
     'cac:LegalMonetaryTotal',
     'cac:InvoiceLine',
   ];
@@ -750,24 +768,15 @@ const validatePeppol = (invoice, validationResult) => {
   }
 
   // Check for tax total
-  if (!invoice['cbc:TaxTotal']?.['cbc:TaxAmount']?._text) {
+  if (!invoice['cac:TaxTotal']?.['cbc:TaxAmount']?._text) {
     validationResult.valid = false;
     validationResult.errors.push(
       'Missing TaxTotal (Peppol rule BR-XX)'
     );
   }
 
-  // append schema name to each warning and error message
-  validationResult.errors = validationResult.errors.map(error => {
-    return error + ' (PEPPOL A-NZ)';
-  });
-  validationResult.warnings = validationResult.warnings.map(warning => {
-    return warning + ' (PEPPOL A-NZ)';
-  });
-
   return validationResult;
 };
-
 
 /**
  * additional checks to comply with the fair work commision guidelines, 
@@ -789,7 +798,7 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   if (!ID || !Name) {
     validationResult.valid = false;
     validationResult.errors.push(
-      'Missing PayeeFinancialAccount details'
+      'Missing PayeeFinancialAccount details (Fair Work Commission)'
     );
   }
 
@@ -799,17 +808,9 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   if (!FIB_ID || !FIB_Name) {
     validationResult.valid = false;
     validationResult.errors.push(
-      'Missing FinancialInstitutionBranch details'
+      'Missing FinancialInstitutionBranch details (Fair Work Commission)'
     );
   }
-
-  // append schema name to each warning and error message
-  validationResult.errors = validationResult.errors.map(error => {
-    return error + ' (Fair Work Commission)';
-  });
-  validationResult.warnings = validationResult.warnings.map(warning => {
-    return warning + ' (Fair Work Commission)';
-  });
 
   return validationResult;
 };
@@ -825,7 +826,10 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     const ublXml = req.body.xml || req.body.invoice;
 
     if (!ublXml) {
-      throw new Error('No UBL XML provided for validation');
+      return res.status(400).json({
+        status: 'error',
+        message: 'No UBL XML provided for validation'
+      });
     }
     
     // Parse the XML to a JavaScript object
@@ -834,7 +838,7 @@ const validateInvoiceStandardv2 = (req, res, next) => {
       ignoreComment: true,
       alwaysChildren: true
     };
-    const parsedXml = xmljs.xml2js(ublXml, options);
+    const parsedXml = xmljs.xml2js(ublXml, options);  
 
     // Check if root Invoice element exists
     const invoice = parsedXml.Invoice;
@@ -869,18 +873,12 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
     // perform checks
     if (schemas.includes('peppol')) {
-      const peppolResult = validatePeppol(invoice, validationResult);
-      validationResult.valid = peppolResult.valid;
-      validationResult.errors.push(...peppolResult.errors);
-      validationResult.warnings.push(...peppolResult.warnings);
+      validationResult = validatePeppol(invoice, validationResult);
     }
 
 
     if (schemas.includes('fairwork')) {
-      const fairWorkResult = validateFairWorkCommission(invoice, validationResult);
-      validationResult.valid = fairWorkResult.valid;
-      validationResult.errors.push(...fairWorkResult.errors);
-      validationResult.warnings.push(...fairWorkResult.warnings);
+      validationResult = validateFairWorkCommission(invoice, validationResult);
     }
 
     // If validation passes
@@ -891,22 +889,22 @@ const validateInvoiceStandardv2 = (req, res, next) => {
     } else if (validationResult.valid === false) {
       return res.status(400).json({
         status: 'error',
-        message: 'Invoice does not comply with Peppol standards',
+        message: 'Invoice failed validation',
         error: validationResult.errors
       });
     } else {
       return res.status(200).json({
         status: 'success',
-        message: 'Invoice successfully validated against Peppol standards',
+        message: 'Invoice successfully validated',
         validationWarnings:
           validationResult.warnings.length > 0 ? validationResult.warnings : []
       });
     }
   } catch (error) {
-      return res.status(400).json({
+      return res.status(500).json({
       status: 'error',
-      message: 'Error validating invoice against Peppol standards',
-      error: validationResult.errors
+      message: 'Error validating invoice',
+      error: error.message || 'Unknown error'
     });
   }
 };

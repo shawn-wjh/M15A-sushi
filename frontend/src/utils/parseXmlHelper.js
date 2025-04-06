@@ -53,6 +53,14 @@ const parseInvoiceXml = (xmlString) => {
               "cac\\:AccountingSupplierParty cac\\:Party cac\\:PostalAddress cac\\:Country cbc\\:IdentificationCode, AccountingSupplierParty Party PostalAddress Country IdentificationCode"
             )?.textContent || "AUS",
         },
+        email:
+          xmlDoc.querySelector(
+            "cac\\:AccountingSupplierParty cac\\:Party cac\\:Contact cbc\\:ElectronicMail, AccountingSupplierParty Party Contact ElectronicMail"
+          )?.textContent || "N/A",
+        phone:
+          xmlDoc.querySelector(
+            "cac\\:AccountingSupplierParty cac\\:Party cac\\:Contact cbc\\:Telephone, AccountingSupplierParty Party Contact Telephone"
+          )?.textContent || "N/A",
       },
       items: Array.from(
         xmlDoc.querySelectorAll("cac\\:InvoiceLine, InvoiceLine")
@@ -71,6 +79,12 @@ const parseInvoiceXml = (xmlString) => {
             .querySelector("cac\\:Price cbc\\:PriceAmount, Price PriceAmount")
             ?.getAttribute("currencyID") || "AUD",
       })),
+      taxRate:
+        xmlDoc.querySelector("cac\\:TaxTotal cbc\\:Percent, TaxTotal Percent")
+          ?.textContent || "0.00",
+      taxTotal:
+        xmlDoc.querySelector("cac\\:TaxTotal cbc\\:TaxAmount, TaxTotal TaxAmount")
+          ?.textContent || "0.00",
     };
   } catch (error) {
     console.error("Error parsing XML:", error);

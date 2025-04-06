@@ -114,6 +114,14 @@
   background-color: var(--accent-red);
 }
 
+.form-section p {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--light-gray);
+  font-style: italic;
+  padding-bottom: 10px;
+}
+
 .form-row {
   display: flex;
   gap: 20px;

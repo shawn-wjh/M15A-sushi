@@ -39,7 +39,6 @@ const InvoiceListItem = ({
 
   const handleViewInvoice = (e) => {
     e.stopPropagation();
-    console.log('view invoice button clicked with invoice.InvoiceID: ', invoice.InvoiceID);
     history.push(`/invoices/${invoice.InvoiceID}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -109,37 +108,37 @@ const InvoiceListItem = ({
           <div className="invoice-details">
             <div className="details-grid">
               <div className="detail-item">
-                <span className="detail-label">Issue Date</span>
+                <span className="list-detail-label">Issue Date</span>
                 <span className="detail-value">
                   {parsedData?.issueDate || "N/A"}
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Due Date</span>
+                <span className="list-detail-label">Due Date</span>
                 <span className="detail-value">
                   {parsedData?.dueDate || "N/A"}
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Total Amount</span>
+                <span className="list-detail-label">Total Amount</span>
                 <span className="detail-value">
                   {parsedData?.currency} {parsedData?.total || "0.00"}
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Buyer Address</span>
+                <span className="list-detail-label">Buyer Address</span>
                 <span className="detail-value">
                   {parsedData?.buyer?.address?.street || "N/A"}
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Buyer Phone</span>
+                <span className="list-detail-label">Buyer Phone</span>
                 <span className="detail-value">
                   {parsedData?.buyer?.phone || "N/A"}
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Items</span>
+                <span className="list-detail-label">Items</span>
                 <span className="detail-value">
                   {parsedData?.items?.length || 0} items
                 </span>

@@ -80,16 +80,46 @@ router.post(
     }
   },
   // This middleware will validate the invoice and attach results to req
-  (req, res, next) => {
+  async (req, res, next) => {
     // Get the UBL XML from the invoice data
     if (req.invoiceData && req.invoiceData.invoice) {
       req.body.xml = req.invoiceData.invoice;
     }
     next();
   },
-  validateInvoiceStandard,
+  // Call validateInvoiceStandard with next parameter to ensure it attaches validationResult to req
+  async (req, res, next) => {
+    try {
+      // Create a custom next function that will attach the validation result to the request
+      const customNext = () => {
+        // Ensure validationResult is attached to the request
+        if (!req.validationResult) {
+          req.validationResult = {
+            valid: true,
+            errors: [],
+            warnings: []
+          };
+        }
+        next();
+      };
+      
+      // Call validateInvoiceStandard with our custom next function
+      await validateInvoiceStandard(req, res, customNext);
+    } catch (error) {
+      next(error);
+    }
+  },
   // Final handler to combine invoice and validation results
-  (req, res) => {
+  async (req, res) => {
+    // Ensure validationResult exists
+    if (!req.validationResult) {
+      req.validationResult = {
+        valid: true,
+        errors: [],
+        warnings: []
+      };
+    }
+    
     // If we have both invoice data and validation results
     if (!req.validationResult.valid) {
       return res.status(400).json({

@@ -1,5 +1,5 @@
 import { useHistory } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../utils/axiosConfig";
 import { useState, useEffect } from "react";
 import getCookie from "../../utils/cookieHelper";
 import "./InvoicePage.css";
@@ -9,7 +9,7 @@ import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPo
 import MenuBar from "../MenuBar";
 import TopBar from "../TopBar";
 
-const API_URL = "http://localhost:3000/v1/invoices";
+const API_URL = "/v1/invoices";
 
 const InvoicePage = () => {
   const history = useHistory();
@@ -40,13 +40,7 @@ const InvoicePage = () => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}/${invoiceId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        });
+        const response = await apiClient.get(`${API_URL}/${invoiceId}`);
 
         // Extract invoice information from XML
         const invoiceData = parseInvoiceXml(response.data);
@@ -55,7 +49,6 @@ const InvoicePage = () => {
         setRawXml(response.data);
         setMessage(null);
       } catch (error) {
-        console.log("error in getInvoice: (correct error) ", error);
         if (error.response?.status === 401) {
           history.push("/login");
         } else {
@@ -66,6 +59,10 @@ const InvoicePage = () => {
 
     getInvoice();
   }, [history]);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // View features /////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   const handleViewXml = () => {
     setShowXmlWindow(true);
@@ -103,13 +100,7 @@ const InvoicePage = () => {
     }
 
     try {
-      await axios.delete(`${API_URL}/${invoiceId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      await apiClient.delete(`${API_URL}/${invoiceId}`);
 
       // Show success message
       setMessage({ type: "success", text: "Invoice successfully deleted" });
@@ -129,11 +120,6 @@ const InvoicePage = () => {
     setShowDeleteConfirm(false);
   };
 
-  const handleEdit = () => {
-    // TODO: Implement edit functionality
-    alert("Edit feature yet to be implemented");
-  };
-
   const handleDownload = () => {
     // TODO: Implement download functionality
     alert("Download feature yet to be implemented");
@@ -141,6 +127,15 @@ const InvoicePage = () => {
 
   const handleValidate = () => {
     setIsValidationPopUpOpen(true);
+  };
+
+  const handleEdit = () => {
+    
+    // Redirect to InvoiceForm with the invoice data
+    history.push({
+      pathname: `/invoices/edit/${invoiceId}`,
+      state: { invoice: invoice }
+    });
   };
 
   if (!invoice) {
@@ -332,11 +327,14 @@ const InvoicePage = () => {
                   <h3>Delete Confirmation</h3>
                   <p>Are you sure you want to delete this invoice?</p>
                   <div className="modal-buttons">
+                    {message && (
+                      <div className="error-message">{message.text}</div>
+                    )}
                     <button
                       className="modal-button cancel"
                       onClick={handleCancelDelete}
                     >
-                      No
+                      Cancel
                     </button>
                     <button
                       className="modal-button delete"
@@ -437,6 +435,22 @@ const InvoicePage = () => {
                     {invoice.supplier.address.country}
                   </div>
                 </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="supplierPhone">
+                      Phone Number <span className="required-note">*</span>
+                    </label>
+                    <div className="form-value">{invoice.supplier.phone}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="supplierEmail">
+                      Email Address <span className="required-note">*</span>
+                    </label>
+                    <div className="form-value">{invoice.supplier.email}</div>
+                  </div>
+                </div>
               </div>
 
               <div className="form-section">
@@ -461,9 +475,7 @@ const InvoicePage = () => {
 
                       <div className="form-group">
                         <label>Unit Price</label>
-                        <div className="form-value">
-                          {item.currency} {item.cost}
-                        </div>
+                        <div className="form-value">{item.cost}</div>
                       </div>
 
                       <div className="form-group">
@@ -482,11 +494,53 @@ const InvoicePage = () => {
                 ))}
               </div>
 
-              <div className="invoice-total">
-                <span className="total-label">Invoice Total:</span>
-                <span className="total-value">
-                  {invoice.currency} {parseFloat(invoice.total).toFixed(2)}
-                </span>
+              <div className="form-section">
+                <h3>Tax Information</h3>
+                <div className="tax-configuration">
+                  <div className="form-group">
+                    <label htmlFor="taxRate">
+                      Tax Rate (%) <span className="required-indicator">*</span>
+                    </label>
+                    <div className="tax-rate-input">
+                      <div className="form-value">{invoice.taxRate}</div>
+                      <span className="tax-rate-symbol">%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section totals-section">
+                <h3>Invoice Summary</h3>
+                <div className="invoice-summary">
+                  <div className="summary-row">
+                    <span className="summary-label">Subtotal:</span>
+                    <span className="summary-value">
+                      {invoice.currency} {parseFloat(invoice.total).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="summary-row tax-row">
+                    <div className="tax-rate-display">
+                      <span className="summary-label">
+                        Tax ({invoice.taxRate === "" ? "0" : invoice.taxRate}%):
+                      </span>
+                    </div>
+                    <span className="summary-value">
+                      {invoice.currency}{" "}
+                      {parseFloat(invoice.taxTotal).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="summary-row total-row">
+                    <span className="summary-label">Total (inc. tax):</span>
+                    <span className="summary-value total">
+                      {invoice.currency}{" "}
+                      {(
+                        parseFloat(invoice.total) + parseFloat(invoice.taxTotal)
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
