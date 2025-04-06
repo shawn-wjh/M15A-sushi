@@ -14,21 +14,6 @@
   --transition-fast: 0.2s ease;
 }
 
-.invoice-page-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: var(--black);
-}
-
-.invoice-page-content {
-  flex: 1;
-  margin-left: 250px; /* Same width as MenuBar */
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--dark-bg);
-}
-
 .invoice-view-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -342,18 +327,6 @@
     flex-direction: column;
     gap: 10px;
     text-align: center;
-  }
-  
-  .invoice-page-content {
-    margin-left: 80px; /* Same width as collapsed MenuBar */
-  }
-  
-  .dashboard-navbar {
-    padding: 1rem;
-  }
-  
-  .dashboard-main {
-    padding: 1rem;
   }
   
   .invoice-view-container {

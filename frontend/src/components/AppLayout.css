@@ -1,0 +1,29 @@
+/* AppLayout.css - Consistent layout styling for the application */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #121212;
+}
+
+.app-content {
+  flex: 1;
+  margin-left: 250px; /* Same width as MenuBar */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #121212;
+}
+
+.main-content-area {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-content {
+    margin-left: 80px; /* Match the collapsed MenuBar width */
+  }
+} 

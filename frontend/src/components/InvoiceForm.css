@@ -582,4 +582,7 @@
   left: 0;
   color: var(--accent-red);
   font-weight: bold;
-} 
+}
+
+/* Removing the .invoice-page-content section that was added at the bottom of the file */
+/* The margin-left is now handled by AppLayout's CSS */ 
