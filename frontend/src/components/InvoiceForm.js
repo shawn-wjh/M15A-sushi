@@ -764,6 +764,49 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     fetchExchangeRates();
   }, []);
 
+  // Add function to fill example values
+  const fillExampleValues = () => {
+    const exampleData = {
+      invoiceId: 'INV-2024-001',
+      total: 0,
+      buyer: 'Example Buyer Company',
+      supplier: 'Example Supplier Inc.',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      currency: 'AUD',
+      buyerAddress: {
+        street: '123 Buyer Street',
+        country: 'AU'
+      },
+      supplierAddress: {
+        street: '456 Supplier Avenue',
+        country: 'AU'
+      },
+      buyerPhone: '+61 123 456 789',
+      supplierPhone: '+61 987 654 321',
+      supplierEmail: 'contact@examplesupplier.com',
+      taxTotal: 0,
+      taxRate: 10,
+      items: [
+        {
+          name: 'Example Product 1',
+          count: 2,
+          cost: 100,
+          currency: 'AUD'
+        },
+        {
+          name: 'Example Service 1',
+          count: 1,
+          cost: 150,
+          currency: 'AUD'
+        }
+      ]
+    };
+    
+    setFormData(exampleData);
+    calculateTotal(exampleData.items, exampleData.taxRate);
+  };
+
   return (
     <AppLayout activeSection="createInvoice">
       <div className="invoice-form-container">
@@ -849,8 +892,20 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
           </div>
         ) : (
           <>
+            {!editMode && (
+              <button 
+                className="form-button secondary"
+                onClick={fillExampleValues}
+                style={{ marginLeft: 'auto' }}
+              >
+                Fill with Example Values
+              </button>
+            )}
+            <div className="padding-bottom"></div>
             <div className="welcome-banner">
-              <h2>{editMode ? 'Edit Invoice' : 'Create New Invoice'}</h2>
+              <div className="banner-header">
+                <h2>{editMode ? 'Edit Invoice' : 'Create New Invoice'}</h2>
+              </div>
               <p>{editMode ? 'Edit the invoice details below.' : 'Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).'}</p>
             </div>
             
