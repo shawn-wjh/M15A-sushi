@@ -101,11 +101,11 @@ const InvoicePage = () => {
     try {
       await apiClient.delete(`${API_URL}/${invoiceId}`);
 
-      // Show success message
-      setMessage({ type: "success", text: "Invoice successfully deleted" });
+      // // Show success message
+      // setMessage({ type: "success", text: "Invoice successfully deleted" });
 
       // Redirect to invoice list
-      history.push("/invoices/list");
+      history.push("/dashboard", { section: "invoices" }); 
     } catch (error) {
       console.error("Error deleting invoice:", error);
       setMessage({
