@@ -85,5 +85,22 @@ router.post('/create-and-validate',
   }
 );
 
+/**
+ * update specific invoice
+ * @route PUT /v2/invoices/:invoiceid
+ * @param {string} invoiceid.path.required - Invoice ID
+ * @returns {object} 200 - Invoice details
+ */
+router.put('/:invoiceid/update', invoiceController.updateInvoice);
+
+/**
+ * Delete invoice
+ * @route DELETE /v2/invoices/:invoiceId
+ * @param {string} invoiceId.path.required - Invoice ID
+ * @returns {object} 200 - Success message
+ */
+router.delete('/:invoiceid', invoiceController.deleteInvoice);
+
+
 module.exports = router;
 
