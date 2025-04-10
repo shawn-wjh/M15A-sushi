@@ -747,39 +747,116 @@ body {
 }
 
 .settings-placeholder {
-  background-color: var(--sidebar-bg);
-  border-radius: 10px;
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-  margin-top: 20px;
-  border: 1px solid var(--border-light);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .settings-option {
-  padding: 20px 30px;
-  border-bottom: 1px solid var(--border-light);
-  cursor: pointer;
-  transition: background-color var(--transition-speed);
-}
-
-.settings-option:last-child {
-  border-bottom: none;
+  background-color: #222222;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid #333333;
+  transition: all 0.3s ease;
 }
 
 .settings-option:hover {
-  background-color: rgba(255, 59, 48, 0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+  border-color: #444444;
 }
 
 .settings-option h3 {
-  margin: 0 0 5px;
-  font-size: 1.1rem;
-  color: #fff;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .settings-option p {
   margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Settings form fields */
+.settings-option .form-field {
+  margin-bottom: 16px;
+}
+
+.settings-option .form-field label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #d0d0d0;
+  font-size: 14px;
+}
+
+.settings-option .form-field input,
+.settings-option .form-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #333333;
+  border: 1px solid #444444;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.settings-option .form-field input:focus,
+.settings-option .form-field textarea:focus {
+  outline: none;
+  border-color: #ff4b4b;
+  box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.2);
+}
+
+.settings-option .form-field input::placeholder,
+.settings-option .form-field textarea::placeholder {
+  color: #777777;
+}
+
+.settings-option .btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.settings-option .btn-primary {
+  background-color: #ff4b4b;
+  color: #ffffff;
+}
+
+.settings-option .btn-primary:hover {
+  background-color: #ff6b6b;
+  transform: translateY(-1px);
+}
+
+.settings-option .btn-secondary {
+  background-color: #333333;
+  color: #ffffff;
+  border: 1px solid #444444;
+}
+
+.settings-option .btn-secondary:hover {
+  background-color: #444444;
+}
+
+.settings-option .btn-danger {
+  background-color: #333333;
+  color: #ff4b4b;
+  border: 1px solid #ff4b4b;
+}
+
+.settings-option .btn-danger:hover {
+  background-color: rgba(255, 75, 75, 0.1);
 }
 
 /* Active state for sidebar navigation items */
@@ -912,4 +989,44 @@ body {
   .content-area {
     padding: 20px 15px;
   }
+}
+
+/* Settings Tabs */
+.settings-tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #333333;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #a0a0a0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  color: #ffffff;
+}
+
+.tab-button.active {
+  color: #ff4b4b;
+  border-bottom-color: #ff4b4b;
+  font-weight: 600;
+}
+
+.settings-content {
+  min-height: 400px;
 } 

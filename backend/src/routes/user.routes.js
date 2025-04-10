@@ -9,6 +9,7 @@ const auth = require('../middleware/auth');
 // Import controllers
 const registrationController = require('../controllers/registration.controller');
 const authController = require('../controllers/auth.controller');
+const peppolController = require('../controllers/peppol.controller');
 
 /**
  * Register user
@@ -49,6 +50,39 @@ router.get(
       }
     });
   }
+);
+
+/**
+ * Get user's Peppol settings
+ * @route GET /v1/users/peppol-settings
+ * @returns {object} 200 - User's Peppol settings
+ */
+router.get(
+  '/peppol-settings',
+  auth.verifyToken,
+  peppolController.getSettings
+);
+
+/**
+ * Save user's Peppol settings
+ * @route POST /v1/users/peppol-settings
+ * @returns {object} 200 - Peppol settings saved successfully
+ */
+router.post(
+  '/peppol-settings',
+  auth.verifyToken,
+  peppolController.saveCredentials
+);
+
+/**
+ * Delete user's Peppol settings
+ * @route DELETE /v1/users/peppol-settings
+ * @returns {object} 200 - Peppol settings deleted successfully
+ */
+router.delete(
+  '/peppol-settings',
+  auth.verifyToken,
+  peppolController.deleteSettings
 );
 
 module.exports = router;
