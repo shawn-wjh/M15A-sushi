@@ -45,7 +45,8 @@ const peppolController = {
         ReturnValues: 'ALL_NEW'
       };
       
-      const result = await dbClient.send(new UpdateCommand(updateParams));
+      // Execute the update command (result not used)
+      await dbClient.send(new UpdateCommand(updateParams));
       
       return res.status(200).json({
         status: 'success',
