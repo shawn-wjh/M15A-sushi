@@ -1,10 +1,12 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./InvoiceList.css";
-import { PopOutIcon } from "./PopOutIcon";
+import { EyeIcon } from "./EyeIcon";
+import { SendIcon } from "./SendIcon";
 import { ValidateIcon } from "./ValidateIcon";
 import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPopUp";
+import apiClient from "../../utils/axiosConfig";
 
 const InvoiceListItem = ({
   invoice,
@@ -17,9 +19,28 @@ const InvoiceListItem = ({
   formatDate,
 }) => {
   const [validationResult, setValidationResults] = useState(null);
+  const [peppolConfigured, setPeppolConfigured] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [recipientId, setRecipientId] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
   const history = useHistory();
   const parsedData = invoice.parsedData;
   const [isValidationPopUpOpen, setIsValidationPopUpOpen] = useState(false);
+
+  // Check if Peppol is configured
+  useEffect(() => {
+    const checkPeppolSettings = async () => {
+      try {
+        const response = await apiClient.get('/v1/users/peppol-settings');
+        setPeppolConfigured(response.data?.status === 'success' && response.data?.data?.isConfigured);
+      } catch (error) {
+        console.error('Failed to check Peppol settings:', error);
+        setPeppolConfigured(false);
+      }
+    };
+    checkPeppolSettings();
+  }, []);
 
   const handleHeaderClick = (e) => {
     if (
@@ -46,6 +67,63 @@ const InvoiceListItem = ({
   const handleValidate = async (e) => {
     // open validation schema pop up
     setIsValidationPopUpOpen(true);
+  };
+
+  const handleSend = (e) => {
+    e.stopPropagation();
+    if (!peppolConfigured) {
+      history.push("/dashboard?tab=settings&settings=peppol");
+    } else {
+      setShowSendModal(true);
+      setSendResult(null);
+    }
+  };
+
+  const handleSendCancel = () => {
+    setShowSendModal(false);
+    setRecipientId('');
+    setSendResult(null);
+  };
+
+  const handleSendConfirm = async () => {
+    if (!recipientId) {
+      setSendResult({
+        status: 'error',
+        message: 'Recipient ID is required'
+      });
+      return;
+    }
+    
+    setIsSending(true);
+    setSendResult(null);
+    
+    try {
+      const response = await apiClient.post(`/v1/invoices/${invoice.InvoiceID}/send`, {
+        recipientId: recipientId
+      });
+      
+      if (response.data?.status === 'success') {
+        setSendResult({
+          status: 'success',
+          message: 'Invoice sent successfully via Peppol network',
+          deliveryId: response.data.deliveryId,
+          timestamp: response.data.timestamp
+        });
+      } else {
+        setSendResult({
+          status: 'error',
+          message: 'Failed to send invoice'
+        });
+      }
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      setSendResult({
+        status: 'error',
+        message: error.response?.data?.message || 'Failed to send invoice via Peppol'
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -89,11 +167,18 @@ const InvoiceListItem = ({
               </div>
             )}
             <div
+              className="invoice-header-icon send"
+              title={peppolConfigured ? "Send via Peppol" : "Configure Peppol Settings"}
+              onClick={handleSend}
+            >
+              <SendIcon onClick={handleSend} />
+            </div>
+            <div
               className="invoice-header-icon view-details"
               title="View Invoice Details"
               onClick={handleViewInvoice}
             >
-              <PopOutIcon onClick={handleViewInvoice} />
+              <EyeIcon onClick={handleViewInvoice} />
             </div>
             <div
               className={`invoice-header-arrow ${isExpanded ? "expanded" : ""}`}
@@ -147,6 +232,66 @@ const InvoiceListItem = ({
           </div>
         )}
       </li>
+
+      {showSendModal && (
+        <div className="modal-overlay" onClick={handleSendCancel}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Send Invoice via Peppol</h3>
+            <p>Enter the recipient's Peppol ID to send this invoice:</p>
+            
+            {sendResult && (
+              <div className={`sending-result ${sendResult.status}`}>
+                <p>{sendResult.message}</p>
+                {sendResult.status === 'success' && sendResult.deliveryId && (
+                  <div className="delivery-details">
+                    <div className="detail-item">
+                      <span className="detail-label">Delivery ID:</span>
+                      <span className="detail-value">{sendResult.deliveryId}</span>
+                    </div>
+                    {sendResult.timestamp && (
+                      <div className="detail-item">
+                        <span className="detail-label">Timestamp:</span>
+                        <span className="detail-value">{new Date(sendResult.timestamp).toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="input-field">
+              <input
+                type="text"
+                value={recipientId}
+                onChange={(e) => setRecipientId(e.target.value)}
+                placeholder="e.g., 0192:12345678901"
+                required
+                disabled={isSending || (sendResult && sendResult.status === 'success')}
+              />
+              <small>The recipient must be registered on the Peppol network</small>
+            </div>
+            
+            <div className="modal-buttons">
+              <button
+                className="modal-button cancel"
+                onClick={handleSendCancel}
+              >
+                Close
+              </button>
+              {(!sendResult || sendResult.status !== 'success') && (
+                <button
+                  className="send-peppol-button"
+                  onClick={handleSendConfirm}
+                  disabled={isSending}
+                >
+                  {isSending ? 'Sending...' : 'Send Invoice'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {isValidationPopUpOpen && (
         <ValidationSchemaPopUp
           onClose={() => setIsValidationPopUpOpen(false)}

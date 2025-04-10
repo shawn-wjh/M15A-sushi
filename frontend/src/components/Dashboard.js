@@ -17,6 +17,21 @@ const Dashboard = () => {
   const history = useHistory();
   const [activeSettingsTab, setActiveSettingsTab] = useState('peppol');
 
+  // Parse URL query parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    const settingsParam = searchParams.get('settings');
+    
+    if (tabParam === 'settings') {
+      setActiveSection('settings');
+      
+      if (settingsParam) {
+        setActiveSettingsTab(settingsParam);
+      }
+    }
+  }, [location.search]);
+
   useEffect(() => {
     // Check if user is logged in
     const storedUser = localStorage.getItem('user');

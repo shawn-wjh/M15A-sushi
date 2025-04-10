@@ -19,6 +19,13 @@ const InvoicePage = () => {
   const [rawXml, setRawXml] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isValidationPopUpOpen, setIsValidationPopUpOpen] = useState(false);
+  
+  // Peppol related state
+  const [peppolConfigured, setPeppolConfigured] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [recipientId, setRecipientId] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
 
   useEffect(() => {
     const getInvoice = async () => {
@@ -47,6 +54,9 @@ const InvoicePage = () => {
         setInvoice(invoiceData);
         setRawXml(response.data);
         setMessage(null);
+        
+        // Check if Peppol is configured
+        checkPeppolSettings();
       } catch (error) {
         if (error.response?.status === 401) {
           history.push("/login");
@@ -58,6 +68,22 @@ const InvoicePage = () => {
 
     getInvoice();
   }, [history]);
+
+  // Function to check if Peppol is configured
+  const checkPeppolSettings = async () => {
+    try {
+      const response = await apiClient.get('/v1/users/peppol-settings');
+      
+      if (response.data?.status === 'success' && response.data?.data?.isConfigured) {
+        setPeppolConfigured(true);
+      } else {
+        setPeppolConfigured(false);
+      }
+    } catch (error) {
+      console.error('Failed to check Peppol settings:', error);
+      setPeppolConfigured(false);
+    }
+  };
 
   //////////////////////////////////////////////////////////////////////////////
   // View features /////////////////////////////////////////////////////////////
@@ -135,6 +161,64 @@ const InvoicePage = () => {
       pathname: `/invoices/edit/${invoiceId}`,
       state: { invoice: invoice }
     });
+  };
+  
+  // Peppol send functions
+  const handleSend = () => {
+    if (!peppolConfigured) {
+      // Direct to Peppol settings if not configured
+      history.push("/dashboard?tab=settings&settings=peppol");
+    } else {
+      setShowSendModal(true);
+      setSendResult(null);
+    }
+  };
+  
+  const handleSendCancel = () => {
+    setShowSendModal(false);
+    setRecipientId('');
+    setSendResult(null);
+  };
+  
+  const handleSendConfirm = async () => {
+    if (!recipientId) {
+      setSendResult({
+        status: 'error',
+        message: 'Recipient ID is required'
+      });
+      return;
+    }
+    
+    setIsSending(true);
+    setSendResult(null);
+    
+    try {
+      const response = await apiClient.post(`${API_URL}/${invoiceId}/send`, {
+        recipientId: recipientId
+      });
+      
+      if (response.data?.status === 'success') {
+        setSendResult({
+          status: 'success',
+          message: 'Invoice sent successfully via Peppol network',
+          deliveryId: response.data.deliveryId,
+          timestamp: response.data.timestamp
+        });
+      } else {
+        setSendResult({
+          status: 'error',
+          message: 'Failed to send invoice'
+        });
+      }
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      setSendResult({
+        status: 'error',
+        message: error.response?.data?.message || 'Failed to send invoice via Peppol'
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (!invoice) {
@@ -255,6 +339,26 @@ const InvoicePage = () => {
               </button>
               <button
                 className="action-button"
+                onClick={handleSend}
+                title={peppolConfigured ? "Send via Peppol" : "Configure Peppol Settings"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+              <button
+                className="action-button"
                 onClick={handleDownload}
                 title="Download Invoice"
               >
@@ -320,6 +424,65 @@ const InvoicePage = () => {
                 >
                   Delete
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {showSendModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Send Invoice via Peppol</h3>
+              <p>Enter the recipient's Peppol ID to send this invoice:</p>
+              
+              {sendResult && (
+                <div className={`sending-result ${sendResult.status}`}>
+                  <p>{sendResult.message}</p>
+                  {sendResult.status === 'success' && sendResult.deliveryId && (
+                    <div className="delivery-details">
+                      <div className="detail-item">
+                        <span className="detail-label">Delivery ID:</span>
+                        <span className="detail-value">{sendResult.deliveryId}</span>
+                      </div>
+                      {sendResult.timestamp && (
+                        <div className="detail-item">
+                          <span className="detail-label">Timestamp:</span>
+                          <span className="detail-value">{new Date(sendResult.timestamp).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="input-field">
+                <input
+                  type="text"
+                  value={recipientId}
+                  onChange={(e) => setRecipientId(e.target.value)}
+                  placeholder="e.g., 0192:12345678901"
+                  required
+                  disabled={isSending || (sendResult && sendResult.status === 'success')}
+                />
+                <small>The recipient must be registered on the Peppol network</small>
+              </div>
+              
+              <div className="modal-buttons">
+                <button
+                  className="modal-button cancel"
+                  onClick={handleSendCancel}
+                >
+                  Close
+                </button>
+                {(!sendResult || sendResult.status !== 'success') && (
+                  <button
+                    className="send-peppol-button"
+                    onClick={handleSendConfirm}
+                    disabled={isSending}
+                  >
+                    {isSending ? 'Sending...' : 'Send Invoice'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
