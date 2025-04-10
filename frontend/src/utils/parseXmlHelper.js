@@ -85,6 +85,15 @@ const parseInvoiceXml = (xmlString) => {
       taxTotal:
         xmlDoc.querySelector("cac\\:TaxTotal cbc\\:TaxAmount, TaxTotal TaxAmount")
           ?.textContent || "0.00",
+      paymentAccountId:
+        xmlDoc.querySelector("cac\\:PaymentMeans cac\\:PayeeFinancialAccount cbc\\:ID, PaymentMeans PayeeFinancialAccount ID")
+          ?.textContent || "N/A",
+      paymentAccountName:
+        xmlDoc.querySelector("cac\\:PaymentMeans cac\\:PayeeFinancialAccount cbc\\:Name, PaymentMeans PayeeFinancialAccount Name")
+          ?.textContent || "N/A",
+      financialInstitutionBranchId:
+        xmlDoc.querySelector("cac\\:PaymentMeans cac\\:PayeeFinancialAccount cac\\:FinancialInstitutionBranch cbc\\:ID, PaymentMeans PayeeFinancialAccount FinancialInstitutionBranch ID")
+          ?.textContent || "N/A",
     };
   } catch (error) {
     console.error("Error parsing XML:", error);

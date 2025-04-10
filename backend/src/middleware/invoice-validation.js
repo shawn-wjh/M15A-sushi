@@ -793,8 +793,8 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   }
 
   // Check PaymentMeans -> PayeeFinancialAccount details
-  const ID = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cbc:ID']?._text;
-  const Name = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cbc:Name']?._text;
+  const ID = invoice['cac:PaymentMeans']?.['cac:PayeeFinancialAccount']?.['cbc:ID']?._text;
+  const Name = invoice['cac:PaymentMeans']?.['cac:PayeeFinancialAccount']?.['cbc:Name']?._text;
   if (!ID || !Name) {
     validationResult.valid = false;
     validationResult.errors.push(
@@ -803,9 +803,8 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   }
 
   // check PaymentMeans -> PayeeFinancialAccount -> FinancialInstitutionBranch details
-  const FIB_ID = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cacFinancialInstitutionBranch']?.['cbc:BIC']?._text;
-  const FIB_Name = invoice['cac:PaymentMeans']?.['cacPayeeFinancialAccount']?.['cacFinancialInstitutionBranch']?.['cbc:Name']?._text;
-  if (!FIB_ID || !FIB_Name) {
+  const FIB_ID = invoice['cac:PaymentMeans']?.['cac:PayeeFinancialAccount']?.['cac:FinancialInstitutionBranch']?.['cbc:ID']?._text;
+  if (!FIB_ID) {
     validationResult.valid = false;
     validationResult.errors.push(
       'Missing FinancialInstitutionBranch details (Fair Work Commission)'

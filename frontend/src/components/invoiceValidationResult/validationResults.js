@@ -5,6 +5,7 @@ import "./validationResults.css";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { FaEdit } from "react-icons/fa";
 import AppLayout from "../AppLayout";
+import parseInvoiceXml from "../../utils/parseXmlHelper";
 
 const API_URL = "/v2/invoices";
 
@@ -13,14 +14,17 @@ export const schemaNameMap = {
   "fairwork": "Fair Work Commision",
 }
 
-async function validateInvoices(invoiceIds, schemas) {
+async function validateInvoices(invoiceIds, schemas, handleEdit) {
   const token = getCookie("token");
   if (!token) {
     throw new Error("No authentication token found");
   }
 
   try {
+    console.log("in validateInvoices, invoiceIds: ", invoiceIds);
     const validationPromises = invoiceIds.map(async (invoiceId) => {
+      console.log("in validateInvoices, invoiceId: ", invoiceId);
+      console.log("in validateInvoices, schemas: ", schemas);
       const response = await apiClient.post(
         `${API_URL}/${invoiceId}/validate`,
         { schemas: schemas }
@@ -53,6 +57,7 @@ const ValidationResult = () => {
   const [validationResults, setValidationResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasValidated, setHasValidated] = useState(false);
 
   const { schemas, invoiceids } = useMemo(() => {
     console.log("useMemo running with search:", location.search);
@@ -78,12 +83,22 @@ const ValidationResult = () => {
   }, [invoiceids, schemas]);
 
   useEffect(() => {
-    console.log("useEffect running");
-    fetchValidationResults();
-  }, [fetchValidationResults]);
+    if (!hasValidated) {
+      console.log("useEffect running");
+      fetchValidationResults();
+      setHasValidated(true);
+    }
+  }, [fetchValidationResults, hasValidated]);
 
-  const handleEditInvoice = (invoiceId) => {
-    alert("Edit invoice functionality is not available yet");
+  const handleEditInvoice = async (invoiceId) => {
+    const response = await apiClient.get(`v1/invoices/${invoiceId}`);
+    console.log("handleEditInvoice response: ", response);
+    const parsedResponse = parseInvoiceXml(response.data);
+    console.log("handleEditInvoice parsedResponse: ", parsedResponse);
+    history.push({
+      pathname: `/invoices/edit/${invoiceId}`, 
+      state: { invoice: parsedResponse }
+    });
   };
 
   if (error) {
