@@ -245,6 +245,75 @@ const LandingPage = () => {
     if (window.anime && heroRef.current) {
       const anime = window.anime;
       
+      // Animate the logo when the page loads
+      const logoText = document.querySelector('.logo-text');
+      const logoDot = document.querySelector('.logo-dot');
+      const logoInvoice = document.querySelector('.logo-invoice');
+      
+      if (logoText && logoDot && logoInvoice) {
+        // Initial entrance animation
+        anime.timeline()
+          .add({
+            targets: logoText,
+            translateY: [-30, 0],
+            opacity: [0, 1],
+            duration: 800,
+            easing: 'easeOutElastic(1, .5)'
+          })
+          .add({
+            targets: logoDot,
+            scale: [0, 1.5, 1],
+            opacity: [0, 1],
+            rotate: ['0deg', '360deg'],
+            duration: 1000,
+            easing: 'easeOutElastic(1, .5)'
+          }, '-=400')
+          .add({
+            targets: logoInvoice,
+            translateX: [-20, 0],
+            opacity: [0, 1],
+            duration: 800,
+            easing: 'easeOutExpo'
+          }, '-=600');
+        
+        // Add pulse animation to the dot
+        anime({
+          targets: logoDot,
+          scale: [1, 1.2, 1],
+          duration: 1500,
+          easing: 'easeInOutQuad',
+          loop: true
+        });
+        
+        // Add hover effect to the entire logo
+        const logo = document.querySelector('.logo');
+        if (logo) {
+          logo.addEventListener('mouseenter', () => {
+            anime({
+              targets: logoText,
+              translateY: [0, -5, 0],
+              duration: 600,
+              easing: 'easeOutElastic(1, .5)'
+            });
+            
+            anime({
+              targets: logoDot,
+              scale: [1, 1.5, 1],
+              rotate: '360deg',
+              duration: 600,
+              easing: 'easeOutElastic(1, .5)'
+            });
+            
+            anime({
+              targets: logoInvoice,
+              translateX: [0, 5, 0],
+              duration: 600,
+              easing: 'easeOutElastic(1, .5)'
+            });
+          });
+        }
+      }
+      
       // Create text animation for the hero title lines
       if (heroTitleRef.current) {
         // Split each title line into characters for animation
@@ -620,6 +689,80 @@ const LandingPage = () => {
     // Immediately trigger animations regardless of anime.js loading state
     triggerInitialAnimations();
     
+    // Function to animate the logo
+    const animateLogo = () => {
+      if (!window.anime) return;
+      
+      const anime = window.anime;
+      const logoText = document.querySelector('.logo-text');
+      const logoDot = document.querySelector('.logo-dot');
+      const logoInvoice = document.querySelector('.logo-invoice');
+      
+      if (logoText && logoDot && logoInvoice) {
+        // Initial entrance animation
+        anime.timeline()
+          .add({
+            targets: logoText,
+            translateY: [-30, 0],
+            opacity: [0, 1],
+            duration: 800,
+            easing: 'easeOutElastic(1, .5)'
+          })
+          .add({
+            targets: logoDot,
+            scale: [0, 1.5, 1],
+            opacity: [0, 1],
+            rotate: ['0deg', '360deg'],
+            duration: 1000,
+            easing: 'easeOutElastic(1, .5)'
+          }, '-=400')
+          .add({
+            targets: logoInvoice,
+            translateX: [-20, 0],
+            opacity: [0, 1],
+            duration: 800,
+            easing: 'easeOutExpo'
+          }, '-=600');
+        
+        // Add pulse animation to the dot
+        anime({
+          targets: logoDot,
+          scale: [1, 1.2, 1],
+          duration: 1500,
+          easing: 'easeInOutQuad',
+          loop: true
+        });
+        
+        // Add hover effect to the entire logo
+        const logo = document.querySelector('.logo');
+        if (logo) {
+          logo.addEventListener('mouseenter', () => {
+            anime({
+              targets: logoText,
+              translateY: [0, -5, 0],
+              duration: 600,
+              easing: 'easeOutElastic(1, .5)'
+            });
+            
+            anime({
+              targets: logoDot,
+              scale: [1, 1.5, 1],
+              rotate: '360deg',
+              duration: 600,
+              easing: 'easeOutElastic(1, .5)'
+            });
+            
+            anime({
+              targets: logoInvoice,
+              translateX: [0, 5, 0],
+              duration: 600,
+              easing: 'easeOutElastic(1, .5)'
+            });
+          });
+        }
+      }
+    };
+    
     // Make sure anime.js is available
     if (typeof window !== 'undefined') {
       // Ensure anime.js is loaded
@@ -632,8 +775,14 @@ const LandingPage = () => {
           console.log('Anime.js loaded successfully');
           // Trigger animations for elements in the initial viewport again when anime loads
           triggerInitialAnimations();
+          
+          // Animate the logo when anime.js is loaded
+          animateLogo();
         };
         document.body.appendChild(script);
+      } else {
+        // If anime.js is already loaded, trigger logo animation immediately
+        animateLogo();
       }
     }
     
@@ -1791,6 +1940,7 @@ const LandingPage = () => {
       </section>
 
       <section id="about" ref={aboutRef} className="about-section fade-in-section">
+        <div style={{ height: "30px" }}></div> {/* Add a small spacer */}
         <div ref={aboutBgPatternRef} className="about-bg-pattern"></div>
         <h2 ref={aboutTitleRef} className="section-title">The Sushi Difference</h2>
         <div ref={aboutContentRef} className="about-content">

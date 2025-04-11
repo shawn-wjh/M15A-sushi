@@ -15,6 +15,11 @@
 }
 
 /* Global Styles */
+html {
+  scroll-padding-top: 90px; /* Adjust based on navbar height plus some extra padding */
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
