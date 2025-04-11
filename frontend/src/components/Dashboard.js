@@ -353,35 +353,85 @@ const Dashboard = () => {
               <div className="settings-option">
                 <h3>Password Management</h3>
                 <p>Change your password to maintain account security</p>
-                <div className="form-field" style={{ marginTop: '20px' }}>
-                  <label htmlFor="current-password">Current Password</label>
-                  <input type="password" id="current-password" placeholder="Enter your current password" />
-                </div>
-                <div className="form-field">
-                  <label htmlFor="new-password">New Password</label>
-                  <input type="password" id="new-password" placeholder="Enter your new password" />
-                </div>
-                <div className="form-field">
-                  <label htmlFor="confirm-password">Confirm New Password</label>
-                  <input type="password" id="confirm-password" placeholder="Confirm your new password" />
-                </div>
-                <button className="btn btn-primary" style={{ marginTop: '15px' }}>Update Password</button>
+                <form autoComplete="off" method="post">
+                  {/* Hidden field to prevent autofill */}
+                  <input type="text" name="username" style={{ display: 'none' }} />
+                  <input type="password" name="password" style={{ display: 'none' }} />
+                  
+                  <div className="form-field" style={{ marginTop: '20px' }}>
+                    <label htmlFor="current-password">Current Password</label>
+                    <input 
+                      type="password" 
+                      id="current-password" 
+                      name="current-password"
+                      placeholder="Enter your current password" 
+                      autoComplete="off"
+                      className="settings-input"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="new-password">New Password</label>
+                    <input 
+                      type="password" 
+                      id="new-password" 
+                      name="new-password"
+                      placeholder="Enter your new password" 
+                      autoComplete="off"
+                      className="settings-input"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="confirm-password">Confirm New Password</label>
+                    <input 
+                      type="password" 
+                      id="confirm-password" 
+                      name="confirm-password"
+                      placeholder="Confirm your new password" 
+                      autoComplete="off"
+                      className="settings-input"
+                    />
+                  </div>
+                  <button type="button" className="settings-save-button">
+                    Update Password
+                  </button>
+                </form>
               </div>
               
               <div className="settings-option">
                 <h3>Two-Factor Authentication</h3>
                 <p>Add an extra layer of security to your account</p>
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px', justifyContent: 'space-between' }}>
+                
+                <div style={{ marginTop: '20px' }}>
                   <div>
-                    <div style={{ fontWeight: 'bold', color: '#ffffff', marginBottom: '5px' }}>Status: <span style={{ color: '#ff4b4b' }}>Disabled</span></div>
-                    <div style={{ color: '#a0a0a0', fontSize: '14px' }}>Enhance your account security by enabling 2FA</div>
+                    <div style={{ fontWeight: 'bold', color: '#ffffff', marginBottom: '8px' }}>
+                      Status: <span style={{ color: '#ff4b4b' }}>Disabled</span>
+                    </div>
+                    <div style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '16px' }}>
+                      Enhance your account security by enabling 2FA
+                    </div>
+                    <button className="settings-save-button" style={{ marginTop: '0' }}>
+                      Enable
+                    </button>
                   </div>
-                  <button className="btn btn-secondary">Enable</button>
                 </div>
-                <div style={{ marginTop: '20px', borderTop: '1px solid #333333', paddingTop: '15px' }}>
-                  <div style={{ fontWeight: 'bold', color: '#ffffff', marginBottom: '5px' }}>Session Management</div>
-                  <div style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '10px' }}>Sign out from all other devices</div>
-                  <button className="btn btn-danger">Sign out everywhere</button>
+                
+                <div style={{ marginTop: '30px' }}>
+                  <h3>Session Management</h3>
+                  <p>Sign out from all other devices</p>
+                  
+                  <div style={{ marginTop: '16px' }}>
+                    <button 
+                      className="settings-save-button" 
+                      style={{ 
+                        backgroundColor: 'transparent', 
+                        border: '1px solid #ff4b4b', 
+                        color: '#ff4b4b', 
+                        marginTop: '0'
+                      }}
+                    >
+                      Sign out everywhere
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

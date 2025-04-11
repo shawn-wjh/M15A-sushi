@@ -71,12 +71,8 @@ const InvoiceListItem = ({
 
   const handleSend = (e) => {
     e.stopPropagation();
-    if (!peppolConfigured) {
-      history.push("/dashboard?tab=settings&settings=peppol");
-    } else {
-      setShowSendModal(true);
-      setSendResult(null);
-    }
+    setShowSendModal(true);
+    setSendResult(null);
   };
 
   const handleSendCancel = () => {
@@ -86,6 +82,12 @@ const InvoiceListItem = ({
   };
 
   const handleSendConfirm = async () => {
+    if (!peppolConfigured) {
+      history.push("/dashboard?tab=settings&settings=peppol");
+      setShowSendModal(false);
+      return;
+    }
+
     if (!recipientId) {
       setSendResult({
         status: 'error',
@@ -237,57 +239,78 @@ const InvoiceListItem = ({
         <div className="modal-overlay" onClick={handleSendCancel}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <h3>Send Invoice via Peppol</h3>
-            <p>Enter the recipient's Peppol ID to send this invoice:</p>
-            
-            {sendResult && (
-              <div className={`sending-result ${sendResult.status}`}>
-                <p>{sendResult.message}</p>
-                {sendResult.status === 'success' && sendResult.deliveryId && (
-                  <div className="delivery-details">
-                    <div className="detail-item">
-                      <span className="detail-label">Delivery ID:</span>
-                      <span className="detail-value">{sendResult.deliveryId}</span>
-                    </div>
-                    {sendResult.timestamp && (
-                      <div className="detail-item">
-                        <span className="detail-label">Timestamp:</span>
-                        <span className="detail-value">{new Date(sendResult.timestamp).toLocaleString()}</span>
+            {!peppolConfigured ? (
+              <>
+                <p>Connect to your Peppol network provider in settings to send invoice.</p>
+                <div className="modal-buttons">
+                  <button
+                    className="modal-button cancel"
+                    onClick={handleSendCancel}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="send-peppol-button"
+                    onClick={handleSendConfirm}
+                  >
+                    Go to Settings
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Enter the recipient's Peppol ID to send this invoice:</p>
+                {sendResult && (
+                  <div className={`sending-result ${sendResult.status}`}>
+                    <p>{sendResult.message}</p>
+                    {sendResult.status === 'success' && sendResult.deliveryId && (
+                      <div className="delivery-details">
+                        <div className="detail-item">
+                          <span className="detail-label">Delivery ID:</span>
+                          <span className="detail-value">{sendResult.deliveryId}</span>
+                        </div>
+                        {sendResult.timestamp && (
+                          <div className="detail-item">
+                            <span className="detail-label">Timestamp:</span>
+                            <span className="detail-value">{new Date(sendResult.timestamp).toLocaleString()}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 )}
-              </div>
+                
+                <div className="input-field">
+                  <input
+                    type="text"
+                    value={recipientId}
+                    onChange={(e) => setRecipientId(e.target.value)}
+                    placeholder="e.g., 0192:12345678901"
+                    required
+                    disabled={isSending || (sendResult && sendResult.status === 'success')}
+                  />
+                  <small>The recipient must be registered on the Peppol network</small>
+                </div>
+                
+                <div className="modal-buttons">
+                  <button
+                    className="modal-button cancel"
+                    onClick={handleSendCancel}
+                  >
+                    Close
+                  </button>
+                  {(!sendResult || sendResult.status !== 'success') && (
+                    <button
+                      className="send-peppol-button"
+                      onClick={handleSendConfirm}
+                      disabled={isSending}
+                    >
+                      {isSending ? 'Sending...' : 'Send Invoice'}
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-            
-            <div className="input-field">
-              <input
-                type="text"
-                value={recipientId}
-                onChange={(e) => setRecipientId(e.target.value)}
-                placeholder="e.g., 0192:12345678901"
-                required
-                disabled={isSending || (sendResult && sendResult.status === 'success')}
-              />
-              <small>The recipient must be registered on the Peppol network</small>
-            </div>
-            
-            <div className="modal-buttons">
-              <button
-                className="modal-button cancel"
-                onClick={handleSendCancel}
-              >
-                Close
-              </button>
-              {(!sendResult || sendResult.status !== 'success') && (
-                <button
-                  className="send-peppol-button"
-                  onClick={handleSendConfirm}
-                  disabled={isSending}
-                >
-                  {isSending ? 'Sending...' : 'Send Invoice'}
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}

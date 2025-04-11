@@ -990,32 +990,44 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
             </div>
             
             <div className="form-actions">
-              {!editMode ? (<button 
-                className="form-button primary" 
-                onClick={() => {
-                  setMessage(null);
-                  setValidationWarnings([]);
-                  setSelectedSchemas([]);
-                  setCreatedInvoice(null);
-                  setSubmittedValues(null);
-                  setSendingResult(null);
-                }}
-              >
-                Create Another Invoice
-              </button>) : (<button 
-                className="form-button primary" 
-                onClick={() => {
-                  setMessage(null);
-                  setValidationWarnings([]);
-                  setSelectedSchemas([]);
-                  setCreatedInvoice(null);
-                  setSubmittedValues(null);
-                  setSendingResult(null);
-                  history.push(`/invoices/${createdInvoice.invoiceId}`);
-                }}
-              >
-                Back to Invoice
-              </button>)}
+              {!editMode ? (
+                <>
+                  <button 
+                    className="form-button primary" 
+                    onClick={() => {
+                      setMessage(null);
+                      setValidationWarnings([]);
+                      setSelectedSchemas([]);
+                      setCreatedInvoice(null);
+                      setSubmittedValues(null);
+                      setSendingResult(null);
+                    }}
+                  >
+                    Create Another Invoice
+                  </button>
+                  <button 
+                    className="form-button secondary" 
+                    onClick={() => history.push('/dashboard?tab=overview')}
+                  >
+                    Back to Dashboard
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className="form-button primary" 
+                  onClick={() => {
+                    setMessage(null);
+                    setValidationWarnings([]);
+                    setSelectedSchemas([]);
+                    setCreatedInvoice(null);
+                    setSubmittedValues(null);
+                    setSendingResult(null);
+                    history.push(`/invoices/${createdInvoice.invoiceId}`);
+                  }}
+                >
+                  Back to Invoice
+                </button>
+              )}
             </div>
           </div>
         ) : (

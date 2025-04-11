@@ -10,12 +10,14 @@ const invoiceSendingService = {
    * @param {string} recipientId - Peppol participant ID of recipient
    * @param {string} [apiKey] - User-specific Peppol API key (optional)
    * @param {string} [apiUrl] - User-specific Peppol API URL (optional)
+   * @param {string} [sendEndpoint] - User-specific send endpoint path (optional)
    * @returns {Promise<Object>} Delivery confirmation
    */
-  sendInvoice: async (ublXml, recipientId, apiKey, apiUrl) => {
+  sendInvoice: async (ublXml, recipientId, apiKey, apiUrl, sendEndpoint) => {
     // Get the base URL and API key from parameters or environment variables
     const PEPPOL_API_URL = apiUrl || process.env.PEPPOL_API_URL;
     const API_KEY = apiKey || process.env.PEPPOL_API_KEY;
+    const SEND_ENDPOINT = sendEndpoint || process.env.PEPPOL_SEND_ENDPOINT || 'send';
     
     if (!PEPPOL_API_URL || !API_KEY) {
       throw new Error('Peppol API URL or API key not configured');
@@ -24,9 +26,14 @@ const invoiceSendingService = {
     console.log(`Sending invoice to recipient: ${recipientId}`);
     
     try {
+      // Construct the full URL, handling trailing/leading slashes
+      const baseUrl = PEPPOL_API_URL.endsWith('/') ? PEPPOL_API_URL.slice(0, -1) : PEPPOL_API_URL;
+      const endpoint = SEND_ENDPOINT.startsWith('/') ? SEND_ENDPOINT : `/${SEND_ENDPOINT}`;
+      const fullUrl = `${baseUrl}${endpoint}`;
+
       // Send to Peppol Access Point
       const response = await axios.post(
-        `${PEPPOL_API_URL}/send`,
+        fullUrl,
         {
           invoice: ublXml,
           recipient: recipientId,
@@ -74,12 +81,14 @@ const invoiceSendingService = {
    * @param {string} deliveryId - Invoice delivery ID
    * @param {string} [apiKey] - User-specific Peppol API key (optional)
    * @param {string} [apiUrl] - User-specific Peppol API URL (optional)
+   * @param {string} [statusEndpoint] - User-specific status endpoint path (optional)
    * @returns {Promise<Object>} Delivery status
    */
-  checkDeliveryStatus: async (deliveryId, apiKey, apiUrl) => {
+  checkDeliveryStatus: async (deliveryId, apiKey, apiUrl, statusEndpoint) => {
     // Get the base URL and API key from parameters or environment variables
     const PEPPOL_API_URL = apiUrl || process.env.PEPPOL_API_URL;
     const API_KEY = apiKey || process.env.PEPPOL_API_KEY;
+    const STATUS_ENDPOINT = statusEndpoint || process.env.PEPPOL_STATUS_ENDPOINT || 'status';
     
     if (!PEPPOL_API_URL || !API_KEY) {
       throw new Error('Peppol API URL or API key not configured');
@@ -88,8 +97,13 @@ const invoiceSendingService = {
     console.log(`Checking delivery status for: ${deliveryId}`);
     
     try {
+      // Construct the full URL, handling trailing/leading slashes
+      const baseUrl = PEPPOL_API_URL.endsWith('/') ? PEPPOL_API_URL.slice(0, -1) : PEPPOL_API_URL;
+      const endpoint = STATUS_ENDPOINT.startsWith('/') ? STATUS_ENDPOINT : `/${STATUS_ENDPOINT}`;
+      const fullUrl = `${baseUrl}${endpoint}/${deliveryId}`;
+
       const response = await axios.get(
-        `${PEPPOL_API_URL}/status/${deliveryId}`,
+        fullUrl,
         {
           headers: {
             'Authorization': `Bearer ${API_KEY}`,
