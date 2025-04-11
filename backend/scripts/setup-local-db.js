@@ -43,10 +43,12 @@ const createInvoicesTable = async () => {
   const params = {
     TableName: 'invoices',
     KeySchema: [
-      { AttributeName: 'InvoiceID', KeyType: 'HASH' }
+      { AttributeName: 'InvoiceID', KeyType: 'HASH' },
+      { AttributeName: 'UserID', KeyType: 'RANGE' }
     ],
     AttributeDefinitions: [
-      { AttributeName: 'InvoiceID', AttributeType: 'S' }
+      { AttributeName: 'InvoiceID', AttributeType: 'S' },
+      { AttributeName: 'UserID', AttributeType: 'S' }
     ],
     ProvisionedThroughput: {
       ReadCapacityUnits: 5,

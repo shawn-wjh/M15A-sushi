@@ -11,7 +11,7 @@ const currencyService = {
   getExchangeRates: async () => {
     // The API URL with API key
     const CURRENCY_API_URL = 'https://api.freecurrencyapi.com/v1/latest';
-    const API_KEY = process.env.CURRENCY_API_KEY || 'fca_live_3nycuKvr5fPePE1xDoVjeNFlfHMayVzVqaxt8Rax';
+    const API_KEY = process.env.CURRENCY_API_KEY;
     
     // Set AUD as the base currency
     const url = `${CURRENCY_API_URL}?apikey=${API_KEY}&base_currency=AUD`;

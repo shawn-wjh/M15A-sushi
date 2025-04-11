@@ -12,6 +12,10 @@
   --transition-slow: 0.5s ease;
   --transition-medium: 0.3s ease;
   --transition-fast: 0.2s ease;
+  --card-background: var(--gray);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --input-background: var(--dark-gray);
+  --placeholder-color: #666666;
 }
 
 .invoice-form-container {
@@ -779,4 +783,142 @@
 
 .padding-bottom {
   padding-bottom: 10px;
+}
+
+/* Peppol Sending Section */
+.peppol-sending-section {
+  background-color: var(--card-background);
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 30px;
+  color: var(--white);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.peppol-sending-section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  color: var(--white);
+  font-weight: 600;
+}
+
+.peppol-sending-section p {
+  color: var(--light-gray);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.peppol-form {
+  margin-top: 15px;
+}
+
+.peppol-form input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-background);
+  color: var(--white);
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.peppol-form input::placeholder {
+  color: var(--placeholder-color);
+}
+
+.peppol-form input:focus {
+  border-color: var(--accent-red);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+}
+
+.peppol-form small {
+  display: block;
+  color: var(--light-gray);
+  font-style: italic;
+  margin-bottom: 15px;
+}
+
+.send-peppol-button {
+  background-color: var(--accent-red);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.send-peppol-button:hover {
+  background-color: #ff1f14;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+.send-peppol-button:disabled {
+  background-color: rgba(255, 59, 48, 0.5);
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-peppol-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.delivery-details {
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.delivery-details .detail-item {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.delivery-details .detail-label {
+  font-weight: 600;
+  width: 100px;
+  flex-shrink: 0;
+  color: var(--light-gray);
+}
+
+.delivery-details .detail-value {
+  flex: 1;
+  color: var(--white);
+}
+
+.peppol-not-configured {
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin-bottom: 15px;
+  border-left: 3px solid var(--accent-red);
+}
+
+.sending-result {
+  padding: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.sending-result.success {
+  background-color: rgba(76, 217, 100, 0.15);
+  border: 1px solid rgba(76, 217, 100, 0.3);
+  color: var(--accent-green);
+}
+
+.sending-result.error {
+  background-color: rgba(255, 59, 48, 0.1);
+  border-left: 4px solid var(--accent-red);
+  color: var(--accent-red);
 }

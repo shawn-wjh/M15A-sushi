@@ -564,33 +564,51 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1100;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  background-color: var(--gray);
+  background-color: var(--dark-gray);
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   max-width: 400px;
   width: 90%;
   text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modal-content h3 {
   color: var(--white);
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
+  margin: 0 0 1.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .modal-content p {
-  color: var(--light-white);
-  margin: 0 0 1.5rem 0;
+  color: var(--light-gray);
+  margin: 0 0 2rem 0;
   font-size: 1rem;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .modal-buttons {
@@ -600,37 +618,65 @@
 }
 
 .modal-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   border: none;
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .modal-button.cancel {
-  background-color: var(--dark-gray);
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--white);
-  border: 1px solid var(--light-gray);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-button.cancel:hover {
-  border-color: var(--white);
-  background-color: var(--gray);
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .modal-button.delete {
-  background-color: rgba(255, 59, 48, 0.15);
-  color: var(--accent-red);
-  border: 1px solid rgba(255, 59, 48, 0.3);
+  background-color: var(--accent-red);
+  color: var(--white);
+  border: none;
 }
 
 .modal-button.delete:hover {
-  background-color: rgba(255, 59, 48, 0.25);
+  background-color: #ff4b40;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
 }
 
+.send-peppol-button {
+  background-color: var(--accent-red);
+  color: var(--white);
+  border: none;
+  padding: 0.875rem 1.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
 
+.send-peppol-button:hover {
+  background-color: #ff4b40;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+.send-peppol-button:disabled {
+  background-color: var(--light-gray);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 /* Position pagination at the bottom of the container */
 .invoice-pagination {

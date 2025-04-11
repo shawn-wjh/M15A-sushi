@@ -332,4 +332,157 @@
   .invoice-view-container {
     padding: 1rem;
   }
+}
+
+/* Send Modal Styles */
+.input-field {
+  margin: 15px 0;
+}
+
+.input-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 5px;
+  background-color: var(--dark-gray);
+  color: var(--white);
+}
+
+.input-field small {
+  color: var(--light-gray);
+  display: block;
+  font-style: italic;
+}
+
+.sending-result {
+  padding: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.sending-result.success {
+  background-color: rgba(76, 217, 100, 0.15);
+  border: 1px solid rgba(76, 217, 100, 0.3);
+  color: var(--accent-green);
+}
+
+.sending-result.error {
+  background-color: rgba(255, 59, 48, 0.1);
+  border-left: 4px solid var(--accent-red);
+  color: var(--accent-red);
+}
+
+.delivery-details {
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.delivery-details .detail-item {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.delivery-details .detail-label {
+  font-weight: 600;
+  width: 100px;
+  flex-shrink: 0;
+  color: var(--light-gray);
+}
+
+.delivery-details .detail-value {
+  flex: 1;
+  color: var(--white);
+}
+
+.modal-button.send {
+  background-color: var(--accent-red);
+  color: white;
+}
+
+.modal-button.send:hover {
+  background-color: #ff1f14;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+.modal-button.send:disabled {
+  background-color: rgba(255, 59, 48, 0.5);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.modal-content {
+  background-color: var(--gray);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
+  width: 90%;
+}
+
+.modal-content h3 {
+  color: var(--white);
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.modal-content p {
+  color: var(--light-white);
+  margin: 0 0 1.5rem 0;
+  font-size: 1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  min-width: 100px;
+}
+
+.modal-button.cancel {
+  background-color: var(--dark-gray);
+  color: var(--white);
+  border: 1px solid var(--light-gray);
+}
+
+.modal-button.cancel:hover {
+  border-color: var(--white);
+  background-color: var(--gray);
+}
+
+.modal-button.delete {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+}
+
+.modal-button.delete:hover {
+  background-color: rgba(255, 59, 48, 0.25);
 } 

@@ -204,4 +204,28 @@ router.put('/:invoiceid', invoiceController.updateInvoice);
  */
 router.delete('/:invoiceid', invoiceController.deleteInvoice);
 
+/**
+ * Send invoice to recipient via Peppol network
+ * @route POST /v1/invoices/:invoiceid/send
+ * @param {string} invoiceid.path.required - Invoice ID
+ * @param {string} recipientId.body.required - Peppol participant ID of recipient
+ * @returns {object} 200 - Delivery confirmation
+ */
+router.post(
+  '/:invoiceid/send',
+  invoiceController.getInvoice,
+  invoiceController.sendInvoice
+);
+
+/**
+ * Check delivery status of sent invoice
+ * @route GET /v1/invoices/delivery/:deliveryId
+ * @param {string} deliveryId.path.required - Delivery ID
+ * @returns {object} 200 - Delivery status
+ */
+router.get(
+  '/delivery/:deliveryId',
+  invoiceController.checkDeliveryStatus
+);
+
 module.exports = router;

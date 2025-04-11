@@ -10,6 +10,7 @@ const {
 const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
 const { checkUserId } = require('../middleware/helperFunctions');
+const invoiceSendingService = require('../externalAPI/invoiceSendingService/invoiceSendingService');
 
 // Initialize DynamoDB Client
 const dbClient = createDynamoDBClient();
@@ -335,6 +336,7 @@ const invoiceController = {
 
       if (next) {
         req.body.xml = xml;
+        req.invoice = Items[0];
         next();
       } else {
         return res.status(200).set('Content-Type', 'application/xml').send(xml);
@@ -607,6 +609,127 @@ const invoiceController = {
       return res.status(500).json({
         status: 'error',
         error: error.message
+      });
+    }
+  },
+
+  /**
+   * Send invoice to recipient via Peppol network
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  sendInvoice: async (req, res) => {
+    try {
+      const { recipientId } = req.body;
+      const userId = req.user.userId;
+      
+      if (!recipientId) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Recipient ID is required'
+        });
+      }
+      
+      // Get user's Peppol settings
+      const getUserParams = {
+        TableName: Tables.USERS,
+        Key: { 
+          UserID: userId 
+        }
+      };
+      
+      const userResult = await dbClient.send(new QueryCommand(getUserParams));
+      
+      if (!userResult.Items || userResult.Items.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'User not found'
+        });
+      }
+      
+      const user = userResult.Items[0];
+      const peppolSettings = user.peppolSettings;
+      
+      // Check if user has configured Peppol
+      if (!peppolSettings || !peppolSettings.isConfigured) {
+        // Fall back to system-wide Peppol settings if user hasn't configured their own
+        console.log('Using system Peppol settings - user has not configured Peppol');
+      }
+      
+      // Invoice XML should be available from the getInvoice middleware
+      const invoiceXml = req.invoice.invoice;
+      
+      // Use user's Peppol settings if available, otherwise fall back to system settings
+      const result = await invoiceSendingService.sendInvoice(
+        invoiceXml, 
+        recipientId,
+        peppolSettings?.apiKey,
+        peppolSettings?.apiUrl
+      );
+      
+      return res.status(200).json({
+        status: 'success',
+        message: 'Invoice sent successfully',
+        deliveryId: result.deliveryId,
+        timestamp: result.timestamp
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to send invoice',
+        details: error.message
+      });
+    }
+  },
+
+  /**
+   * Check delivery status of sent invoice
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  checkDeliveryStatus: async (req, res) => {
+    try {
+      const { deliveryId } = req.params;
+      const userId = req.user.userId;
+      
+      // Get user's Peppol settings
+      const getUserParams = {
+        TableName: Tables.USERS,
+        Key: { 
+          UserID: userId 
+        }
+      };
+      
+      const userResult = await dbClient.send(new QueryCommand(getUserParams));
+      
+      if (!userResult.Items || userResult.Items.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'User not found'
+        });
+      }
+      
+      const user = userResult.Items[0];
+      const peppolSettings = user.peppolSettings;
+      
+      // Check delivery status using user's Peppol settings if available
+      const result = await invoiceSendingService.checkDeliveryStatus(
+        deliveryId,
+        peppolSettings?.apiKey,
+        peppolSettings?.apiUrl
+      );
+      
+      return res.status(200).json({
+        status: 'success',
+        deliveryId: result.deliveryId,
+        deliveryStatus: result.status,
+        deliveredAt: result.deliveredAt
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to check delivery status',
+        details: error.message
       });
     }
   }

@@ -7,6 +7,7 @@ import './Dashboard.css';
 import InvoiceForm from './InvoiceForm';
 import InvoiceList from './invoiceList/InvoiceList';
 import AppLayout from './AppLayout';
+import PeppolSettings from './PeppolSettings';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -14,6 +15,22 @@ const Dashboard = () => {
   const location = useLocation();
   const [activeSection, setActiveSection] = useState(location.state?.section || 'overview');
   const history = useHistory();
+  const [activeSettingsTab, setActiveSettingsTab] = useState('peppol');
+
+  // Parse URL query parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    const settingsParam = searchParams.get('settings');
+    
+    if (tabParam === 'settings') {
+      setActiveSection('settings');
+      
+      if (settingsParam) {
+        setActiveSettingsTab(settingsParam);
+      }
+    }
+  }, [location.search]);
 
   useEffect(() => {
     // Check if user is logged in
@@ -266,28 +283,159 @@ const Dashboard = () => {
     return (
       <div className="settings-section">
         <h2>Account Settings</h2>
-        <p>Settings functionality will be implemented soon.</p>
         
-        <div className="settings-placeholder">
-          <div className="settings-option">
-            <h3>Personal Information</h3>
-            <p>Update your personal details and contact information</p>
-          </div>
+        <div className="settings-tabs">
+          <button 
+            className={`tab-button ${activeSettingsTab === 'account' ? 'active' : ''}`}
+            onClick={() => setActiveSettingsTab('account')}
+          >
+            Account Information
+          </button>
+          <button 
+            className={`tab-button ${activeSettingsTab === 'security' ? 'active' : ''}`}
+            onClick={() => setActiveSettingsTab('security')}
+          >
+            Security
+          </button>
+          <button 
+            className={`tab-button ${activeSettingsTab === 'peppol' ? 'active' : ''}`}
+            onClick={() => setActiveSettingsTab('peppol')}
+          >
+            Peppol Integration
+          </button>
+        </div>
+        
+        <div className="settings-content">
+          {activeSettingsTab === 'peppol' && <PeppolSettings />}
           
-          <div className="settings-option">
-            <h3>Password & Security</h3>
-            <p>Manage your password and security preferences</p>
-          </div>
+          {activeSettingsTab === 'account' && (
+            <div className="settings-placeholder">
+              <div className="settings-option">
+                <h3>Personal Information</h3>
+                <p>Update your personal details and contact information</p>
+                <div className="form-field" style={{ marginTop: '20px' }}>
+                  <label htmlFor="name">Full Name</label>
+                  <input type="text" id="name" defaultValue={user?.name || ''} placeholder="Enter your full name" />
+                </div>
+                <div className="form-field">
+                  <label htmlFor="email">Email Address</label>
+                  <input type="email" id="email" defaultValue={user?.email || ''} placeholder="Enter your email" />
+                </div>
+                <div className="form-field">
+                  <label htmlFor="company">Company Name</label>
+                  <input type="text" id="company" defaultValue="" placeholder="Enter your company name" />
+                </div>
+                <button className="btn btn-primary" style={{ marginTop: '15px' }}>Save Changes</button>
+              </div>
+              
+              <div className="settings-option">
+                <h3>Business Information</h3>
+                <p>Update your business details for invoicing</p>
+                <div className="form-field" style={{ marginTop: '20px' }}>
+                  <label htmlFor="business-id">Business ID</label>
+                  <input type="text" id="business-id" placeholder="Enter your business ID" />
+                </div>
+                <div className="form-field">
+                  <label htmlFor="tax-id">Tax ID / VAT Number</label>
+                  <input type="text" id="tax-id" placeholder="Enter your tax ID" />
+                </div>
+                <div className="form-field">
+                  <label htmlFor="address">Business Address</label>
+                  <textarea id="address" rows="3" placeholder="Enter your business address"></textarea>
+                </div>
+                <button className="btn btn-primary" style={{ marginTop: '15px' }}>Save Changes</button>
+              </div>
+            </div>
+          )}
           
-          <div className="settings-option">
-            <h3>Notifications</h3>
-            <p>Configure your notification preferences</p>
-          </div>
-          
-          <div className="settings-option">
-            <h3>Billing & Payments</h3>
-            <p>Manage your subscription and payment methods</p>
-          </div>
+          {activeSettingsTab === 'security' && (
+            <div className="settings-placeholder">
+              <div className="settings-option">
+                <h3>Password Management</h3>
+                <p>Change your password to maintain account security</p>
+                <form autoComplete="off" method="post">
+                  {/* Hidden field to prevent autofill */}
+                  <input type="text" name="username" style={{ display: 'none' }} />
+                  <input type="password" name="password" style={{ display: 'none' }} />
+                  
+                  <div className="form-field" style={{ marginTop: '20px' }}>
+                    <label htmlFor="current-password">Current Password</label>
+                    <input 
+                      type="password" 
+                      id="current-password" 
+                      name="current-password"
+                      placeholder="Enter your current password" 
+                      autoComplete="off"
+                      className="settings-input"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="new-password">New Password</label>
+                    <input 
+                      type="password" 
+                      id="new-password" 
+                      name="new-password"
+                      placeholder="Enter your new password" 
+                      autoComplete="off"
+                      className="settings-input"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="confirm-password">Confirm New Password</label>
+                    <input 
+                      type="password" 
+                      id="confirm-password" 
+                      name="confirm-password"
+                      placeholder="Confirm your new password" 
+                      autoComplete="off"
+                      className="settings-input"
+                    />
+                  </div>
+                  <button type="button" className="settings-save-button">
+                    Update Password
+                  </button>
+                </form>
+              </div>
+              
+              <div className="settings-option">
+                <h3>Two-Factor Authentication</h3>
+                <p>Add an extra layer of security to your account</p>
+                
+                <div style={{ marginTop: '20px' }}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: '#ffffff', marginBottom: '8px' }}>
+                      Status: <span style={{ color: '#ff4b4b' }}>Disabled</span>
+                    </div>
+                    <div style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '16px' }}>
+                      Enhance your account security by enabling 2FA
+                    </div>
+                    <button className="settings-save-button" style={{ marginTop: '0' }}>
+                      Enable
+                    </button>
+                  </div>
+                </div>
+                
+                <div style={{ marginTop: '30px' }}>
+                  <h3>Session Management</h3>
+                  <p>Sign out from all other devices</p>
+                  
+                  <div style={{ marginTop: '16px' }}>
+                    <button 
+                      className="settings-save-button" 
+                      style={{ 
+                        backgroundColor: 'transparent', 
+                        border: '1px solid #ff4b4b', 
+                        color: '#ff4b4b', 
+                        marginTop: '0'
+                      }}
+                    >
+                      Sign out everywhere
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
