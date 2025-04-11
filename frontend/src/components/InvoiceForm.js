@@ -42,6 +42,9 @@ const initialFormState = {
   buyerPhone: '',
   supplierPhone: '',
   supplierEmail: '',
+  paymentAccountId: '',
+  paymentAccountName: '',
+  financialInstitutionBranchId: '',
   taxTotal: 0,
   taxRate: 10, // Default 10% GST for Australia
   items: [
@@ -110,6 +113,9 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
         supplierEmail: invoiceToEdit.supplier.email || '',
         taxTotal: parseFloat(invoiceToEdit.taxTotal) || 0,
         taxRate: parseFloat(invoiceToEdit.taxRate) || 10,
+        paymentAccountId: invoiceToEdit.paymentAccountId || '',
+        paymentAccountName: invoiceToEdit.paymentAccountName || '',
+        financialInstitutionBranchId: invoiceToEdit.financialInstitutionBranchId || '',
         items: invoiceToEdit.items?.length > 0 
           ? invoiceToEdit.items.map(item => ({
               name: item.name || '',
@@ -791,6 +797,9 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       buyerPhone: '+61 123 456 789',
       supplierPhone: '+61 987 654 321',
       supplierEmail: 'contact@examplesupplier.com',
+      paymentAccountId: '128394',
+      paymentAccountName: 'Company Pty Ltd',
+      financialInstitutionBranchId: '383-292',
       taxTotal: 0,
       taxRate: 10,
       items: [
@@ -1432,6 +1441,43 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                       Required for Peppol validation.
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>Payment Information</h3>
+                <div className="form-group">
+                  <label htmlFor="paymentMeans">Bank Account Number</label>
+                  <input
+                    type="text"
+                    id="paymentAccountId"
+                    name="paymentAccountId"
+                    value={formData.paymentAccountId}
+                    onChange={handleChange}
+                    placeholder="e.g., 128394"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="paymentMeans">Account Name</label>
+                  <input
+                    type="text"
+                    id="paymentAccountName"
+                    name="paymentAccountName"
+                    value={formData.paymentAccountName}
+                    onChange={handleChange}
+                    placeholder="e.g., Company Pty Ltd"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="paymentMeans">Branch Identifier</label>
+                  <input
+                    type="text"
+                    id="financialInstitutionBranchId"
+                    name="financialInstitutionBranchId"
+                    value={formData.financialInstitutionBranchId}
+                    onChange={handleChange}
+                    placeholder="e.g., 383-292"
+                  />
                 </div>
               </div>
               

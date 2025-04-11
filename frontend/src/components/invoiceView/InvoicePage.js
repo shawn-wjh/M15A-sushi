@@ -155,7 +155,6 @@ const InvoicePage = () => {
   };
 
   const handleEdit = () => {
-    
     // Redirect to InvoiceForm with the invoice data
     history.push({
       pathname: `/invoices/edit/${invoiceId}`,
@@ -647,6 +646,30 @@ const InvoicePage = () => {
                   <span className="tax-rate-symbol">%</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3>Payment Information</h3>
+            <div className="form-group">
+              <label htmlFor="paymentAccountId">
+                Bank Account Number
+              </label>
+              <div className="form-value">{invoice.paymentAccountId}</div>
+            </div>
+    
+            <div className="form-group">
+              <label htmlFor="paymentAccountId">
+                Account Name
+              </label>
+              <div className="form-value">{invoice.paymentAccountName}</div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="financialInstitutionBranchId">
+                Branch Identifier
+              </label>
+              <div className="form-value">{invoice.financialInstitutionBranchId}</div>
             </div>
           </div>
 
