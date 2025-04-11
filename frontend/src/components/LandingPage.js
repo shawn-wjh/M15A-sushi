@@ -210,7 +210,7 @@ const LandingPage = () => {
                 translateY: [40, 0],
                 scale: [0.6, 1.1, 1],
                 duration: 1500,
-                delay: 3000,
+                delay: 1800,
                 easing: 'easeOutElastic(1, .5)'
               });
           }
@@ -365,7 +365,7 @@ const LandingPage = () => {
             translateY: [40, 0],
             scale: [0.6, 1.1, 1],
             duration: 1500,
-            delay: 3000,
+            delay: 1800,
             easing: 'easeOutElastic(1, .5)'
           });
       }
