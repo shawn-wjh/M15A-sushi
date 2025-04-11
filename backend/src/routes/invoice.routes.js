@@ -228,4 +228,14 @@ router.get(
   invoiceController.checkDeliveryStatus
 );
 
+router.put(
+  '/share/:invoiceid',
+  invoiceController.shareInvoice
+);
+
+router.put(
+  '/unshare/:invoiceid',
+  invoiceController.unshareInvoice
+);
+
 module.exports = router;

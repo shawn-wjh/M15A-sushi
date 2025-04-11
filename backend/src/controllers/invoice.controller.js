@@ -11,6 +11,7 @@ const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
 const { checkUserId } = require('../middleware/helperFunctions');
 const invoiceSendingService = require('../externalAPI/invoiceSendingService/invoiceSendingService');
+const validator = require('validator');
 
 // Initialize DynamoDB Client
 const dbClient = createDynamoDBClient();
@@ -729,6 +730,109 @@ const invoiceController = {
       return res.status(500).json({
         status: 'error',
         message: 'Failed to check delivery status',
+        details: error.message
+      });
+    }
+  },
+
+  shareInvoice: async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      const { newRecipientEmails } = req.body;
+
+      // check if new recipient emails are valid
+      for (const email of newRecipientEmails) {
+        if (!validator.isEmail(email)) {
+          return res.status(400).json({
+            status: 'error',
+            message: 'Invalid recipient email: ' + email
+          });
+        }
+
+        const queryParams = {
+          TableName: Tables.USERS,
+          KeyConditionExpression: 'email = :email',
+          ExpressionAttributeValues: {
+            ':email': email
+          }
+        };
+
+        const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+        if (!Items || Items.length === 0) {
+          return res.status(400).json({
+            status: 'error',
+            message: 'Recipient email not found: ' + email
+          });
+        } 
+      }
+
+      // check if invoice exists
+      const queryParams = {
+        TableName: Tables.INVOICES,
+        KeyConditionExpression: 'InvoiceID = :InvoiceID',
+        ExpressionAttributeValues: {
+          ':InvoiceID': invoiceId
+        }
+      };
+
+      const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+      if (!Items || Items.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid invoice ID'
+        });
+      }
+
+      // check if user has access to the invoice
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Unauthorised Access'
+        });
+      }
+
+      const recipientEmails = Items[0].sharedWith.split(',');
+      recipientEmails.push(...newRecipientEmails);
+
+      const recipientString = recipientEmails.join(',');
+
+      const updateParams = {
+        TableName: Tables.INVOICES,
+        Key: {
+          InvoiceID: invoiceId,
+          UserID: req.user.userId
+        },
+        UpdateExpression: 'set sharedWith = :sharedWith',
+        ExpressionAttributeValues: {
+          ':sharedWith': recipientString
+        }
+      };
+
+      await dbClient.send(new UpdateCommand(updateParams));
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Invoice shared successfully',
+        sharedWith: recipientString
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to share invoice',
+        details: error.message
+      });
+    }
+  },
+
+  unshareInvoice: async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to unshare invoice',
         details: error.message
       });
     }
