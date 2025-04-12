@@ -16,6 +16,7 @@ const userRoutes = require('./routes/user.routes');
 const healthRoutes = require('./routes/health.routes');
 const orderRoutes = require('./routes/order.routes');
 const currencyRoutes = require('./routes/currency.routes');
+const xmlDatasetRoutes = require('./routes/xmldataset.routes');
 
 // Create Express app
 const app = express();
@@ -67,6 +68,7 @@ app.use('/v2/invoices', v2InvoiceRoutes);
 app.use('/v1/users', userRoutes);
 app.use('/v1/admin/orders', orderRoutes);
 app.use('/v1/currency', currencyRoutes);
+app.use('/v1/xml-dataset', xmlDatasetRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.resolve(__dirname, '../../public')));

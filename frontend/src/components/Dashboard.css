@@ -1100,4 +1100,18 @@ body {
   -webkit-box-shadow: 0 0 0 1000px #333333 inset !important;
   -webkit-text-fill-color: #ffffff !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+.xml-upload-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--gray);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.xml-upload-section h2 {
+  color: var(--white);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
 } 

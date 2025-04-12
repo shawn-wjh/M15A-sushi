@@ -8,6 +8,7 @@ import InvoiceForm from './InvoiceForm';
 import InvoiceList from './invoiceList/InvoiceList';
 import AppLayout from './AppLayout';
 import PeppolSettings from './PeppolSettings';
+import XMLDatasetUpload from './XMLDatasetUpload';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -200,7 +201,7 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <div className="charts-container">
+        <div className="chart-container">
           <div className="chart-card">
             <h3>Monthly Invoice Trend</h3>
             <div className="chart-placeholder">
@@ -243,37 +244,9 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        
-        <div className="recent-activity">
-          <h3>Recent Activity</h3>
-          <div className="activity-list">
-            <div className="activity-item">
-              <div className="activity-icon created"></div>
-              <div className="activity-content">
-                <div className="activity-title">Invoice #1234 Created</div>
-                <div className="activity-time">Today, 2:30 PM</div>
-              </div>
-              <div className="activity-amount">$850.00</div>
-            </div>
-            
-            <div className="activity-item">
-              <div className="activity-icon paid"></div>
-              <div className="activity-content">
-                <div className="activity-title">Invoice #1233 Paid</div>
-                <div className="activity-time">Yesterday, 11:15 AM</div>
-              </div>
-              <div className="activity-amount">$1,240.00</div>
-            </div>
-            
-            <div className="activity-item">
-              <div className="activity-icon sent"></div>
-              <div className="activity-content">
-                <div className="activity-title">Invoice #1232 Sent</div>
-                <div className="activity-time">Jun 14, 2023</div>
-              </div>
-              <div className="activity-amount">$650.00</div>
-            </div>
-          </div>
+
+        <div className="xml-upload-section">
+          <XMLDatasetUpload />
         </div>
       </div>
     );

@@ -157,35 +157,50 @@
   color: var(--menu-text-dark);
 }
 
-.menu-create-invoice-button-container {
-  padding: 20px;
+.menu-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 24px;
 }
 
-.menu-create-invoice-button {
-  width: 100%;
-  background-color: var(--menu-primary-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+.menu-create-invoice-button,
+.menu-upload-xml-button {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--menu-transition-speed);
+  transition: all 0.2s ease;
 }
 
-.menu-create-invoice-button:hover {
+.menu-create-invoice-button,
+.menu-upload-xml-button {
+  background-color: var(--menu-primary-color);
+  color: white;
+}
+
+.menu-create-invoice-button:hover,
+.menu-upload-xml-button:hover {
   background-color: var(--menu-primary-light);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
 }
 
-.menu-plus-icon {
-  margin-right: 8px;
-  font-size: 1.2rem;
-  font-weight: 300;
+.menu-plus-icon,
+.menu-upload-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 .menu-sidebar-nav {
