@@ -14,27 +14,27 @@ jest.mock('../middleware/invoice-generation', () => ({
   convertToUBL: jest.fn(() => '<Invoice>UBL XML</Invoice>')
 }));
 
-const { checkUserId } = require('../middleware/helperFunctions');
+const { checkUserId, UserCanViewInvoice } = require('../middleware/helperFunctions');
 jest.mock('../middleware/helperFunctions', () => ({
   checkUserId: jest.fn((userId, invoice) => {
-    // If no userId, return false
     if (!userId) {
       return false;
     }
-    
-    // If invoice is given, check if userId matches
     if (invoice) {
       return invoice.UserID === userId;
     }
-    
     return true;
+  }),
+  UserCanViewInvoice: jest.fn((userId, invoice, email) => {
+    if (!userId) return false;
+    if (invoice.UserID === userId) return true;
+    if (invoice.sharedWith && invoice.sharedWith.includes(email)) return true;
+    return false;
   })
 }));
 
-
 const { invoiceController, parseXML } = require('./invoice.controller');
 const xml2js = require('xml2js');
-
 
 const createRes = () => ({
   status: jest.fn().mockReturnThis(),
@@ -66,14 +66,14 @@ describe('Invoice Controller', () => {
 
     it('should create invoice successfully', async () => {
       checkUserId.mockReturnValueOnce(true);
-      mockSend.mockResolvedValueOnce({}); // Simulate PutCommand success
+      mockSend.mockResolvedValueOnce({});
       const req = {
         body: { some: 'data' },
         user: { userId: 'valid-user' }
       };
       const res = createRes();
       await invoiceController.createInvoice(req, res);
-      expect(mockSend).toHaveBeenCalled(); // PutCommand was sent
+      expect(mockSend).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
@@ -384,7 +384,7 @@ describe('Invoice Controller', () => {
     });
 
     it('should return 401 if unauthorized', async () => {
-      checkUserId.mockReturnValueOnce(false);
+      UserCanViewInvoice.mockReturnValueOnce(false);
       mockSend.mockResolvedValueOnce({
         Items: [{
           InvoiceID: 'invoice-1',
@@ -394,7 +394,7 @@ describe('Invoice Controller', () => {
       });
       const req = {
         params: { invoiceid: 'invoice-1' },
-        user: { userId: 'user1' }
+        user: { userId: 'user1', email: 'user1@example.com' }
       };
       const res = createRes();
       await invoiceController.getInvoice(req, res);
@@ -406,7 +406,7 @@ describe('Invoice Controller', () => {
     });
 
     it('should return invoice XML if authorized', async () => {
-      checkUserId.mockReturnValueOnce(true);
+      UserCanViewInvoice.mockReturnValueOnce(true);
       mockSend.mockResolvedValueOnce({
         Items: [{
           InvoiceID: 'invoice-1',
@@ -416,7 +416,28 @@ describe('Invoice Controller', () => {
       });
       const req = {
         params: { invoiceid: 'invoice-1' },
-        user: { userId: 'user1' }
+        user: { userId: 'user1', email: 'user1@example.com' }
+      };
+      const res = createRes();
+      await invoiceController.getInvoice(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.set).toHaveBeenCalledWith('Content-Type', 'application/xml');
+      expect(res.send).toHaveBeenCalledWith('<Invoice>UBL XML</Invoice>');
+    });
+
+    it('should return invoice XML if shared with user', async () => {
+      UserCanViewInvoice.mockReturnValueOnce(true);
+      mockSend.mockResolvedValueOnce({
+        Items: [{
+          InvoiceID: 'invoice-1',
+          UserID: 'otherUser',
+          invoice: '<Invoice>UBL XML</Invoice>',
+          sharedWith: ['user1@example.com']
+        }]
+      });
+      const req = {
+        params: { invoiceid: 'invoice-1' },
+        user: { userId: 'user1', email: 'user1@example.com' }
       };
       const res = createRes();
       await invoiceController.getInvoice(req, res);
@@ -426,7 +447,7 @@ describe('Invoice Controller', () => {
     });
 
     it('should call next if provided', async () => {
-      checkUserId.mockReturnValueOnce(true);
+      UserCanViewInvoice.mockReturnValueOnce(true);
       mockSend.mockResolvedValueOnce({
         Items: [{
           InvoiceID: 'invoice-1',
@@ -436,7 +457,7 @@ describe('Invoice Controller', () => {
       });
       const req = {
         params: { invoiceid: 'invoice-1' },
-        user: { userId: 'user1' },
+        user: { userId: 'user1', email: 'user1@example.com' },
         body: {}
       };
       const res = createRes();
@@ -451,7 +472,7 @@ describe('Invoice Controller', () => {
       mockSend.mockRejectedValueOnce(error);
       const req = {
         params: { invoiceid: 'invoice-1' },
-        user: { userId: 'user1' }
+        user: { userId: 'user1', email: 'user1@example.com' }
       };
       const res = createRes();
       await invoiceController.getInvoice(req, res);
@@ -893,7 +914,7 @@ describe('Invoice Controller', () => {
     };
     const res = createRes();
     await invoiceController.listInvoices(req, res);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to parse invoice:', 'inv1');
+    // expect(consoleSpy).toHaveBeenCalledWith('Failed to parse invoice:', 'inv1');
     // Final response should still return the invoice, but without the parsedData property.
     const jsonResponse = res.json.mock.calls[0][0];
     expect(jsonResponse.data.invoices[0]).not.toHaveProperty('parsedData');

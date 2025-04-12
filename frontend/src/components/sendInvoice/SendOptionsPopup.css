@@ -1,0 +1,193 @@
+.send-options-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  backdrop-filter: blur(4px);
+}
+
+.send-options-content {
+  background-color: var(--dark-gray);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: modalAppear 0.3s ease-out;
+  position: relative;
+}
+
+.send-options-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #ff0000;
+  border-radius: 4px 4px 0 0;
+}
+
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--light-gray);
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.close-button:hover {
+  color: var(--white);
+}
+
+.send-options-title {
+  color: var(--white);
+  margin: 0 0 1.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.send-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.send-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+}
+
+.send-option:hover {
+  transform: translateY(-2px);
+}
+
+.send-option-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff0000, #000000);
+  color: var(--white);
+  font-size: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.send-option-icon img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.send-option-icon::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+.send-option-icon.peppol {
+  background: linear-gradient(135deg, #ff0000, #000000);
+  padding: 8px;
+}
+
+.send-option-icon.peppol::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="white"/><circle cx="12" cy="12" r="8" fill="none" stroke="%23ff0000" stroke-width="1"/><circle cx="12" cy="12" r="5" fill="none" stroke="%23ff0000" stroke-width="1"/><circle cx="12" cy="12" r="2" fill="%23ff0000"/></svg>');
+  background-size: 60%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.send-option-label {
+  color: var(--light-gray);
+  font-size: 0.9rem;
+}
+
+.send-options-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.send-options-button {
+  padding: 0.875rem 1.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+
+.send-options-button.cancel {
+  background-color: var(--dark-gray);
+  color: var(--white);
+  border: 1px solid var(--gray);
+}
+
+.send-options-button.cancel:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}

@@ -16,4 +16,16 @@ const checkUserId = (userId, invoice) => {
   return true;
 };
 
-module.exports = { checkUserId };
+const UserCanViewInvoice = (userId, invoice, userEmail) => {
+  if (checkUserId(userId, invoice)) {
+    return true;
+  }
+
+  if (invoice.sharedWith) {
+    return invoice.sharedWith.includes(userEmail);
+  }
+
+  return false;
+};
+
+module.exports = { checkUserId, UserCanViewInvoice };

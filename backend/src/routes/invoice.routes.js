@@ -170,6 +170,13 @@ router.post(
 );
 
 /**
+ * List shared invoices
+ * @route GET /v1/invoices/shared
+ * @returns {object} 200 - Array of shared invoices
+ */
+router.get('/list/shared', invoiceController.listSharedInvoices);
+
+/**
  * List all invoices
  * @route GET /v1/invoices
  * @returns {object} 200 - Array of invocies
