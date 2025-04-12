@@ -58,6 +58,13 @@ const Dashboard = () => {
     }
   }, [location.state]);
 
+  // Add useEffect to handle location state
+  useEffect(() => {
+    if (location.state?.fromShared) {
+      setActiveSection('shared-invoices');
+    }
+  }, [location.state]);
+
   const handleLogout = () => {
     // Clear user data
     localStorage.removeItem('user');
@@ -85,6 +92,8 @@ const Dashboard = () => {
         return renderOverviewSection();
       case 'invoices':
         return renderInvoiceListSection();
+      case 'shared-invoices':
+        return renderSharedInvoicesSection();
       case 'createInvoice':
         history.push('/invoices/create');
       case 'settings':
@@ -109,6 +118,14 @@ const Dashboard = () => {
     return (
       <div className="invoice-list-section">
         <InvoiceList />
+      </div>
+    );
+  };
+
+  const renderSharedInvoicesSection = () => {
+    return (
+      <div className="invoice-list-section">
+        <InvoiceList displaySharedInvoices={true} />
       </div>
     );
   };

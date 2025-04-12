@@ -99,6 +99,13 @@ const MenuBar = ({ activeSection, setActiveSection }) => {
             <span>View Invoices</span>
           </li>
           <li 
+            className={activeSection === 'shared-invoices' ? 'menu-active' : ''} 
+            onClick={() => handleSectionChange('shared-invoices')}
+          >
+            <div className="menu-nav-icon menu-shared-invoices-icon"></div>
+            <span>Shared With Me</span>
+          </li>
+          <li 
             className={activeSection === 'settings' ? 'menu-active' : ''} 
             onClick={() => handleSectionChange('settings')}
           >

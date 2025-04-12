@@ -9,8 +9,9 @@ const {
 } = require('@aws-sdk/lib-dynamodb');
 const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
-const { checkUserId } = require('../middleware/helperFunctions');
+const { checkUserId, UserCanViewInvoice } = require('../middleware/helperFunctions');
 const invoiceSendingService = require('../externalAPI/invoiceSendingService/invoiceSendingService');
+const validator = require('validator');
 
 // Initialize DynamoDB Client
 const dbClient = createDynamoDBClient();
@@ -20,7 +21,6 @@ const parseXML = async (xmlString) => {
   try {
     // First, check if we have valid XML
     if (!xmlString || typeof xmlString !== 'string') {
-      console.error('Invalid XML string:', xmlString);
       return null;
     }
 
@@ -43,8 +43,6 @@ const parseXML = async (xmlString) => {
                           null
     };
   } catch (error) {
-    console.error('Error parsing XML:', error);
-    console.error('XML content:', xmlString);
     return null;
   }
 };
@@ -108,7 +106,6 @@ const invoiceController = {
         });
       }
     } catch (error) {
-      console.error('Error creating invoice:', error);
       return res.status(500).json({
         status: 'error',
         message: 'Failed to create invoice',
@@ -284,7 +281,6 @@ const invoiceController = {
         }
       });
     } catch (error) {
-      console.error('Error in listInvoices:', error);
       return res.status(500).json({
         status: 'error',
         message: 'Failed to list invoices',
@@ -323,14 +319,13 @@ const invoiceController = {
       }
 
       // check if allowed access
-      if (!checkUserId(req.user.userId, Items[0])) {
-        console.log('Unauthorised Access');
+      if (!UserCanViewInvoice(req.user.userId, Items[0], req.user.email)) {
         return res.status(401).json({
           status: 'error',
           error: 'Unauthorised Access'
         });
       }
-
+      
       // access the invoice from the dynamoDB response
       const xml = Items[0].invoice;
 
@@ -456,7 +451,6 @@ const invoiceController = {
         invoiceId: invoiceId
       });
     } catch (error) {
-      console.error('Error updating invoice:', error);
       return res.status(400).json({
         status: 'error',
         error: error.message
@@ -732,6 +726,275 @@ const invoiceController = {
         details: error.message
       });
     }
+  },
+
+  shareInvoice: async (req, res) => {
+    try {
+      const { invoiceid } = req.params;
+      const { recipients } = req.body;
+
+      // check if new recipient emails are valid
+      for (const email of recipients) {
+        if (!validator.isEmail(email)) {
+          return res.status(400).json({
+            status: 'error',
+            message: 'Invalid recipient email: ' + email
+          });
+        }
+      }
+
+      // check if invoice exists
+      const queryParams = {
+        TableName: Tables.INVOICES,
+        KeyConditionExpression: 'InvoiceID = :InvoiceID',
+        ExpressionAttributeValues: {
+          ':InvoiceID': invoiceid
+        }
+      };
+
+      const { Items } = await dbClient.send(new QueryCommand(queryParams));
+
+      if (!Items || Items.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid invoice ID'
+        });
+      }
+
+      // check if user has access to the invoice
+      if (!checkUserId(req.user.userId, Items[0])) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Unauthorised Access'
+        });
+      }
+
+      // Initialize sharedWith array with existing recipients or empty array if field doesn't exist
+      const existingRecipients = Items[0].sharedWith || [];
+      
+      const recipientEmails = [...existingRecipients, ...recipients];
+
+      // Remove any duplicates
+      const uniqueRecipients = [...new Set(recipientEmails)];
+
+      const updateParams = {
+        TableName: Tables.INVOICES,
+        Key: {
+          InvoiceID: invoiceid,
+          UserID: req.user.userId
+        },
+        UpdateExpression: 'set sharedWith = :sharedWith',
+        ExpressionAttributeValues: {
+          ':sharedWith': uniqueRecipients
+        },
+        ReturnValues: 'ALL_NEW' // This will return the updated item
+      };
+
+      const result = await dbClient.send(new UpdateCommand(updateParams));
+
+      if (!result) {
+        throw new Error('Failed to share invoice');
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Invoice shared successfully',
+        sharedWith: uniqueRecipients
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to share invoice',
+        details: error.message
+      });
+    }
+  },
+
+  unshareInvoice: async (req, res) => {
+    try {
+      console.log('unshareInvoice called');
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to unshare invoice',
+        details: error.message
+      });
+    }
+  },
+
+  /**
+   * List all invoices shared with the current user
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  listSharedInvoices: async (req, res) => {
+   // Extract and validate query parameters first, before any async operations
+   let { limit, offset, sort, order } = req.query;
+    
+   // Validate limit
+   limit = parseInt(limit, 10) || 10;
+   if (limit < 1) {
+     return res.status(400).json({
+       status: 'error',
+       error: 'limit must be greater than 0'
+     });
+   }
+
+   // Validate offset
+   offset = parseInt(offset, 10) || 0;
+   if (offset < 0) {
+     return res.status(400).json({
+       status: 'error',
+       error: 'offset must be at least 0'
+     });
+   }
+
+   // Validate sort and order if provided
+   const validSortFields = ['issuedate', 'duedate', 'total'];
+   const validOrders = ['asc', 'desc'];
+   
+   if (sort && !validSortFields.includes(sort.toLowerCase())) {
+     return res.status(400).json({
+       status: 'error',
+       error: 'invalid sort query'
+     });
+   }
+   
+   if (order && !validOrders.includes(order.toLowerCase())) {
+     return res.status(400).json({
+       status: 'error',
+       error: 'invalid order query'
+     });
+   }
+
+   try {
+     let { limit, offset, sort, order } = req.query;
+     limit = parseInt(limit, 10) || 10;
+     offset = parseInt(offset, 10) || 0;
+
+     if (limit < 1) {
+       return res.status(400).json({
+         status: 'error',
+         error: 'limit must be greater than 0'
+       });
+     }
+     if (offset < 0) {
+       return res.status(400).json({
+         status: 'error',
+         error: 'offset must be at least 0'
+       });
+     }
+
+     // Validate sort and order if provided
+     const validSortFields = ['issuedate', 'duedate', 'total'];
+     const validOrders = ['asc', 'desc'];
+     if (sort && !validSortFields.includes(sort.toLowerCase())) {
+       return res.status(400).json({
+         status: 'error',
+         error: 'invalid sort query'
+       });
+     }
+     if (order && !validOrders.includes(order.toLowerCase())) {
+       return res.status(400).json({
+         status: 'error',
+         error: 'invalid order query'
+       });
+     }
+
+     const userEmail = req.user.email;
+
+     const scanParams = {
+       TableName: Tables.INVOICES,
+       FilterExpression: 'contains(sharedWith, :userEmail)',
+       ExpressionAttributeValues: {
+         ':userEmail': userEmail
+       }
+     };
+
+     const { Items } = await dbClient.send(new ScanCommand(scanParams));
+     const allInvoices = Items || [];
+
+     // Parse all invoices first
+     const parsedInvoices = await Promise.all(allInvoices.map(async (invoice) => {
+       const parsedXML = await parseXML(invoice.invoice);
+       if (!parsedXML) {
+         console.error('Failed to parse invoice:', invoice.InvoiceID);
+       }
+       return {
+         ...invoice,
+         parsedData: parsedXML || {
+           IssueDate: null,
+           DueDate: null,
+           TotalPayableAmount: null
+         }
+       };
+     }));
+
+     if (sort) {
+       parsedInvoices.sort((a, b) => {
+         const aData = a.parsedData || {};
+         const bData = b.parsedData || {};
+
+         let aValue, bValue;
+
+         switch (sort.toLowerCase()) {
+           case 'issuedate':
+             aValue = aData.IssueDate ? new Date(aData.IssueDate) : null;
+             bValue = bData.IssueDate ? new Date(bData.IssueDate) : null;
+             break;
+           case 'duedate':
+             aValue = aData.DueDate ? new Date(aData.DueDate) : null;
+             bValue = bData.DueDate ? new Date(bData.DueDate) : null;
+             break;
+           case 'total':
+             aValue = aData.TotalPayableAmount._ ? parseFloat(aData.TotalPayableAmount._) : null;
+             bValue = bData.TotalPayableAmount._ ? parseFloat(bData.TotalPayableAmount._) : null;
+             break;
+           default:
+             return 0;
+         }
+
+         // Handle null values
+         if (aValue === null && bValue === null) return 0;
+         if (aValue === null) return 1;
+         if (bValue === null) return -1;
+
+         // Compare valid values
+         return aValue - bValue;
+       });
+
+       if (order && order.toLowerCase() === 'desc') {
+         parsedInvoices.reverse();
+       }
+     }
+
+     // remove the parsedData field from the invoices after sorting
+     parsedInvoices.forEach(invoice => {
+       delete invoice.parsedData;
+     });
+
+     // apply offset and limit
+     const maxOffset = parsedInvoices.length;
+     if (offset > maxOffset) {
+       offset = maxOffset - limit; // default to limit
+     }
+
+     const paginatedInvoices = parsedInvoices.slice(offset, offset + limit);
+
+     return res.status(200).json({
+       status: 'success',
+       data: {
+         count: parsedInvoices.length,
+         invoices: paginatedInvoices
+       }
+     });
+   } catch (error) {
+     return res.status(500).json({
+       status: 'error',
+       message: 'Failed to list invoices',
+       details: error.message
+     });
+   }
   }
 };
 

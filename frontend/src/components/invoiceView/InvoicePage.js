@@ -1,4 +1,4 @@
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import apiClient from "../../utils/axiosConfig";
 import { useState, useEffect } from "react";
 import getCookie from "../../utils/cookieHelper";
@@ -12,6 +12,8 @@ const API_URL = "/v1/invoices";
 
 const InvoicePage = () => {
   const history = useHistory();
+  const location = useLocation();
+  const fromShared = location.state?.fromShared || false;
   const [invoiceId, setInvoiceId] = useState(null);
   const [invoice, setInvoice] = useState(null);
   const [message, setMessage] = useState(null);
@@ -19,11 +21,11 @@ const InvoicePage = () => {
   const [rawXml, setRawXml] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isValidationPopUpOpen, setIsValidationPopUpOpen] = useState(false);
-  
+
   // Peppol related state
   const [peppolConfigured, setPeppolConfigured] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
-  const [recipientId, setRecipientId] = useState('');
+  const [recipientId, setRecipientId] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
 
@@ -46,6 +48,7 @@ const InvoicePage = () => {
       }
 
       try {
+        console.log("invoiceId in invoice page", invoiceId);
         const response = await apiClient.get(`${API_URL}/${invoiceId}`);
 
         // Extract invoice information from XML
@@ -54,7 +57,7 @@ const InvoicePage = () => {
         setInvoice(invoiceData);
         setRawXml(response.data);
         setMessage(null);
-        
+
         // Check if Peppol is configured
         checkPeppolSettings();
       } catch (error) {
@@ -72,15 +75,18 @@ const InvoicePage = () => {
   // Function to check if Peppol is configured
   const checkPeppolSettings = async () => {
     try {
-      const response = await apiClient.get('/v1/users/peppol-settings');
-      
-      if (response.data?.status === 'success' && response.data?.data?.isConfigured) {
+      const response = await apiClient.get("/v1/users/peppol-settings");
+
+      if (
+        response.data?.status === "success" &&
+        response.data?.data?.isConfigured
+      ) {
         setPeppolConfigured(true);
       } else {
         setPeppolConfigured(false);
       }
     } catch (error) {
-      console.error('Failed to check Peppol settings:', error);
+      console.error("Failed to check Peppol settings:", error);
       setPeppolConfigured(false);
     }
   };
@@ -131,7 +137,7 @@ const InvoicePage = () => {
       // setMessage({ type: "success", text: "Invoice successfully deleted" });
 
       // Redirect to invoice list
-      history.push("/dashboard", { section: "invoices" }); 
+      history.push("/dashboard", { section: "invoices" });
     } catch (error) {
       console.error("Error deleting invoice:", error);
       setMessage({
@@ -158,10 +164,10 @@ const InvoicePage = () => {
     // Redirect to InvoiceForm with the invoice data
     history.push({
       pathname: `/invoices/edit/${invoiceId}`,
-      state: { invoice: invoice }
+      state: { invoice: invoice },
     });
   };
-  
+
   // Peppol send functions
   const handleSend = () => {
     if (!peppolConfigured) {
@@ -172,48 +178,49 @@ const InvoicePage = () => {
       setSendResult(null);
     }
   };
-  
+
   const handleSendCancel = () => {
     setShowSendModal(false);
-    setRecipientId('');
+    setRecipientId("");
     setSendResult(null);
   };
-  
+
   const handleSendConfirm = async () => {
     if (!recipientId) {
       setSendResult({
-        status: 'error',
-        message: 'Recipient ID is required'
+        status: "error",
+        message: "Recipient ID is required",
       });
       return;
     }
-    
+
     setIsSending(true);
     setSendResult(null);
-    
+
     try {
       const response = await apiClient.post(`${API_URL}/${invoiceId}/send`, {
-        recipientId: recipientId
+        recipientId: recipientId,
       });
-      
-      if (response.data?.status === 'success') {
+
+      if (response.data?.status === "success") {
         setSendResult({
-          status: 'success',
-          message: 'Invoice sent successfully via Peppol network',
+          status: "success",
+          message: "Invoice sent successfully via Peppol network",
           deliveryId: response.data.deliveryId,
-          timestamp: response.data.timestamp
+          timestamp: response.data.timestamp,
         });
       } else {
         setSendResult({
-          status: 'error',
-          message: 'Failed to send invoice'
+          status: "error",
+          message: "Failed to send invoice",
         });
       }
     } catch (error) {
-      console.error('Error sending invoice:', error);
+      console.error("Error sending invoice:", error);
       setSendResult({
-        status: 'error',
-        message: error.response?.data?.message || 'Failed to send invoice via Peppol'
+        status: "error",
+        message:
+          error.response?.data?.message || "Failed to send invoice via Peppol",
       });
     } finally {
       setIsSending(false);
@@ -222,7 +229,7 @@ const InvoicePage = () => {
 
   if (!invoice) {
     return (
-      <AppLayout activeSection="invoices">
+      <AppLayout activeSection={fromShared ? "shared-invoices" : "invoices"}>
         <div className="invoice-view-container">
           {message && (
             <div className={`message ${message.type}`}>{message.text}</div>
@@ -233,7 +240,7 @@ const InvoicePage = () => {
   }
 
   return (
-    <AppLayout activeSection="invoices">
+    <AppLayout activeSection={fromShared ? "shared-invoices" : "invoices"}>
       {isValidationPopUpOpen && (
         <ValidationSchemaPopUp
           onClose={() => setIsValidationPopUpOpen(false)}
@@ -246,7 +253,7 @@ const InvoicePage = () => {
           onClick={() =>
             history.push({
               pathname: "/dashboard",
-              state: { section: "invoices" },
+              state: { section: fromShared ? "shared-invoices" : "invoices" },
             })
           }
           title="Back to Invoice List"
@@ -278,6 +285,7 @@ const InvoicePage = () => {
                 className="action-button validate"
                 onClick={handleValidate}
                 title="Validate Invoice"
+                disabled={fromShared}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -320,6 +328,7 @@ const InvoicePage = () => {
                 className="action-button"
                 onClick={handleEdit}
                 title="Edit Invoice"
+                disabled={fromShared}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -339,7 +348,12 @@ const InvoicePage = () => {
               <button
                 className="action-button"
                 onClick={handleSend}
-                title={peppolConfigured ? "Send via Peppol" : "Configure Peppol Settings"}
+                title={
+                  peppolConfigured
+                    ? "Send via Peppol"
+                    : "Configure Peppol Settings"
+                }
+                disabled={fromShared}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -381,6 +395,7 @@ const InvoicePage = () => {
                 className="action-button delete"
                 onClick={handleDelete}
                 title="Delete Invoice"
+                disabled={fromShared}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -408,9 +423,7 @@ const InvoicePage = () => {
               <h3>Delete Confirmation</h3>
               <p>Are you sure you want to delete this invoice?</p>
               <div className="modal-buttons">
-                {message && (
-                  <div className="error-message">{message.text}</div>
-                )}
+                {message && <div className="error-message">{message.text}</div>}
                 <button
                   className="modal-button cancel"
                   onClick={handleCancelDelete}
@@ -427,33 +440,37 @@ const InvoicePage = () => {
             </div>
           </div>
         )}
-        
+
         {showSendModal && (
           <div className="modal-overlay">
             <div className="modal-content">
               <h3>Send Invoice via Peppol</h3>
               <p>Enter the recipient's Peppol ID to send this invoice:</p>
-              
+
               {sendResult && (
                 <div className={`sending-result ${sendResult.status}`}>
                   <p>{sendResult.message}</p>
-                  {sendResult.status === 'success' && sendResult.deliveryId && (
+                  {sendResult.status === "success" && sendResult.deliveryId && (
                     <div className="delivery-details">
                       <div className="detail-item">
                         <span className="detail-label">Delivery ID:</span>
-                        <span className="detail-value">{sendResult.deliveryId}</span>
+                        <span className="detail-value">
+                          {sendResult.deliveryId}
+                        </span>
                       </div>
                       {sendResult.timestamp && (
                         <div className="detail-item">
                           <span className="detail-label">Timestamp:</span>
-                          <span className="detail-value">{new Date(sendResult.timestamp).toLocaleString()}</span>
+                          <span className="detail-value">
+                            {new Date(sendResult.timestamp).toLocaleString()}
+                          </span>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
               )}
-              
+
               <div className="input-field">
                 <input
                   type="text"
@@ -461,11 +478,15 @@ const InvoicePage = () => {
                   onChange={(e) => setRecipientId(e.target.value)}
                   placeholder="e.g., 0192:12345678901"
                   required
-                  disabled={isSending || (sendResult && sendResult.status === 'success')}
+                  disabled={
+                    isSending || (sendResult && sendResult.status === "success")
+                  }
                 />
-                <small>The recipient must be registered on the Peppol network</small>
+                <small>
+                  The recipient must be registered on the Peppol network
+                </small>
               </div>
-              
+
               <div className="modal-buttons">
                 <button
                   className="modal-button cancel"
@@ -473,13 +494,13 @@ const InvoicePage = () => {
                 >
                   Close
                 </button>
-                {(!sendResult || sendResult.status !== 'success') && (
+                {(!sendResult || sendResult.status !== "success") && (
                   <button
                     className="send-peppol-button"
                     onClick={handleSendConfirm}
                     disabled={isSending}
                   >
-                    {isSending ? 'Sending...' : 'Send Invoice'}
+                    {isSending ? "Sending..." : "Send Invoice"}
                   </button>
                 )}
               </div>
@@ -534,9 +555,7 @@ const InvoicePage = () => {
 
             <div className="form-group">
               <label>Street Address</label>
-              <div className="form-value">
-                {invoice.buyer.address.street}
-              </div>
+              <div className="form-value">{invoice.buyer.address.street}</div>
             </div>
 
             <div className="form-row">
@@ -626,9 +645,7 @@ const InvoicePage = () => {
 
                 <div className="item-total">
                   Item Total: {item.currency}{" "}
-                  {(parseFloat(item.count) * parseFloat(item.cost)).toFixed(
-                    2
-                  )}
+                  {(parseFloat(item.count) * parseFloat(item.cost)).toFixed(2)}
                 </div>
               </div>
             ))}
@@ -652,16 +669,12 @@ const InvoicePage = () => {
           <div className="form-section">
             <h3>Payment Information</h3>
             <div className="form-group">
-              <label htmlFor="paymentAccountId">
-                Bank Account Number
-              </label>
+              <label htmlFor="paymentAccountId">Bank Account Number</label>
               <div className="form-value">{invoice.paymentAccountId}</div>
             </div>
-    
+
             <div className="form-group">
-              <label htmlFor="paymentAccountId">
-                Account Name
-              </label>
+              <label htmlFor="paymentAccountId">Account Name</label>
               <div className="form-value">{invoice.paymentAccountName}</div>
             </div>
 
@@ -669,7 +682,9 @@ const InvoicePage = () => {
               <label htmlFor="financialInstitutionBranchId">
                 Branch Identifier
               </label>
-              <div className="form-value">{invoice.financialInstitutionBranchId}</div>
+              <div className="form-value">
+                {invoice.financialInstitutionBranchId}
+              </div>
             </div>
           </div>
 
@@ -690,8 +705,7 @@ const InvoicePage = () => {
                   </span>
                 </div>
                 <span className="summary-value">
-                  {invoice.currency}{" "}
-                  {parseFloat(invoice.taxTotal).toFixed(2)}
+                  {invoice.currency} {parseFloat(invoice.taxTotal).toFixed(2)}
                 </span>
               </div>
 

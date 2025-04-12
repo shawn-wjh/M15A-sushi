@@ -13,7 +13,7 @@ import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPo
 
 const API_URL = "/v1/invoices/list";
 
-const InvoiceList = () => {
+const InvoiceList = ({ displaySharedInvoices = false }) => {
   const history = useHistory();
   const [message, setMessage] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -45,7 +45,12 @@ const InvoiceList = () => {
         offset: (currentPage - 1) * filters.limit,
       }).toString();
 
-      const response = await apiClient.get(`${API_URL}?${queryParams}`);
+      let response;
+      if (displaySharedInvoices) {
+        response = await apiClient.get(`${API_URL}/shared?${queryParams}`);
+      } else {
+        response = await apiClient.get(`${API_URL}?${queryParams}`);
+      }
 
       // case where user is not logged in
       if (response.status === 401) {
@@ -54,10 +59,18 @@ const InvoiceList = () => {
       }
 
       // case where user has no invoices
-      if (response.data.data.invoices.length === 0) {
+      if (
+        !response.data.data.invoices ||
+        response.data.data.invoices.length === 0
+      ) {
         setInvoices([]);
         setTotalInvoices(0);
-        setMessage({ type: "info", text: "No Invoices Created Yet" });
+        setMessage({
+          type: "info",
+          text: displaySharedInvoices
+            ? "No Shared Invoices"
+            : "No Invoices Created Yet",
+        });
         return;
       }
 
@@ -77,15 +90,29 @@ const InvoiceList = () => {
       console.error("Error fetching invoices:", error);
       if (error.response?.status === 401) {
         history.push("/login");
+      } else if (error.response?.status === 400) {
+        setMessage({
+          type: "error",
+          text:
+            error.response?.data?.message ||
+            "Invalid request. Please try again.",
+        });
       } else {
-        setMessage({ type: "error", text: "Failed to fetch invoices" });
+        setMessage({
+          type: "error",
+          text: error.response?.data?.message || "Failed to fetch invoices",
+        });
       }
+      setInvoices([]);
+      setTotalInvoices(0);
     }
   };
 
   useEffect(() => {
     fetchInvoices();
-  }, [filters, currentPage, history]);
+    // Reset to first page when switching between views
+    setCurrentPage(1);
+  }, [filters, currentPage, history, displaySharedInvoices]);
 
   const toggleInvoice = (invoiceId) => {
     setExpandedInvoices((prev) => {
@@ -263,6 +290,7 @@ const InvoiceList = () => {
               onViewXml={handleViewXml}
               formatDateTime={formatDateTime}
               formatDate={formatDate}
+              displaySharedInvoices={displaySharedInvoices}
             />
           ))}
         </ul>
@@ -293,42 +321,46 @@ const InvoiceList = () => {
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </ActionBarIcon>
-                <ActionBarIcon
-                  onClick={handleValidateSelected}
-                  title="Validate Selected"
-                  className="validate"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                </ActionBarIcon>
-                <ActionBarIcon
-                  onClick={handleDeleteSelected}
-                  title="Delete Selected"
-                  className="delete"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                  </svg>
-                </ActionBarIcon>
+                {!displaySharedInvoices && (
+                  <>
+                    <ActionBarIcon
+                      onClick={handleValidateSelected}
+                      title="Validate Selected"
+                      className="validate"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    </ActionBarIcon>
+                    <ActionBarIcon
+                      onClick={handleDeleteSelected}
+                      title="Delete Selected"
+                      className="delete"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
+                    </ActionBarIcon>
+                  </>
+                )}
                 <ActionBarIcon
                   onClick={handleDownloadSelected}
                   title="Download Selected"
