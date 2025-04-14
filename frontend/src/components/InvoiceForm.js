@@ -5,6 +5,10 @@ import OrderSearch from './OrderSearch';
 import { schemaNameMap } from './invoiceValidationResult/validationResults';
 import { useHistory, useLocation } from 'react-router-dom';
 import AppLayout from './AppLayout';
+import { FaDownload, FaPaperPlane } from 'react-icons/fa';
+import SendOptionsPopup from './sendInvoice/SendOptionsPopup';
+import ExportInvoicePopup from './exportInvoice/ExportInvoicePopup';
+
 // Determine base URL based on environment
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
@@ -78,11 +82,8 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
   const [itemConversionInfo, setItemConversionInfo] = useState([]);
   const [itemErrorMessages, setItemErrorMessages] = useState([]);
   
-  // Peppol related state variables
-  const [peppolConfigured, setPeppolConfigured] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [recipientId, setRecipientId] = useState('');
-  const [sendingResult, setSendingResult] = useState(null);
+  const [exportInvoicePopupOpen, setExportInvoicePopupOpen] = useState(false);
+  const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 
   // Initialize form with invoice data if in edit mode
   useEffect(() => {
@@ -822,75 +823,31 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     calculateTotal(exampleData.items, exampleData.taxRate);
   };
 
-  // Check if user has Peppol settings configured
-  useEffect(() => {
-    if (createdInvoice) {
-      checkPeppolSettings();
-    }
-  }, [createdInvoice]);
-
-  // Function to check if Peppol is configured
-  const checkPeppolSettings = async () => {
-    try {
-      const response = await apiClient.get('/v1/users/peppol-settings');
-      
-      if (response.data?.status === 'success' && response.data?.data?.isConfigured) {
-        setPeppolConfigured(true);
-      } else {
-        setPeppolConfigured(false);
-      }
-    } catch (error) {
-      console.error('Failed to check Peppol settings:', error);
-      setPeppolConfigured(false);
-    }
+  const handleExportInvoice = async (e) => {
+    setExportInvoicePopupOpen(true);
   };
 
   // Function to handle invoice sending via Peppol
   const handleSendInvoice = async (e) => {
-    e.preventDefault();
-    
-    if (!recipientId || !createdInvoice?.invoiceId) {
-      setMessage({
-        type: 'error',
-        text: 'Recipient ID is required to send the invoice'
-      });
-      return;
-    }
-    
-    setIsSending(true);
-    setSendingResult(null);
-    
-    try {
-      const response = await apiClient.post(`/v1/invoices/${createdInvoice.invoiceId}/send`, {
-        recipientId: recipientId
-      });
-      
-      if (response.data?.status === 'success') {
-        setSendingResult({
-          status: 'success',
-          message: 'Invoice sent successfully via Peppol network',
-          deliveryId: response.data.deliveryId,
-          timestamp: response.data.timestamp
-        });
-      } else {
-        setSendingResult({
-          status: 'error',
-          message: 'Failed to send invoice'
-        });
-      }
-    } catch (error) {
-      console.error('Error sending invoice:', error);
-      setSendingResult({
-        status: 'error',
-        message: error.response?.data?.message || 'Failed to send invoice via Peppol'
-      });
-    } finally {
-      setIsSending(false);
-    }
+    setSendInvoicePopupOpen(true);
   };
 
   return (
     <AppLayout activeSection="createInvoice">
+      {exportInvoicePopupOpen && (
+        <ExportInvoicePopup
+          invoiceId={createdInvoice.invoiceId}
+          onClose={() => setExportInvoicePopupOpen(false)}
+        />
+      )}
+
+      {sendInvoicePopupOpen && (
+        <SendOptionsPopup
+          invoiceId={createdInvoice.invoiceId}
+          onClose={() => setSendInvoicePopupOpen(false)}
+        />
+      )}
+      
       <div className="invoice-form-container">
         {createdInvoice ? (
           <div className="invoice-success">
@@ -944,59 +901,30 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
               )}
             </div>
 
-            {/* Peppol sending section */}
-            <div className="peppol-sending-section">
-              <h3>Send via Peppol Network</h3>
-              
-              {!peppolConfigured ? (
-                <div className="peppol-not-configured">
-                  <p>To send this invoice via the Peppol network, you need to configure your Peppol Access Point credentials first.</p>
-                  <button 
-                    className="send-peppol-button"
-                    onClick={() => history.push('/dashboard?tab=settings&settings=peppol')}
-                  >
-                    Configure Peppol Settings
-                  </button>
+
+            {/* if validated, give option to export or send invoice */}
+            { wasValidated && (
+              <div className="form-actions centered">
+                <div
+                  className="form-button circle-icon"
+                  onClick={handleExportInvoice}
+                >
+                  <div className="circle-icon">
+                    <FaDownload />
+                  </div>
+                  <span className="circle-icon-label">Export Invoice</span>
                 </div>
-              ) : sendingResult ? (
-                <div className={`sending-result ${sendingResult.status}`}>
-                  <p>{sendingResult.message}</p>
-                  {sendingResult.status === 'success' && (
-                    <div className="delivery-details">
-                      <div className="detail-item">
-                        <span className="detail-label">Delivery ID:</span>
-                        <span className="detail-value">{sendingResult.deliveryId}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Timestamp:</span>
-                        <span className="detail-value">{new Date(sendingResult.timestamp).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  )}
+                <div
+                  className="form-button circle-icon"
+                  onClick={handleSendInvoice}
+                >
+                  <div className="circle-icon">
+                    <FaPaperPlane />
+                  </div>
+                  <span className="circle-icon-label">Send Invoice</span>
                 </div>
-              ) : (
-                <div className="peppol-form">
-                  <p>Enter the recipient's Peppol ID to send this invoice:</p>
-                  <form onSubmit={handleSendInvoice}>
-                    <input
-                      type="text"
-                      value={recipientId}
-                      onChange={(e) => setRecipientId(e.target.value)}
-                      placeholder="e.g., 0192:12345678901"
-                      required
-                    />
-                    <small>The recipient must be registered on the Peppol network to receive this invoice.</small>
-                    <button 
-                      type="submit" 
-                      className="send-peppol-button"
-                      disabled={isSending}
-                    >
-                      {isSending ? 'Sending...' : 'Send Invoice'}
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
             
             <div className="form-actions">
               {!editMode ? (
@@ -1009,10 +937,22 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                       setSelectedSchemas([]);
                       setCreatedInvoice(null);
                       setSubmittedValues(null);
-                      setSendingResult(null);
                     }}
                   >
                     Create Another Invoice
+                  </button>
+                  <button 
+                    className="form-button secondary"
+                    onClick={() => {
+                      setMessage(null);
+                      setValidationWarnings([]);
+                      setSelectedSchemas([]);
+                      setCreatedInvoice(null);
+                      setSubmittedValues(null);
+                      history.push(`/invoices/${createdInvoice.invoiceId}`);
+                    }}
+                  >
+                    View Invoice
                   </button>
                   <button 
                     className="form-button secondary" 
@@ -1030,7 +970,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                     setSelectedSchemas([]);
                     setCreatedInvoice(null);
                     setSubmittedValues(null);
-                    setSendingResult(null);
                     history.push(`/invoices/${createdInvoice.invoiceId}`);
                   }}
                 >
