@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { FaEnvelope, FaTimes } from "react-icons/fa";
-import "./EmailSendOption.css";
+import "./SushiSendOption.css";
 import apiClient from "../../utils/axiosConfig";
 
 const EmailSendOption = ({ onClose, invoiceId }) => {

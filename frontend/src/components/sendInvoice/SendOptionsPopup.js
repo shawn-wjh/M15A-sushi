@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./SendOptionsPopup.css";
 import { FaNetworkWired, FaEnvelope, FaFileInvoice } from "react-icons/fa";
 import PeppolSendOption from "./PeppolSendOption";
-import EmailSendOption from "./EmailSendOption";
+import SushiSendOption from "./SushiSendOption";
 
 const SendOptionsPopup = ({ onClose, invoiceId }) => {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -21,14 +21,17 @@ const SendOptionsPopup = ({ onClose, invoiceId }) => {
   }
 
   if (selectedOption === "email") {
+    alert("Email option not implemented yet");
+  }
+
+  if (selectedOption === "sushi") {
     return (
-      <EmailSendOption
+      <SushiSendOption
         invoiceId={invoiceId}
         onClose={() => setSelectedOption(null)}
       />
     );
   }
-
   return (
     <div className="send-options-overlay" onClick={onClose}>
       <div
