@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { createDynamoDBClient, Tables, createSESClient } = require('../config/database');
+const { createDynamoDBClient, Tables } = require('../config/database');
 const {
   PutCommand,
   ScanCommand,
@@ -13,7 +13,7 @@ const { checkUserId, UserCanViewInvoice } = require('../middleware/helperFunctio
 const validator = require('validator');
 const nodemailer = require('nodemailer');
 const config = require('../config/index');
-const path = require('path');
+const invoiceSendingService = require('../externalAPI/invoiceSendingService/invoiceSendingService');
 
 const dbClient = createDynamoDBClient();
 
