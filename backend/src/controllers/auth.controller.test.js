@@ -162,6 +162,7 @@ describe('Auth Controller', () => {
         {
           userId: mockUser.UserID,
           email: mockUser.email,
+          name: mockUser.name,
           role: mockUser.role
         },
         'test-secret',
