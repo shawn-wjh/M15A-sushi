@@ -50,6 +50,10 @@ const config = {
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     detailed: process.env.LOG_DETAILED === 'true' || false
+  },
+  email: {
+    email: process.env.GOOGLE_EMAIL,
+    password: process.env.GOOGLE_APP_PASSWORD
   }
 };
 

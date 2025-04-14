@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { createDynamoDBClient, Tables } = require('../config/database');
+const { createDynamoDBClient, Tables, createSESClient } = require('../config/database');
 const {
   PutCommand,
   ScanCommand,
@@ -10,10 +10,11 @@ const {
 const { convertToUBL } = require('../middleware/invoice-generation');
 const xml2js = require('xml2js');
 const { checkUserId, UserCanViewInvoice } = require('../middleware/helperFunctions');
-const invoiceSendingService = require('../externalAPI/invoiceSendingService/invoiceSendingService');
 const validator = require('validator');
+const nodemailer = require('nodemailer');
+const config = require('../config/index');
+const path = require('path');
 
-// Initialize DynamoDB Client
 const dbClient = createDynamoDBClient();
 
 // Helper function to parse XML safely
@@ -995,6 +996,115 @@ const invoiceController = {
        details: error.message
      });
    }
+  },
+
+  emailInvoice: async (req, res) => {
+    try {
+      const invoice = req.body.xml;
+      const invoiceId = req.params.invoiceid;
+      const senderName = req.user.name;
+      const senderEmail = req.user.email;
+      const recipientEmails = req.body.recipients;
+
+      if (!invoice || !invoiceId) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invoice or invoice ID not provided'
+        });
+      }
+
+      if (!senderName || !senderEmail) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Sender name or email missing'
+        });
+      }
+
+      if (!recipientEmails || recipientEmails.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'No recipients provided'
+        });
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: config.email.email,
+          pass: config.email.password,
+        }
+      });
+
+      
+      recipientEmails.forEach(async (recipientEmail) => {
+        const mailOptions = {
+          from: `${senderName} <${config.email.email}>`,
+          replyTo: senderEmail,
+          to: recipientEmail,
+          subject: 'Invoice Document',
+          text: 'Please find the attached invoice document.',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="margin-bottom: 20px;">
+                <p>Dear Recipient,</p>
+                <p>Please find the attached invoice document for your reference.</p>
+              </div>
+              
+              <div style="margin-bottom: 20px;">
+                <p>Best regards,<br>${senderName}</p>
+              </div>
+
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Sent from Sushi Invoice</p>
+              </div>
+
+              <div style="background: linear-gradient(to right, #ff3b30, #000); padding: 30px 20px; border-radius: 8px; color: #fff; text-align: center; margin-bottom: 30px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <div style="display: inline-block; font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #fff;">
+                    <span style="color: #fff;">Sushi</span>
+                    <span style="color: #ff3b30;">.</span>
+                    <span style="color: #fff;">Invoice</span>
+                  </div>
+                  <p style="margin-top: 10px; font-style: italic; font-size: 14px;">Complete eInvoicing Solution</p>
+                </div>
+                
+                <div style="text-align: center; font-size: 14px;">
+                  <p>Contact us: <a href="mailto:sushi.invoice@gmail.com" style="color: #007bff; text-decoration: none;">sushi.invoice@gmail.com</a></p>
+                </div>
+              </div>
+            </div>
+          `,
+          attachments: [
+            {
+              filename: `Invoice-${invoiceId}.xml`,
+              content: invoice,
+              contentType: 'application/xml'
+            }
+          ]
+        }
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Error sending email:', error);
+            throw new Error('Failed to send email');
+          } else {
+            console.log('Email sent:', info.response);
+            return res.status(200).json({
+              status: 'success',
+              message: 'Email sent successfully'
+            });
+          }
+        });
+      });
+
+    } catch (error) {
+      console.error('Error sending email:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to send email',
+        details: error.message
+      });
+    }
   }
 };
 

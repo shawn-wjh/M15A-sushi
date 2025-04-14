@@ -245,4 +245,17 @@ router.put(
   invoiceController.unshareInvoice
 );
 
+router.post(
+  '/:invoiceid/email',
+  invoiceController.getInvoice,
+  invoiceController.emailInvoice,
+  async (req, res) => {
+    console.log(req.body);
+    res.status(200).json({
+      status: 'success',
+      message: 'Email sent successfully'
+    });
+  }
+);
+
 module.exports = router;
