@@ -61,13 +61,13 @@ const EmailSendOption = ({ onClose, invoiceId }) => {
 
       if (response.status === 200) {
         setSuccess(true);
-        setMessage("Invoice shared successfully");
+        setMessage("Invoice sent successfully");
       } else {
-        setMessage("Failed to share invoice, please try again");
+        setMessage("Failed to send invoice, please try again");
         setError(response.data.error);
       }
     } catch (error) {
-      setMessage("Failed to share invoice, please try again");
+      setMessage("Failed to send invoice, please try again");
       setError(error.response?.data?.message || "An error occurred");
     } finally {
       setIsLoading(false);
@@ -119,7 +119,6 @@ const EmailSendOption = ({ onClose, invoiceId }) => {
                     className="email-input"
                   />
                 </div>
-                <small>Recipients must be registered in Sushi*</small>
                 {error && <div className="email-error">{error}</div>}
               </div>
 
