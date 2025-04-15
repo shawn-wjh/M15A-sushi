@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const openaiController = require('../controllers/openAI.controller');
 const auth = require('../middleware/auth');
@@ -10,10 +11,16 @@ const auth = require('../middleware/auth');
 // Apply auth middleware to all routes
 router.use(auth.verifyToken);
 
+// Ensure temp directory exists
+const tempDir = path.join(__dirname, '../temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../temp'));
+    cb(null, tempDir);
   },
   filename: function (req, file, cb) {
     const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;

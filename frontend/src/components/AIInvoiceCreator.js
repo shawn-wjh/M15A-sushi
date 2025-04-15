@@ -38,6 +38,10 @@ const AIInvoiceCreator = () => {
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
+    
+    // Auto-resize the textarea
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px';
   };
 
   const handleFileChange = (e) => {
@@ -79,6 +83,11 @@ const AIInvoiceCreator = () => {
     
     // Clear input
     setInput('');
+    
+    // Reset textarea height
+    if (e.target.querySelector('.chat-textarea')) {
+      e.target.querySelector('.chat-textarea').style.height = 'auto';
+    }
     
     // Process the message
     await processTextMessage(userMessage);
@@ -151,9 +160,11 @@ const AIInvoiceCreator = () => {
       const formData = new FormData();
       formData.append('image', file);
       
-      // Add conversation history to the form data
+      // Add conversation history to the form data - stringify properly
       const conversationHistory = messages.slice(1);
       formData.append('conversation', JSON.stringify(conversationHistory));
+      
+      console.log("Sending image with conversation history:", conversationHistory.length, "messages");
       
       const response = await apiClient.post('/v1/ai/image-to-invoice', formData, {
         headers: {
@@ -362,13 +373,19 @@ const AIInvoiceCreator = () => {
   };
 
   const isInvoiceDataComplete = (data) => {
-    // This function checks only required fields - payment information is recommended but not required
-    return ['buyer', 'supplier', 'items', 'issueDate', 'currency'].every(field => {
-      if (field === 'items') {
-        return data[field] && data[field].length > 0;
-      }
-      return !!data[field];
-    });
+    // Check if data exists
+    if (!data) return false;
+
+    // Check buyer and supplier required fields
+    const hasBuyer = data.buyer && data.buyer.name;
+    const hasSupplier = data.supplier && data.supplier.name;
+
+    // Check other required fields
+    const hasItems = data.items && data.items.length > 0;
+    const hasIssueDate = !!data.issueDate;
+    const hasCurrency = !!data.currency;
+
+    return hasBuyer && hasSupplier && hasItems && hasIssueDate && hasCurrency;
   };
 
   const getMissingFields = (data) => {
@@ -405,7 +422,7 @@ const AIInvoiceCreator = () => {
         key={index} 
         className={`chat-message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
       >
-        <div style={{ display: 'flex' }}>
+        <div className="message-container">
           <div className="message-avatar">
             {message.role === 'user' ? (
               <div className="user-avatar">👤</div>
@@ -414,6 +431,10 @@ const AIInvoiceCreator = () => {
             )}
           </div>
           <div className="message-content">
+            <div className="message-header">
+              <span className="message-sender">{message.role === 'user' ? 'You' : 'Sushi AI'}</span>
+              <span className="message-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
             {message.image && (
               <div className="message-image">
                 <img src={message.image} alt="Uploaded invoice" />
@@ -474,15 +495,6 @@ const AIInvoiceCreator = () => {
                   ) : (
                     <div className="invoice-action-buttons">
                       <button 
-                        className="continue-chat-button"
-                        onClick={() => {
-                          setInput("Please help me complete the missing information");
-                          setShowInvoicePreview(false);
-                        }}
-                      >
-                        Continue Chat
-                      </button>
-                      <button 
                         className="prefill-form-button"
                         onClick={handleCreateInvoice}
                       >
@@ -522,10 +534,14 @@ const AIInvoiceCreator = () => {
       <div className="ai-chat-container">
         <div className="chat-header">
           <h2>
-            <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>🍣</span>
+            <span className="logo-icon">🍣</span>
             Sushi AI Invoice Creator
+            <div className="status-indicator">
+              <span className="status-dot"></span>
+              <span className="status-text">Online</span>
+            </div>
           </h2>
-          <p>Chat with our AI to create invoices easily</p>
+          <p>Chat with our AI to create invoices easily and efficiently</p>
         </div>
         
         <div className="chat-messages">
@@ -561,12 +577,19 @@ const AIInvoiceCreator = () => {
                 <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <input 
-              type="text" 
+            <textarea 
               value={input} 
               onChange={handleInputChange} 
               placeholder="Describe the invoice you want to create..."
               disabled={isLoading}
+              rows="1"
+              className="chat-textarea"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
             />
             <button 
               type="submit" 

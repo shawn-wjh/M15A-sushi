@@ -29,20 +29,25 @@ const createInvoiceFromText = async (req, res) => {
         role: 'system',
         content: `You are Sushi AI 🍣, a friendly and helpful invoice creation assistant. 
         Your goal is to guide users through creating an invoice by asking smart follow-up questions and extracting clear, structured information from their input.
-
+        
         Be charming, sushi-themed, and conversational — like a sushi chef helping a customer build their perfect invoice roll. When enough info is collected, generate structured invoice data.
 
         🎯 Your mission:
-        - Extract ONLY what is explicitly given — never make up details.
-        - Ask friendly follow-up questions if any required information is missing.
-        - Always ask for payment information (account number, account name, branch ID).
-        - "As soon as you collect any valid invoice field (even just one), include the available structured data inside a
+        - "As soon as you collect any valid invoice field (even from first user input), include the available structured data inside a
         \\\`\\\`\\\`json code block. This allows the system to populate the invoice form in real time. 
-         Always include the latest collected fields in the JSON block, even if incomplete. 
+        - Always include the latest collected fields in the JSON block, even if incomplete. 
          Continue the conversation normally afterward."
+        - Always include the payment information in the JSON block, even if incomplete.
+        - IMPORTANT:Do not display the json object as text in message just output the json object.
+
 
         📝 Output format:
-        When you have enough to start forming the invoice, respond normally, **then include the data in a JSON code block like this**:
+        - Always output the JSON code block with the latest collected fields and ask for more details
+        if required 
+        - When all required fields are collected, let the user know all required field are collected
+        - If user chose to remove a field when all all collected data is present, then it should go back to displaying pre-fill invoivce
+        with collected data part.
+        **then include the data in a JSON code block like this**:
 
         \`\`\`json
         {
@@ -82,8 +87,8 @@ const createInvoiceFromText = async (req, res) => {
         "total": number (optional)
         }
         \`\`\`
-
-        Let’s roll some invoices, chef! 🍣`
+    
+        Let's roll some invoices, chef! 🍣`
       }
     ];
     
@@ -134,10 +139,13 @@ const createInvoiceFromText = async (req, res) => {
       // Continue without invoice data if parsing fails
     }
 
+    // Remove the JSON block for the user-facing message
+    const displayMessage = aiResponse.replace(/```json\s*([\s\S]*?)\s*```/, '').trim();
+
     // Return both the conversation response and any structured data
     return res.status(200).json({
       success: true,
-      message: aiResponse,
+      message: displayMessage,
       data: invoiceData,
       hasInvoiceData: invoiceData !== null
     });
@@ -158,6 +166,7 @@ const createInvoiceFromText = async (req, res) => {
  */
 const createInvoiceFromImage = async (req, res) => {
   try {
+    console.log("Processing image upload request");
     // Check if file exists in the request
     if (!req.file) {
       return res.status(400).json({
@@ -168,57 +177,88 @@ const createInvoiceFromImage = async (req, res) => {
 
     // Get the file path and conversation history
     const filePath = req.file.path;
-    const { conversation = [] } = req.body;
+    
+    // Parse conversation history from form data
+    let conversation = [];
+    try {
+      if (req.body.conversation) {
+        conversation = JSON.parse(req.body.conversation);
+        if (!Array.isArray(conversation)) {
+          console.log("Conversation is not an array, setting to empty array");
+          conversation = [];
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing conversation JSON:", error);
+      conversation = [];
+    }
 
     // Create a system prompt for invoice extraction
     let messages = [
       {
         role: 'system',
-        content: `You are Sushi AI, an invoice data extraction assistant with a friendly, helpful personality.
-        Analyze the provided invoice image and extract key information into a structured JSON format while maintaining a conversational approach.
+        content: `You are Sushi AI 🍣, a friendly and helpful invoice creation assistant. 
+        Your goal is to guide users through creating an invoice by asking smart follow-up questions and extracting clear, structured information from their input.
         
-        When you have extracted information, provide it in this JSON format along with your conversational response:
-        {
-          "invoiceId": string (optional),
-          "issueDate": YYYY-MM-DD (required),
-          "dueDate": YYYY-MM-DD (optional),
-          "currency": three-letter currency code (required),
-          "buyer": {
-            "name": string (required),
-            "address": {
-              "street": string (optional),
-              "country": two-letter country code (optional)
-            },
-            "phone": string (optional)
-          },
-          "supplier": {
-            "name": string (required),
-            "address": {
-              "street": string (optional),
-              "country": two-letter country code (optional)
-            },
-            "phone": string (optional),
-            "email": string (optional)
-          },
-          "paymentAccountId": string (optional, bank account number),
-          "paymentAccountName": string (optional, account name),
-          "financialInstitutionBranchId": string (optional, bank branch code or routing number),
-          "items": [
-            {
-              "name": string (required),
-              "count": number (required),
-              "cost": number (required),
-              "currency": three-letter currency code (optional)
-            }
-          ],
-          "taxRate": number (percentage, optional),
-          "total": number (optional, calculated)
-        }
-        
-        IMPORTANT: Always look for and include payment information (paymentAccountId, paymentAccountName, financialInstitutionBranchId) from the image. If you can't find this information, explicitly mention it's missing in your response so the user can provide it.
+        Be charming, sushi-themed, and conversational — like a sushi chef helping a customer build their perfect invoice roll. When enough info is collected, generate structured invoice data.
 
-        Only extract fields that you can confidently identify. Be friendly and explain what you found in the image.
-        If some information is missing or unclear, ask the user about it in a conversational way.`
+        🎯 Your mission:
+        - "As soon as you collect any valid invoice field (even from first user input), include the available structured data inside a
+        \\\`\\\`\\\`json code block. This allows the system to populate the invoice form in real time. 
+        - Always include the latest collected fields in the JSON block, even if incomplete. 
+         Continue the conversation normally afterward."
+        - Always include the payment information in the JSON block, even if incomplete.
+        - IMPORTANT:Do not display the json object as text in message just output the json object.
+
+
+        📝 Output format:
+        - Always output the JSON code block with the latest collected fields and ask for more details
+        if required 
+        - When all required fields are collected, let the user know all required field are collected
+        - If user chose to remove a field when all all collected data is present, then it should go back to displaying pre-fill invoivce
+        with collected data part.
+        **then include the data in a JSON code block like this**:
+
+        \`\`\`json
+        {
+        "invoiceId": "string (optional, can generate if not provided)",
+        "issueDate": "YYYY-MM-DD (required)",
+        "dueDate": "YYYY-MM-DD (optional)",
+        "currency": "three-letter currency code (required, default to USD)",
+        "buyer": {
+            "name": "string (required)",
+            "address": {
+            "street": "string (optional)",
+            "country": "two-letter country code (optional)"
+            },
+            "phone": "string (optional)"
+        },
+        "supplier": {
+            "name": "string (required)",
+            "address": {
+            "street": "string (optional)",
+            "country": "two-letter country code (optional)"
+            },
+            "phone": "string (optional)",
+            "email": "string (optional)"
+        },
+        "paymentAccountId": "string (optional)",
+        "paymentAccountName": "string (optional)",
+        "financialInstitutionBranchId": "string (optional)",
+        "items": [
+            {
+            "name": "string (required)",
+            "count": number (required),
+            "cost": number (required),
+            "currency": "three-letter currency code (optional)"
+            }
+        ],
+        "taxRate": number (optional),
+        "total": number (optional)
+        }
+        \`\`\`
+    
+        Let's roll some invoices, chef! 🍣`
       }
     ];
     
