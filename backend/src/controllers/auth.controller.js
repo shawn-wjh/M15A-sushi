@@ -62,6 +62,7 @@ const authController = {
       // 4. Generate JWT token
       const tokenPayload = {
         userId: user.UserID,
+        name: user.name,
         email: user.email,
         role: user.role
       };

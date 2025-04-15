@@ -3,7 +3,7 @@ import { FaEnvelope, FaTimes } from "react-icons/fa";
 import "./SushiSendOption.css";
 import apiClient from "../../utils/axiosConfig";
 
-const EmailSendOption = ({ onClose, invoiceId }) => {
+const SushiSendOption = ({ onClose, invoiceId }) => {
   const [emails, setEmails] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
@@ -69,7 +69,7 @@ const EmailSendOption = ({ onClose, invoiceId }) => {
           className="modal-content email-send-content"
           onClick={(e) => e.stopPropagation()}
         >
-          <h3>Share via Email</h3>
+          <h3>Share via Sushi</h3>
           <p>Enter recipients email addresses</p>
 
           <div className="email-input-container">
@@ -148,4 +148,4 @@ const EmailSendOption = ({ onClose, invoiceId }) => {
   );
 };
 
-export default EmailSendOption;
+export default SushiSendOption;

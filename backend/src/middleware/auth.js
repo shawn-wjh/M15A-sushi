@@ -41,6 +41,7 @@ const auth = {
       // 3. Add user data to request object for use in subsequent middleware/routes
       req.user = {
         userId: decoded.userId,
+        name: decoded.name,
         email: decoded.email,
         role: decoded.role
       };
