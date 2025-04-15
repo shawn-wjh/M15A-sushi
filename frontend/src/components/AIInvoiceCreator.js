@@ -108,7 +108,19 @@ const AIInvoiceCreator = () => {
         
         // If we have invoice data, set it for preview
         if (response.data.hasInvoiceData && response.data.data) {
-          setInvoiceData(response.data.data);
+          const data = response.data.data;
+          
+          // Ensure payment fields exist
+          const invoiceDataWithPayment = {
+            ...data,
+            paymentAccountId: data.paymentAccountId || '',
+            paymentAccountName: data.paymentAccountName || '',
+            financialInstitutionBranchId: data.financialInstitutionBranchId || ''
+          };
+          
+          console.log("Processed invoice data with payment:", invoiceDataWithPayment);
+          
+          setInvoiceData(invoiceDataWithPayment);
           setShowInvoicePreview(true);
         }
       } else {
@@ -161,7 +173,19 @@ const AIInvoiceCreator = () => {
         
         // If we have invoice data, set it for preview
         if (response.data.hasInvoiceData && response.data.data) {
-          setInvoiceData(response.data.data);
+          const data = response.data.data;
+          
+          // Ensure payment fields exist
+          const invoiceDataWithPayment = {
+            ...data,
+            paymentAccountId: data.paymentAccountId || '',
+            paymentAccountName: data.paymentAccountName || '',
+            financialInstitutionBranchId: data.financialInstitutionBranchId || ''
+          };
+          
+          console.log("Processed image invoice data with payment:", invoiceDataWithPayment);
+          
+          setInvoiceData(invoiceDataWithPayment);
           setShowInvoicePreview(true);
         }
       } else {
@@ -203,10 +227,37 @@ const AIInvoiceCreator = () => {
         // Call API to directly create the invoice
         createInvoiceDirectly();
       } else {
+        // Transform the data to match the structure expected by InvoiceForm
+        const formData = {
+          invoiceId: invoiceData.invoiceId || generateInvoiceId(),
+          issueDate: invoiceData.issueDate || '',
+          dueDate: invoiceData.dueDate || '',
+          currency: invoiceData.currency || 'AUD',
+          buyer: invoiceData.buyer?.name || '',
+          supplier: invoiceData.supplier?.name || '',
+          buyerAddress: invoiceData.buyer?.address || { street: '', country: 'AU' },
+          supplierAddress: invoiceData.supplier?.address || { street: '', country: 'AU' },
+          buyerPhone: invoiceData.buyer?.phone || '',
+          supplierPhone: invoiceData.supplier?.phone || '',
+          supplierEmail: invoiceData.supplier?.email || '',
+          // Include payment information
+          paymentAccountId: invoiceData.paymentAccountId || '',
+          paymentAccountName: invoiceData.paymentAccountName || '',
+          financialInstitutionBranchId: invoiceData.financialInstitutionBranchId || '',
+          items: (invoiceData.items || []).map(item => ({
+            name: item.name || '',
+            count: parseFloat(item.count) || 1,
+            cost: parseFloat(item.cost) || 0,
+            currency: item.currency || invoiceData.currency || 'AUD'
+          })),
+          taxRate: invoiceData.taxRate || 10,
+          total: invoiceData.total || 0
+        };
+
         // Navigate to invoice form with pre-filled data for manual completion
         history.push({
           pathname: '/invoices/create',
-          state: { invoiceData }
+          state: { orderData: formData }
         });
       }
     }
@@ -218,33 +269,38 @@ const AIInvoiceCreator = () => {
     try {
       // Transform the invoiceData to the format expected by the API
       const requestData = {
-        invoice: {
-          invoiceId: invoiceData.invoiceId || generateInvoiceId(),
-          issueDate: invoiceData.issueDate,
-          dueDate: invoiceData.dueDate || calculateDefaultDueDate(invoiceData.issueDate),
-          currency: invoiceData.currency,
-          buyer: {
-            name: invoiceData.buyer.name,
-            address: invoiceData.buyer.address || { street: '', country: 'AU' },
-            phone: invoiceData.buyer.phone || ''
-          },
-          supplier: {
-            name: invoiceData.supplier.name,
-            address: invoiceData.supplier.address || { street: '', country: 'AU' },
-            phone: invoiceData.supplier.phone || '',
-            email: invoiceData.supplier.email || ''
-          },
-          items: invoiceData.items.map(item => ({
-            name: item.name,
-            count: item.count,
-            cost: item.cost,
-            currency: item.currency || invoiceData.currency
-          })),
-          taxRate: invoiceData.taxRate || 10,
-          total: invoiceData.total || calculateTotal(invoiceData.items, invoiceData.taxRate)
-        }
+        invoiceId: invoiceData.invoiceId || generateInvoiceId(),
+        issueDate: invoiceData.issueDate,
+        dueDate: invoiceData.dueDate || calculateDefaultDueDate(invoiceData.issueDate),
+        currency: invoiceData.currency,
+        // Use the direct string values for buyer and supplier names
+        buyer: invoiceData.buyer.name,
+        supplier: invoiceData.supplier.name,
+        // Use separate fields for addresses and contact info
+        buyerAddress: invoiceData.buyer.address || { street: '', country: 'AU' },
+        supplierAddress: invoiceData.supplier.address || { street: '', country: 'AU' },
+        buyerPhone: invoiceData.buyer.phone || '',
+        supplierPhone: invoiceData.supplier.phone || '',
+        supplierEmail: invoiceData.supplier.email || '',
+        // Process payment information - ensure it's explicitly included
+        paymentAccountId: invoiceData.paymentAccountId || '',
+        paymentAccountName: invoiceData.paymentAccountName || '',
+        financialInstitutionBranchId: invoiceData.financialInstitutionBranchId || '',
+        // Include items array
+        items: invoiceData.items.map(item => ({
+          name: item.name,
+          count: parseFloat(item.count),
+          cost: parseFloat(item.cost),
+          currency: item.currency || invoiceData.currency
+        })),
+        // Include tax information
+        taxRate: invoiceData.taxRate || 10,
+        total: invoiceData.total || calculateTotal(invoiceData.items, invoiceData.taxRate),
+        taxTotal: (invoiceData.total || calculateTotal(invoiceData.items, invoiceData.taxRate)) * ((invoiceData.taxRate || 10) / 100)
       };
 
+      console.log("Sending to API:", requestData);
+      
       // Make the API call
       const response = await apiClient.post(`${API_URL}/create`, requestData);
       
@@ -306,16 +362,12 @@ const AIInvoiceCreator = () => {
   };
 
   const isInvoiceDataComplete = (data) => {
-    // Simple check for required fields
-    const requiredFields = [
-      'buyer', 'supplier', 'items', 'issueDate', 'currency'
-    ];
-    
-    return requiredFields.every(field => {
+    // This function checks only required fields - payment information is recommended but not required
+    return ['buyer', 'supplier', 'items', 'issueDate', 'currency'].every(field => {
       if (field === 'items') {
         return data[field] && data[field].length > 0;
       }
-      return data[field];
+      return !!data[field];
     });
   };
 
@@ -328,7 +380,7 @@ const AIInvoiceCreator = () => {
       { key: 'currency', label: 'currency' }
     ];
     
-    return requiredFields
+    const missingRequired = requiredFields
       .filter(field => {
         if (field.key === 'items') {
           return !data[field.key] || data[field.key].length === 0;
@@ -336,6 +388,13 @@ const AIInvoiceCreator = () => {
         return !data[field.key];
       })
       .map(field => field.label);
+    
+    // Check for payment information
+    const hasPaymentInfo = data.paymentAccountId || data.paymentAccountName || data.financialInstitutionBranchId;
+    
+    return missingRequired.concat(
+      !hasPaymentInfo ? ['payment information (recommended)'] : []
+    );
   };
 
   const renderMessage = (message, index) => {
@@ -386,6 +445,23 @@ const AIInvoiceCreator = () => {
                   <div className="preview-row">
                     <span>Total:</span>
                     <span>{invoiceData.currency} {invoiceData.total || 0}</span>
+                  </div>
+                  
+                  {/* Payment Information Section */}
+                  <div className="preview-payment">
+                    <h5>Payment Information</h5>
+                    <div className="preview-row">
+                      <span>Bank Account Number:</span>
+                      <span>{invoiceData.paymentAccountId || 'Not specified'}</span>
+                    </div>
+                    <div className="preview-row">
+                      <span>Account Name:</span>
+                      <span>{invoiceData.paymentAccountName || 'Not specified'}</span>
+                    </div>
+                    <div className="preview-row">
+                      <span>Branch Identifier:</span>
+                      <span>{invoiceData.financialInstitutionBranchId || 'Not specified'}</span>
+                    </div>
                   </div>
                   
                   {isInvoiceDataComplete(invoiceData) ? (

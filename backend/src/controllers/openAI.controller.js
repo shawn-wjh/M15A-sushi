@@ -27,48 +27,63 @@ const createInvoiceFromText = async (req, res) => {
     let messages = [
       {
         role: 'system',
-        content: `You are Sushi AI, an invoice creation assistant with a friendly, helpful personality. 
-        Your goal is to help the user create an invoice by extracting structured information from their input in a conversational way.
-        Always maintain the conversation and ask follow-up questions when information is missing or unclear.
-        
-        When you have collected enough information, provide the structured data in JSON format along with your conversational response.
-        The invoice should include:
+        content: `You are Sushi AI 🍣, a friendly and helpful invoice creation assistant. 
+        Your goal is to guide users through creating an invoice by asking smart follow-up questions and extracting clear, structured information from their input.
+
+        Be charming, sushi-themed, and conversational — like a sushi chef helping a customer build their perfect invoice roll. When enough info is collected, generate structured invoice data.
+
+        🎯 Your mission:
+        - Extract ONLY what is explicitly given — never make up details.
+        - Ask friendly follow-up questions if any required information is missing.
+        - Always ask for payment information (account number, account name, branch ID).
+        - "As soon as you collect any valid invoice field (even just one), include the available structured data inside a
+        \\\`\\\`\\\`json code block. This allows the system to populate the invoice form in real time. 
+         Always include the latest collected fields in the JSON block, even if incomplete. 
+         Continue the conversation normally afterward."
+
+        📝 Output format:
+        When you have enough to start forming the invoice, respond normally, **then include the data in a JSON code block like this**:
+
+        \`\`\`json
         {
-          "invoiceId": string (optional, can generate if not provided),
-          "issueDate": YYYY-MM-DD (required),
-          "dueDate": YYYY-MM-DD (optional),
-          "currency": three-letter currency code (required, default to USD),
-          "buyer": {
-            "name": string (required),
+        "invoiceId": "string (optional, can generate if not provided)",
+        "issueDate": "YYYY-MM-DD (required)",
+        "dueDate": "YYYY-MM-DD (optional)",
+        "currency": "three-letter currency code (required, default to USD)",
+        "buyer": {
+            "name": "string (required)",
             "address": {
-              "street": string (optional),
-              "country": two-letter country code (optional)
+            "street": "string (optional)",
+            "country": "two-letter country code (optional)"
             },
-            "phone": string (optional)
-          },
-          "supplier": {
-            "name": string (required),
+            "phone": "string (optional)"
+        },
+        "supplier": {
+            "name": "string (required)",
             "address": {
-              "street": string (optional),
-              "country": two-letter country code (optional)
+            "street": "string (optional)",
+            "country": "two-letter country code (optional)"
             },
-            "phone": string (optional),
-            "email": string (optional)
-          },
-          "items": [
+            "phone": "string (optional)",
+            "email": "string (optional)"
+        },
+        "paymentAccountId": "string (optional)",
+        "paymentAccountName": "string (optional)",
+        "financialInstitutionBranchId": "string (optional)",
+        "items": [
             {
-              "name": string (required),
-              "count": number (required),
-              "cost": number (required),
-              "currency": three-letter currency code (optional)
+            "name": "string (required)",
+            "count": number (required),
+            "cost": number (required),
+            "currency": "three-letter currency code (optional)"
             }
-          ],
-          "taxRate": number (percentage, optional),
-          "total": number (optional, calculated)
+        ],
+        "taxRate": number (optional),
+        "total": number (optional)
         }
-        
-        Only extract information that is clearly provided. Don't make up information.
-        Be conversational and friendly in your responses. Use a sushi-themed personality.`
+        \`\`\`
+
+        Let’s roll some invoices, chef! 🍣`
       }
     ];
     
@@ -89,7 +104,7 @@ const createInvoiceFromText = async (req, res) => {
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages,
       temperature: 0.7, // Higher for more conversational tone
       max_tokens: 2000
@@ -97,17 +112,22 @@ const createInvoiceFromText = async (req, res) => {
 
     // Extract response
     const aiResponse = completion.choices[0].message.content;
+    console.log(aiResponse);
     
     // Try to extract JSON from the response if it exists
     let invoiceData = null;
     try {
       // Look for JSON in the response
-      const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || 
-                         aiResponse.match(/{[\s\S]*?}/);
+      const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/) ||
+                  aiResponse.match(/```[\s\S]*?({[\s\S]*})[\s\S]*?```/) ||
+                  aiResponse.match(/{[\s\S]*}/);
       
       if (jsonMatch) {
         const jsonStr = jsonMatch[1] || jsonMatch[0];
         invoiceData = JSON.parse(jsonStr);
+        
+        
+        console.log(invoiceData);
       }
     } catch (error) {
       console.error('Error parsing AI response:', error);
@@ -180,6 +200,9 @@ const createInvoiceFromImage = async (req, res) => {
             "phone": string (optional),
             "email": string (optional)
           },
+          "paymentAccountId": string (optional, bank account number),
+          "paymentAccountName": string (optional, account name),
+          "financialInstitutionBranchId": string (optional, bank branch code or routing number),
           "items": [
             {
               "name": string (required),
@@ -192,6 +215,8 @@ const createInvoiceFromImage = async (req, res) => {
           "total": number (optional, calculated)
         }
         
+        IMPORTANT: Always look for and include payment information (paymentAccountId, paymentAccountName, financialInstitutionBranchId) from the image. If you can't find this information, explicitly mention it's missing in your response so the user can provide it.
+
         Only extract fields that you can confidently identify. Be friendly and explain what you found in the image.
         If some information is missing or unclear, ask the user about it in a conversational way.`
       }
@@ -229,7 +254,7 @@ const createInvoiceFromImage = async (req, res) => {
 
     // Call OpenAI API with vision capabilities
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4-mini',
+      model: 'gpt-4o-mini',
       messages,
       temperature: 0.7,
       max_tokens: 2000
@@ -251,6 +276,15 @@ const createInvoiceFromImage = async (req, res) => {
       if (jsonMatch) {
         const jsonStr = jsonMatch[1] || jsonMatch[0];
         invoiceData = JSON.parse(jsonStr);
+        
+        // Ensure payment fields are always present in the data
+        if (invoiceData) {
+          invoiceData.paymentAccountId = invoiceData.paymentAccountId || '';
+          invoiceData.paymentAccountName = invoiceData.paymentAccountName || '';
+          invoiceData.financialInstitutionBranchId = invoiceData.financialInstitutionBranchId || '';
+        }
+        
+        console.log(invoiceData);
       }
     } catch (error) {
       console.error('Error parsing AI response:', error);
