@@ -15,15 +15,6 @@ const partitionArray = (array, size) => {
   return result;
 };
 
-// Helper: Convert invoice object back to XML string
-const convertToXml = (invoice) => {
-  const builder = new xml2js.Builder({
-    renderOpts: { pretty: true, indent: '  ' },
-    xmldec: { version: '1.0', encoding: 'UTF-8' }
-  });
-  return builder.buildObject({ Invoice: invoice });
-};
-
 /**
  * Upload an XML dataset and store each record in DynamoDB.
  * Expects validated invoices to be attached to req.validatedInvoices by the validateXmlInvoices middleware.
@@ -42,44 +33,59 @@ const uploadXMLDataset = async (req, res) => {
       });
     }
     
-    // Map each invoice into a DynamoDB PutRequest item
-    const items = await Promise.all(invoices.map(async (invoice) => {
+    // Important: Store the original XML string to preserve namespace prefixes
+    const originalXml = req.body.xmlDataset;
+    
+    // Check if we have a single invoice or multiple
+    const isSingleInvoice = invoices.length === 1;
+    
+    // For single invoice, we can store the original XML directly
+    if (isSingleInvoice) {
+      console.log('Processing single invoice for upload');
+      
       const invoiceId = uuidv4();
       const timestamp = new Date().toISOString();
       
-      // Convert invoice object back to XML string
-      const invoiceXml = convertToXml(invoice);
-
-      return {
-        PutRequest: {
-          Item: {
-            InvoiceID: invoiceId,
-            timestamp,
-            UserID: req.user.userId,
-            invoice: invoiceXml, // Store as XML string
-          }
-        }
-      };
-    }));
-    
-    // DynamoDB BatchWriteCommand limits to 25 items per request
-    const batches = partitionArray(items, 25);
-    
-    // Write each batch to the table
-    for (const batch of batches) {
+      // Extract invoice number for reference
+      const invoice = invoices[0];
+      const invoiceNumber = invoice.ID && invoice.ID._ ? invoice.ID._ : 
+                           (invoice.ID || `Generated-${invoiceId.substr(0, 8)}`);
+      
+      // Store the invoice in DynamoDB
       const params = {
         RequestItems: {
-          [Tables.INVOICES]: batch
+          [Tables.INVOICES]: [
+            {
+              PutRequest: {
+                Item: {
+                  InvoiceID: invoiceId,
+                  timestamp,
+                  UserID: req.user.userId,
+                  invoice: originalXml, // Store the original XML to preserve namespace prefixes
+                  invoiceNumber: invoiceNumber
+                }
+              }
+            }
+          ]
         }
       };
+      
       await dbClient.send(new BatchWriteCommand(params));
+      
+      return res.status(200).json({
+        status: 'success',
+        message: 'XML invoice uploaded successfully',
+        recordsUploaded: 1
+      });
+    } else {
+      // For multiple invoices, we need to extract each one
+      // This gets more complex - we would need to extract each invoice from the XML
+      // For now, we'll use a simplified approach that will only work for single invoices
+      return res.status(400).json({
+        status: 'error',
+        message: 'Multiple invoice upload is not yet supported with namespace preservation. Please upload invoices one at a time.'
+      });
     }
-    
-    return res.status(200).json({
-      status: 'success',
-      message: 'XML dataset uploaded successfully',
-      recordsUploaded: items.length
-    });
   } catch (error) {
     console.error('Error uploading XML dataset:', error);
     return res.status(500).json({
