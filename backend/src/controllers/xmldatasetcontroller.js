@@ -1,19 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const { createDynamoDBClient, Tables } = require('../config/database');
 const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
-const xml2js = require('xml2js');
+
 
 // Initialize DynamoDB client
 const dbClient = createDynamoDBClient();
 
-// Helper: Partition items into chunks (batch size is 25 for DynamoDB BatchWrite)
-const partitionArray = (array, size) => {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
-};
+
 
 /**
  * Upload an XML dataset and store each record in DynamoDB.
