@@ -15,6 +15,7 @@ import XMLDatasetUpload from './components/XMLDatasetUpload';
 import './App.css';
 import apiClient from './utils/axiosConfig';
 import parseInvoiceXml from './utils/parseXmlHelper';
+import AIInvoiceCreator from './components/AIInvoiceCreator';
 
 // Protected route component
 const ProtectedRoute = ({ component: Component, ...rest }) => {
@@ -118,6 +119,7 @@ function App() {
           <ProtectedRoute path="/invoices/create-from-order" component={CreateFromOrderPage} />
           <ProtectedRoute path="/invoices/upload-xml" component={XmlUploadSelectionPage} />
           <ProtectedRoute path="/invoices/upload-xml-dataset" component={XMLDatasetUpload} />
+          <ProtectedRoute path="/invoices/ai-invoice-creator" component={AIInvoiceCreator} />
           <ProtectedRoute path="/invoices/create" component={InvoiceForm} />
           
           <ProtectedRoute path="/invoices/edit/:invoiceid" component={EditInvoiceRoute} />
