@@ -21,6 +21,11 @@ const InvoiceSelectionPage = () => {
     history.push('/invoices/create');
   };
 
+  const handleAiCreation = () => {
+    // Navigate to the AI invoice creator page
+    history.push('/invoices/ai-invoice-creator');
+  };
+
   return (
     <AppLayout activeSection="createInvoice">
       <div className="invoice-selection-container">
@@ -86,6 +91,29 @@ const InvoiceSelectionPage = () => {
             <div className="selection-content">
               <h3>Create Invoice Manually</h3>
               <p>Create an invoice by filling in fields yourself</p>
+            </div>
+            <div className="selection-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+          </div>
+
+          {/* Create Invoice from AI */}
+          <div className="selection-card ai-selection-card" onClick={handleAiCreation}>
+            <div className="new-feature-badge">NEW</div>
+            <div className="selection-icon ai-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                <path d="M12 8v4l3 3"/>
+                <path d="M9 15a3 3 0 1 0 6 0H9z"/>
+                <path d="M9 9h6"/>
+              </svg>
+            </div>
+            <div className="selection-content">
+              <h3>AI Powered Invoice Creator</h3>
+              <p>Create an invoice by using AI with text prompts or by uploading an image of an existing invoice.</p>
             </div>
             <div className="selection-arrow">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
