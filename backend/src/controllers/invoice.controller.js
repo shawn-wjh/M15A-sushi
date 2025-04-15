@@ -296,6 +296,7 @@ const invoiceController = {
    * @param {Object} res - Express response object
    */
   getInvoice: async (req, res, next) => {
+    console.log("getInvoice called");
     const invoiceId = req.params.invoiceid;
 
     // check if invoiceId is empty
@@ -333,6 +334,7 @@ const invoiceController = {
       if (next) {
         req.body.xml = xml;
         req.invoice = Items[0];
+        console.log("getInvoice next called");
         next();
       } else {
         return res.status(200).set('Content-Type', 'application/xml').send(xml);

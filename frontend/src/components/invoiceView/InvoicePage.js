@@ -8,6 +8,7 @@ import parseInvoiceXml from "../../utils/parseXmlHelper";
 import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPopUp";
 import AppLayout from "../AppLayout";
 import SendOptionsPopup from "../sendInvoice/SendOptionsPopup";
+import ExportInvoicePopup from "../exportInvoice/ExportInvoicePopup";
 const API_URL = "/v1/invoices";
 
 const InvoicePage = () => {
@@ -28,6 +29,7 @@ const InvoicePage = () => {
   const [recipientId, setRecipientId] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
+  const [showExportInvoicePopup, setShowExportInvoicePopup] = useState(false);
 
   useEffect(() => {
     const getInvoice = async () => {
@@ -152,8 +154,7 @@ const InvoicePage = () => {
   };
 
   const handleDownload = () => {
-    // TODO: Implement download functionality
-    alert("Download feature yet to be implemented");
+    setShowExportInvoicePopup(true);
   };
 
   const handleValidate = () => {
@@ -441,6 +442,13 @@ const InvoicePage = () => {
           <SendOptionsPopup
             onClose={handleSendCancel}
             invoiceId={invoice.InvoiceID}
+          />
+        )}
+
+        {showExportInvoicePopup && (
+          <ExportInvoicePopup
+            onClose={() => setShowExportInvoicePopup(false)}
+            invoiceId={invoiceId}
           />
         )}
 
