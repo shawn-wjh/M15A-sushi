@@ -282,8 +282,7 @@ const createInvoiceFromImage = async (req, res) => {
         {
           type: 'image_url',
           image_url: {
-            url: `data:${mimeType};base64,${base64Image}`
-          }
+            url: `data:${mimeType};base64,${base64Image}`          }
         },
         {
           type: 'text',
