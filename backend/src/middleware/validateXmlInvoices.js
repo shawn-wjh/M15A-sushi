@@ -25,6 +25,8 @@ function validateXmlInvoices(req, res, next) {
       const parser = new xml2js.Parser({
         explicitArray: false,
         ignoreAttrs: false,
+        mergeAttrs: true,
+        xmlns: true,
         tagNameProcessors: [xml2js.processors.stripPrefix],
         attrNameProcessors: [xml2js.processors.stripPrefix]
       });
@@ -46,55 +48,57 @@ function validateXmlInvoices(req, res, next) {
       } else {
         return res.status(400).json({
           status: 'error',
-          message: 'Invalid XML structure. Expected <Invoice> or <Invoices> element.'
+          message: 'Invalid XML structure. Expected <Invoice> or <Invoices> element.',
+          errors: ['Invalid XML structure. Expected <Invoice> or <Invoices> element.']
         });
       }
 
       const errors = [];
       invoices.forEach((invoice, index) => {
-        // Check for IssueDate
-        if (!invoice.IssueDate) {
+        // Check for IssueDate (cbc:IssueDate)
+        
+        if (!invoice.IssueDate._) {
           errors.push(`Invoice at index ${index} is missing IssueDate.`);
-        } else if (isNaN(Date.parse(invoice.IssueDate))) {
-          errors.push(`Invoice at index ${index} has an invalid IssueDate.`);
+        } else if (isNaN(Date.parse(invoice.IssueDate._))) {
+          errors.push(`Invoice at index ${index} has an invalid IssueDate format: ${invoice.IssueDate._}`);
         }
 
-        // Check for DueDate
-        if (!invoice.DueDate) {
+        // Check for DueDate (cbc:DueDate)
+        if (!invoice.DueDate._) {
           errors.push(`Invoice at index ${index} is missing DueDate.`);
-        } else if (isNaN(Date.parse(invoice.DueDate))) {
-          errors.push(`Invoice at index ${index} has an invalid DueDate.`);
+        } else if (isNaN(Date.parse(invoice.DueDate._))) {
+          errors.push(`Invoice at index ${index} has an invalid DueDate format: ${invoice.DueDate._}`);
         }
 
-        // Check that LegalMonetaryTotal exists and has at least one of PayableAmount or TaxInclusiveAmount
+        // Check that LegalMonetaryTotal exists and has PayableAmount (cbc:PayableAmount)
         if (!invoice.LegalMonetaryTotal) {
-          errors.push(`Invoice at index ${index} is missing total amount information.`);
+          errors.push(`Invoice at index ${index} is missing LegalMonetaryTotal element.`);
         } else {
           // Validate PayableAmount if present
           if (invoice.LegalMonetaryTotal.PayableAmount) {
-            const amount = parseFloat(invoice.LegalMonetaryTotal.PayableAmount);
+            // Extract the numeric value from the PayableAmount structure
+            const payableAmount = invoice.LegalMonetaryTotal.PayableAmount;
+            // The actual amount value is in the _ property
+            const amount = typeof payableAmount === 'object' && payableAmount._ 
+              ? parseFloat(payableAmount._) 
+              : parseFloat(payableAmount);
+            
+            console.log('Extracted amount:', amount);
+            
             if (isNaN(amount)) {
-              errors.push(`Invoice at index ${index} has an invalid monetary amount.`);
+              errors.push(`Invoice at index ${index} has an invalid PayableAmount: ${JSON.stringify(invoice.LegalMonetaryTotal.PayableAmount)}`);
             }
-          }
-          // Validate TaxInclusiveAmount if present
-          if (invoice.LegalMonetaryTotal.TaxInclusiveAmount) {
-            const amount = parseFloat(invoice.LegalMonetaryTotal.TaxInclusiveAmount);
-            if (isNaN(amount)) {
-              errors.push(`Invoice at index ${index} has an invalid monetary amount.`);
-            }
-          }
-          // Check that at least one amount is present
-          if (!invoice.LegalMonetaryTotal.PayableAmount && !invoice.LegalMonetaryTotal.TaxInclusiveAmount) {
-            errors.push(`Invoice at index ${index} is missing total amount information.`);
+          } else {
+            errors.push(`Invoice at index ${index} is missing PayableAmount in LegalMonetaryTotal.`);
           }
         }
       });
 
       if (errors.length > 0) {
+        console.log('Validation errors:', errors);
         return res.status(400).json({
           status: 'error',
-          message: 'Invalid invoice data.',
+          message: `Invalid invoice data. Errors: ${errors.join(' | ')}`,
           errors
         });
       }
@@ -107,6 +111,7 @@ function validateXmlInvoices(req, res, next) {
       return res.status(400).json({
         status: 'error',
         message: 'Failed to parse XML data.',
+        errors: [error.message],
         details: error.message
       });
     });
@@ -115,6 +120,7 @@ function validateXmlInvoices(req, res, next) {
     return res.status(400).json({
       status: 'error',
       message: 'Failed to validate XML data.',
+      errors: [error.message],
       details: error.message
     });
   }
