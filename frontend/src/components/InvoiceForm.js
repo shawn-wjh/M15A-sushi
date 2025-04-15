@@ -889,6 +889,15 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     }
   };
 
+  // At the top of the component, add this code after the useState initializations
+  useEffect(() => {
+    // If this page is accessed directly without order data and not in edit mode,
+    // redirect to the selection page
+    if (!editMode && !location.state?.orderData && !invoiceToEdit) {
+      history.push('/invoices/create-selection');
+    }
+  }, [history, editMode, location.state, invoiceToEdit]);
+
   return (
     <AppLayout activeSection="createInvoice">
       <div className="invoice-form-container">

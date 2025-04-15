@@ -75,8 +75,8 @@ const Dashboard = () => {
   };
 
   const handleCreateInvoice = () => {
-    // Set active section to create invoice instead of redirecting
-    setActiveSection('createInvoice');
+    // Redirect to the invoice selection page
+    history.push('/invoices/create-selection');
   };
 
   const handleViewInvoices = () => {
@@ -95,7 +95,9 @@ const Dashboard = () => {
       case 'shared-invoices':
         return renderSharedInvoicesSection();
       case 'createInvoice':
-        history.push('/invoices/create');
+        // Redirect to the invoice selection page
+        history.push('/invoices/create-selection');
+        return null;
       case 'settings':
         return renderSettingsSection();
       default:

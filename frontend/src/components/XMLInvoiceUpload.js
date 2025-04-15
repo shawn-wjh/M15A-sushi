@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import apiClient from '../utils/axiosConfig';
 import AppLayout from './AppLayout';
-import './XMLDatasetUpload.css';
+import './XMLInvoiceUpload.css';
 
-const XMLDatasetUpload = () => {
+const XMLInvoiceUpload = () => {
   const [xmlData, setXmlData] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -29,17 +29,18 @@ const XMLDatasetUpload = () => {
     setError(null);
 
     try {
-      const response = await apiClient.post('/v1/xml-dataset/upload', {
-        xmlDataset: xmlData
+      // Use the correct endpoint for single XML invoice upload
+      const response = await apiClient.post('/v1/invoices/upload-single-xml', {
+        xmlInvoice: xmlData
       });
 
       setMessage({
         type: 'success',
-        text: `Successfully uploaded ${response.data.recordsUploaded} records`
+        text: 'Invoice uploaded successfully'
       });
       setXmlData('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to upload XML dataset');
+      setError(err.response?.data?.message || 'Failed to upload XML invoice');
     } finally {
       setIsUploading(false);
     }
@@ -47,12 +48,12 @@ const XMLDatasetUpload = () => {
 
   return (
     <AppLayout activeSection="createInvoice">
-      <div className="xml-dataset-upload-container">
+      <div className="xml-invoice-upload-container">
         <div className="xml-upload-header">
-          <h2>Upload XML Dataset</h2>
-          <p>Upload an XML file containing multiple invoices</p>
+          <h2>Upload XML Invoice</h2>
+          <p>Upload a single XML invoice file</p>
         </div>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="upload-area">
             <label htmlFor="xml-file" className="file-input-label">
@@ -70,6 +71,7 @@ const XMLDatasetUpload = () => {
                 className="file-input"
               />
             </label>
+            
             {xmlData && (
               <div className="preview-area">
                 <h3>XML Preview</h3>
@@ -77,12 +79,13 @@ const XMLDatasetUpload = () => {
               </div>
             )}
           </div>
+          
           <button
             type="submit"
             className={`upload-button ${isUploading ? 'uploading' : ''}`}
             disabled={!xmlData || isUploading}
           >
-            {isUploading ? 'Uploading...' : 'Upload Dataset'}
+            {isUploading ? 'Uploading...' : 'Upload Invoice'}
           </button>
         </form>
         
@@ -105,7 +108,7 @@ const XMLDatasetUpload = () => {
             {error}
           </div>
         )}
-        
+
         <div className="back-button-container">
           <button 
             className="back-button" 
@@ -119,4 +122,4 @@ const XMLDatasetUpload = () => {
   );
 };
 
-export default XMLDatasetUpload; 
+export default XMLInvoiceUpload; 
