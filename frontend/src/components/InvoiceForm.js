@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import apiClient from '../utils/axiosConfig';
 import './InvoiceForm.css';
-import OrderSearch from './OrderSearch';
 import { schemaNameMap } from './invoiceValidationResult/validationResults';
 import { useHistory, useLocation } from 'react-router-dom';
 import AppLayout from './AppLayout';
@@ -84,7 +83,7 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
   const [recipientId, setRecipientId] = useState('');
   const [sendingResult, setSendingResult] = useState(null);
 
-  // Initialize form with invoice data if in edit mode
+  // Initialize form with invoice data if in edit mode or from order data
   useEffect(() => {
     if (editMode && invoiceToEdit) {
       // Map the invoice data to the form structure
@@ -135,8 +134,61 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
       setShowCurrencyInputs(Array(itemCount).fill(false));
       setItemConversionInfo(Array(itemCount).fill(null));
       setItemErrorMessages(Array(itemCount).fill(null));
+    } else if (location.state && location.state.orderData) {
+      // If we have order data from location state, process it
+      const orderData = location.state.orderData;
+      // Create a properly structured form data object with default values
+      const formattedData = {
+        // Map the received data to form fields
+        invoiceId: orderData.invoiceId || '',
+        total: 0,
+        buyer: orderData.buyer || '',
+        supplier: orderData.supplier || '',
+        issueDate: orderData.issueDate || '',
+        dueDate: '',
+        currency: orderData.currency || 'AUD',
+        // Ensure these objects exist with default values
+        buyerAddress: {
+          street: '',
+          country: 'AU'
+        },
+        supplierAddress: {
+          street: '',
+          country: 'AU'
+        },
+        buyerPhone: '',
+        supplierPhone: '',
+        supplierEmail: '',
+        taxTotal: 0,
+        taxRate: 10,
+        // Handle empty or missing items array
+        items: Array.isArray(orderData.items?.[0]) ? 
+          // If items is an empty array inside array, create default item
+          [{ name: '', count: 1, cost: 0, currency: orderData.currency || 'AUD' }] :
+          // If items exist, map them
+          (orderData.items || []).map(item => ({
+            name: item.description || '',
+            count: item.quantity || 1,
+            cost: item.unitPrice || 0,
+            currency: orderData.currency || 'AUD'
+          }))
+      };
+
+      // Update form with the properly structured data
+      setFormData(formattedData);
+      
+      // Initialize currency selections for items from the order
+      const itemCount = formattedData.items.length;
+      setItemCurrencySelections(Array(itemCount).fill('USD'));
+      setItemCurrencyInputs(Array(itemCount).fill(''));
+      setShowCurrencyInputs(Array(itemCount).fill(false));
+      setItemConversionInfo(Array(itemCount).fill(null));
+      setItemErrorMessages(Array(itemCount).fill(null));
+      
+      // Calculate totals based on the items
+      setTimeout(() => calculateTotal(formattedData.items), 0);
     }
-  }, [editMode, invoiceToEdit]);
+  }, [editMode, invoiceToEdit, location]);
 
   // Modify handleChange to clear conversion info when currency changes
   const handleChange = (e) => {
@@ -468,67 +520,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     setValidationErrors([]);
     setValidationWarnings([]);
     setSelectedSchemas([]);
-  };
-
-  // Handle order selection from OrderSearch component
-  const handleOrderSelect = (orderData) => {
-    // Create a properly structured form data object with default values
-    const formattedData = {
-      // Map the received data to form fields
-      invoiceId: orderData.invoiceId || '',
-      total: 0,
-      buyer: orderData.buyer || '',
-      supplier: orderData.supplier || '',
-      issueDate: orderData.issueDate || '',
-      dueDate: '',
-      currency: orderData.currency || 'AUD',
-      // Ensure these objects exist with default values
-      buyerAddress: {
-        street: '',
-        country: 'AU'
-      },
-      supplierAddress: {
-        street: '',
-        country: 'AU'
-      },
-      buyerPhone: '',
-      supplierPhone: '',
-      supplierEmail: '',
-      taxTotal: 0,
-      taxRate: 10,
-      // Handle empty or missing items array
-      items: Array.isArray(orderData.items?.[0]) ? 
-        // If items is an empty array inside array, create default item
-        [{ name: '', count: 1, cost: 0, currency: orderData.currency || 'AUD' }] :
-        // If items exist, map them
-        (orderData.items || []).map(item => ({
-          name: item.description || '',
-          count: item.quantity || 1,
-          cost: item.unitPrice || 0,
-          currency: orderData.currency || 'AUD'
-        }))
-    };
-
-    // Update form with the properly structured data
-    setFormData(formattedData);
-    
-    // Initialize currency selections for items from the order
-    const itemCount = formattedData.items.length;
-    setItemCurrencySelections(Array(itemCount).fill('USD'));
-    setItemCurrencyInputs(Array(itemCount).fill(''));
-    setShowCurrencyInputs(Array(itemCount).fill(false));
-    setItemConversionInfo(Array(itemCount).fill(null));
-    setItemErrorMessages(Array(itemCount).fill(null));
-    
-    // Reset any previous submission state
-    setCreatedInvoice(null);
-    setWasValidated(false);
-    setSubmittedValues(null);
-    setValidationErrors([]);
-    setValidationWarnings([]);
-    
-    // Calculate totals based on the items
-    setTimeout(() => calculateTotal(formattedData.items), 0);
   };
 
   const handleSchemaChange = (schema) => {
@@ -889,6 +880,15 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
     }
   };
 
+  // At the top of the component, add this code after the useState initializations
+  useEffect(() => {
+    // If this page is accessed directly without order data and not in edit mode,
+    // and not coming from invoice selection page, redirect to the selection page
+    if (!editMode && !location.state?.orderData && !invoiceToEdit && !location.pathname.includes('/invoices/create')) {
+      history.push('/invoices/create-selection');
+    }
+  }, [history, editMode, location.state, invoiceToEdit, location.pathname]);
+
   return (
     <AppLayout activeSection="createInvoice">
       <div className="invoice-form-container">
@@ -1057,8 +1057,6 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
               </div>
               <p>{editMode ? 'Edit the invoice details below.' : 'Fill in the details below to create a new invoice. Required fields are marked with an asterisk (*).'}</p>
             </div>
-            
-            {!editMode && <OrderSearch onOrderSelect={handleOrderSelect} />}
             
             <form 
               className="invoice-form" 

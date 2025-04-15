@@ -8,6 +8,10 @@ import InvoiceList from './components/invoiceList/InvoiceList';
 import InvoicePage from './components/invoiceView/InvoicePage';
 import Welcome from './components/Welcome';
 import ValidationResults from './components/invoiceValidationResult/validationResults';
+import InvoiceSelectionPage from './components/InvoiceSelectionPage';
+import CreateFromOrderPage from './components/CreateFromOrderPage';
+import XmlUploadSelectionPage from './components/XmlUploadSelectionPage';
+import XMLDatasetUpload from './components/XMLDatasetUpload';
 import './App.css';
 import apiClient from './utils/axiosConfig';
 import parseInvoiceXml from './utils/parseXmlHelper';
@@ -108,7 +112,14 @@ function App() {
           <PublicRoute restricted={true} path="/login" component={() => <Auth isLoginForm={true} />} />
           <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
           <ProtectedRoute path="/dashboard" component={Dashboard} />
+          
+          {/* Invoice creation routes */}
+          <ProtectedRoute path="/invoices/create-selection" component={InvoiceSelectionPage} />
+          <ProtectedRoute path="/invoices/create-from-order" component={CreateFromOrderPage} />
+          <ProtectedRoute path="/invoices/upload-xml" component={XmlUploadSelectionPage} />
+          <ProtectedRoute path="/invoices/upload-xml-dataset" component={XMLDatasetUpload} />
           <ProtectedRoute path="/invoices/create" component={InvoiceForm} />
+          
           <ProtectedRoute path="/invoices/edit/:invoiceid" component={EditInvoiceRoute} />
           <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
           <ProtectedRoute path="/validation-result" component={ValidationResults} />
