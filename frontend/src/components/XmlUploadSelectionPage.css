@@ -8,10 +8,9 @@
   border: 1px solid #333;
 }
 
-/* Reuse styles from InvoiceSelectionPage.css */
 .selection-header {
-  margin-bottom: 2rem;
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .selection-header h2 {
@@ -29,6 +28,7 @@
   display: flex;
   gap: 2rem;
   flex-wrap: wrap;
+  margin-bottom: 30px;
 }
 
 .selection-card {
@@ -104,6 +104,31 @@
 
 .back-button:hover {
   background-color: rgba(255, 59, 48, 0.1);
+}
+
+/* Styles for the xml-upload-section */
+.xml-upload-section {
+  margin-top: 30px;
+  border-top: 1px solid #333;
+  padding-top: 30px;
+}
+
+/* Ensure the XMLDatasetUpload component inherits styling */
+.xml-upload-section .xml-dataset-upload-container {
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+  margin: 0;
+}
+
+.xml-upload-section .xml-upload-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.xml-upload-section .back-button-container {
+  display: none; /* Hide the back button in the XMLDatasetUpload component */
 }
 
 @media (max-width: 768px) {

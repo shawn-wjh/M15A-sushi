@@ -96,6 +96,8 @@
   max-height: 80vh;
   overflow-y: auto;
   border: 1px solid #ff0000;
+  position: relative;
+  padding-top: 3rem;
 }
 
 .popup-content h4 {
@@ -169,12 +171,26 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
-  width: 100%;
+  width: auto;
   font-weight: 600;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.close-button::before {
+  content: "×";
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .close-button:hover {
   background-color: #cc0000;
+  transform: scale(1.05);
 }
 
 button:disabled {

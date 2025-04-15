@@ -8,7 +8,6 @@ import InvoiceForm from './InvoiceForm';
 import InvoiceList from './invoiceList/InvoiceList';
 import AppLayout from './AppLayout';
 import PeppolSettings from './PeppolSettings';
-import XMLDatasetUpload from './XMLDatasetUpload';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -262,10 +261,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="xml-upload-section">
-          <XMLDatasetUpload />
         </div>
       </div>
     );

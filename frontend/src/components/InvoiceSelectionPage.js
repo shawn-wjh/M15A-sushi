@@ -12,8 +12,13 @@ const InvoiceSelectionPage = () => {
   };
 
   const handleXmlUploadSelection = () => {
-    // Navigate directly to the single XML upload page
-    history.push('/invoices/upload-xml-single');
+    // Navigate directly to the XML upload selection page
+    history.push('/invoices/upload-xml');
+  };
+
+  const handleManualCreation = () => {
+    // Navigate to the invoice form directly
+    history.push('/invoices/create');
   };
 
   return (
@@ -60,6 +65,27 @@ const InvoiceSelectionPage = () => {
             <div className="selection-content">
               <h3>Upload XML</h3>
               <p>Import invoice data from XML files</p>
+            </div>
+            <div className="selection-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+          </div>
+
+          {/* Create Invoice Manually Option */}
+          <div className="selection-card" onClick={handleManualCreation}>
+            <div className="selection-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
+            <div className="selection-content">
+              <h3>Create Invoice Manually</h3>
+              <p>Create an invoice by filling in fields yourself</p>
             </div>
             <div className="selection-arrow">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

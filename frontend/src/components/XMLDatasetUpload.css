@@ -8,9 +8,49 @@
   border: 1px solid #333;
 }
 
+/* When the component is embedded */
+.xml-dataset-upload-container.embedded {
+  margin: 0;
+  padding: 20px 0;
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  max-width: 100%;
+  color: #fff;
+}
+
+.xml-dataset-upload-container.embedded .xml-upload-header h2,
+.xml-dataset-upload-container.embedded .xml-upload-header p,
+.xml-dataset-upload-container.embedded .preview-area h3 {
+  color: #fff;
+}
+
+.xml-dataset-upload-container.embedded .file-input-label {
+  background-color: #2d2d2d;
+  border: 2px dashed #444;
+  color: #fff;
+}
+
+.xml-dataset-upload-container.embedded .file-input-label:hover {
+  background-color: #333;
+  border-color: #ff3b30;
+}
+
+.xml-dataset-upload-container.embedded .preview-area {
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+}
+
+.xml-dataset-upload-container.embedded .xml-preview {
+  background-color: #262626;
+  color: #a0a0a0;
+  border: 1px solid #333;
+}
+
 .xml-upload-header {
-  margin-bottom: 2rem;
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .xml-upload-header h2 {
@@ -25,23 +65,21 @@
 }
 
 .upload-area {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .file-input-label {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem;
   background-color: #2d2d2d;
   border: 2px dashed #444;
-  border-radius: 8px;
+  border-radius: 6px;
+  padding: 3rem 2rem;
+  text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  gap: 0.5rem;
   color: #fff;
 }
 
@@ -55,115 +93,91 @@
 }
 
 .preview-area {
+  margin-top: 1.5rem;
   background-color: #2d2d2d;
-  border-radius: 8px;
-  padding: 1.5rem;
+  border-radius: 6px;
+  padding: 1rem;
   border: 1px solid #444;
 }
 
 .preview-area h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
   color: #fff;
   font-size: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .xml-preview {
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 1rem;
-  background-color: #1a1a1a;
+  background-color: #262626;
   border-radius: 4px;
-  color: #a0a0a0;
+  padding: 1rem;
   font-family: monospace;
-  font-size: 0.85rem;
-  line-height: 1.5;
+  color: #a0a0a0;
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
   white-space: pre-wrap;
-  word-break: break-all;
+  border: 1px solid #333;
 }
 
 .upload-button {
-  display: block;
-  width: 100%;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
   background-color: #ff3b30;
+  color: #fff;
   border: none;
   border-radius: 4px;
-  color: #fff;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
-  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
+  transition: background-color 0.3s ease;
+  width: 100%;
 }
 
 .upload-button:hover:not(:disabled) {
-  background-color: #e02e24;
+  background-color: #ff291f;
 }
 
 .upload-button:disabled {
-  background-color: #555;
+  background-color: #7a7a7a;
   cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.uploading {
-  opacity: 0.8;
-}
-
-.uploading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 2px solid #fff;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
 }
 
 .message {
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
 }
 
 .message.success {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background-color: rgba(39, 174, 96, 0.2);
+  border: 1px solid #27ae60;
+  color: #2ecc71;
 }
 
 .error-message {
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #f44336;
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  background-color: rgba(231, 76, 60, 0.2);
+  border: 1px solid #e74c3c;
+  color: #ff6b6b;
 }
 
 .back-button-container {
   display: flex;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
 
 .back-button {
-  padding: 0.75rem 1.5rem;
   background-color: transparent;
-  color: #ff3b30;
   border: 1px solid #ff3b30;
+  color: #ff3b30;
+  padding: 0.75rem 1.5rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;

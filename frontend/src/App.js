@@ -11,7 +11,6 @@ import ValidationResults from './components/invoiceValidationResult/validationRe
 import InvoiceSelectionPage from './components/InvoiceSelectionPage';
 import CreateFromOrderPage from './components/CreateFromOrderPage';
 import XmlUploadSelectionPage from './components/XmlUploadSelectionPage';
-import XMLInvoiceUpload from './components/XMLInvoiceUpload';
 import XMLDatasetUpload from './components/XMLDatasetUpload';
 import './App.css';
 import apiClient from './utils/axiosConfig';
@@ -118,7 +117,6 @@ function App() {
           <ProtectedRoute path="/invoices/create-selection" component={InvoiceSelectionPage} />
           <ProtectedRoute path="/invoices/create-from-order" component={CreateFromOrderPage} />
           <ProtectedRoute path="/invoices/upload-xml" component={XmlUploadSelectionPage} />
-          <ProtectedRoute path="/invoices/upload-xml-single" component={XMLInvoiceUpload} />
           <ProtectedRoute path="/invoices/upload-xml-dataset" component={XMLDatasetUpload} />
           <ProtectedRoute path="/invoices/create" component={InvoiceForm} />
           
