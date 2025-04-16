@@ -1,174 +1,191 @@
-.xml-upload-container {
+.xml-dataset-upload-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
   background-color: #1a1a1a;
   border-radius: 8px;
-  padding: 24px;
-  margin: 20px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  border: 1px solid #3d3d3d;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #333;
+}
+
+/* When the component is embedded */
+.xml-dataset-upload-container.embedded {
+  margin: 0;
+  padding: 20px 0;
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  max-width: 100%;
+  color: #fff;
+}
+
+.xml-dataset-upload-container.embedded .xml-upload-header h2,
+.xml-dataset-upload-container.embedded .xml-upload-header p,
+.xml-dataset-upload-container.embedded .preview-area h3 {
+  color: #fff;
+}
+
+.xml-dataset-upload-container.embedded .file-input-label {
+  background-color: #2d2d2d;
+  border: 2px dashed #444;
+  color: #fff;
+}
+
+.xml-dataset-upload-container.embedded .file-input-label:hover {
+  background-color: #333;
+  border-color: #ff3b30;
+}
+
+.xml-dataset-upload-container.embedded .preview-area {
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+}
+
+.xml-dataset-upload-container.embedded .xml-preview {
+  background-color: #262626;
+  color: #a0a0a0;
+  border: 1px solid #333;
 }
 
 .xml-upload-header {
-  margin-bottom: 24px;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-.xml-upload-header h3 {
-  color: #ffffff;
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
+.xml-upload-header h2 {
+  color: #fff;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 .xml-upload-header p {
   color: #a0a0a0;
-  margin: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
-.xml-upload-content {
+.upload-area {
+  margin-bottom: 2rem;
+}
+
+.file-input-label {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  background-color: #2d2d2d;
+  border: 2px dashed #444;
+  border-radius: 6px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  gap: 0.5rem;
+  color: #fff;
 }
 
-.file-input-container {
-  position: relative;
+.file-input-label:hover {
+  background-color: #333;
+  border-color: #ff3b30;
 }
 
 .file-input {
   display: none;
 }
 
-.file-input-label {
-  display: inline-block;
-  padding: 12px 24px;
-  background-color: #ff3b30;
-  color: #ffffff;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  border: 1px solid #3d3d3d;
-}
-
-.file-input-label:hover {
-  background-color: #3d3d3d;
-}
-
-.selected-file {
-  background-color: #2d2d2d;
-  padding: 12px;
-  border-radius: 6px;
-  border: 1px solid #3d3d3d;
-}
-
-.file-name {
-  color: #ffffff;
-  font-size: 0.9rem;
-}
-
 .preview-area {
-  margin-top: 1rem;
-  border: 1px solid #3d3d3d;
-  border-radius: 8px;
-  padding: 1.5rem;
+  margin-top: 1.5rem;
   background-color: #2d2d2d;
+  border-radius: 6px;
+  padding: 1rem;
+  border: 1px solid #444;
 }
 
 .preview-area h3 {
+  color: #fff;
+  font-size: 1.25rem;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
-  color: #ffffff;
-  font-weight: 500;
 }
 
 .xml-preview {
-  max-height: 400px;
+  background-color: #262626;
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: monospace;
+  color: #a0a0a0;
+  overflow-x: auto;
+  max-height: 200px;
   overflow-y: auto;
-  background-color: #1a1a1a;
-  padding: 1.5rem;
-  border-radius: 8px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.9rem;
-  line-height: 1.5;
   white-space: pre-wrap;
-  word-wrap: break-word;
-  border: 1px solid #3d3d3d;
-  color: #ffffff;
-}
-
-.xml-preview::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.xml-preview::-webkit-scrollbar-track {
-  background: #2d2d2d;
-  border-radius: 4px;
-}
-
-.xml-preview::-webkit-scrollbar-thumb {
-  background: #3d3d3d;
-  border-radius: 4px;
-}
-
-.xml-preview::-webkit-scrollbar-thumb:hover {
-  background: #4d4d4d;
+  border: 1px solid #333;
 }
 
 .upload-button {
-  padding: 12px 24px;
   background-color: #ff3b30;
-  color: #ffffff;
-  border: 1px solid #3d3d3d;
-  border-radius: 6px;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s;
-  font-weight: 500;
+  transition: background-color 0.3s ease;
+  width: 100%;
 }
 
 .upload-button:hover:not(:disabled) {
-  background-color: #3d3d3d;
+  background-color: #ff291f;
 }
 
 .upload-button:disabled {
-  background-color: #1a1a1a;
-  color: #666666;
+  background-color: #7a7a7a;
   cursor: not-allowed;
-  border-color: #2d2d2d;
 }
 
-.success-message {
-  color: #4caf50;
-  padding: 12px;
-  background-color: rgba(76, 175, 80, 0.1);
-  border-radius: 6px;
-  font-size: 0.9rem;
+.message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.message.success {
+  background-color: rgba(39, 174, 96, 0.2);
+  border: 1px solid #27ae60;
+  color: #2ecc71;
 }
 
 .error-message {
-  color: #f44336;
-  padding: 12px;
-  background-color: rgba(244, 67, 54, 0.1);
-  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  background-color: rgba(231, 76, 60, 0.2);
+  border: 1px solid #e74c3c;
+  color: #ff6b6b;
+}
+
+.back-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.back-button {
+  background-color: transparent;
+  border: 1px solid #ff3b30;
+  color: #ff3b30;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 0.9rem;
+  transition: all 0.3s ease;
 }
 
-/* Loading state */
-.uploading {
-  position: relative;
-  opacity: 0.7;
-}
-
-.uploading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  border: 2px solid #ffffff;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.back-button:hover {
+  background-color: rgba(255, 59, 48, 0.1);
 }
 
 @keyframes spin {

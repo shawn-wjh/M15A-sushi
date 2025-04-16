@@ -27,7 +27,7 @@ const MenuBar = ({ activeSection, setActiveSection }) => {
   };
 
   const handleCreateInvoice = () => {
-    history.push('/invoices/create');
+    history.push('/invoices/create-selection');
   };
 
   const handleLogoClick = () => {

@@ -18,6 +18,7 @@ const orderRoutes = require('./routes/order.routes');
 const currencyRoutes = require('./routes/currency.routes');
 const xmlDatasetRoutes = require('./routes/xmldataset.routes');
 const exportRoutes = require('./routes/export.routes');
+const aiRoutes = require('./routes/ai.routes');
 // Create Express app
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/v1/admin/orders', orderRoutes);
 app.use('/v1/currency', currencyRoutes);
 app.use('/v1/xml-dataset', xmlDatasetRoutes);
 app.use('/v1/export', exportRoutes);
+app.use('/v1/ai', aiRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.resolve(__dirname, '../../public')));
