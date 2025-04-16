@@ -1,5 +1,4 @@
 const { schemaNameMap } = require('../utils/schemaNameMap');
-const path = require('path');
 
 const pdfLayout = async (doc, invoice) => {
   doc.setFont('helvetica');
@@ -116,7 +115,6 @@ const addItemsTable = async (doc, invoice) => {
   // Draw table rows with pagination
   doc.setFont('helvetica', 'normal');
   let y = startY + 10;
-  let currentPage = 1;
   let rowsOnCurrentPage = 0;
 
   for (let i = 0; i < invoice.items.length; i++) {
@@ -126,7 +124,6 @@ const addItemsTable = async (doc, invoice) => {
     // Check if we need a new page
     if (rowsOnCurrentPage >= maxRowsPerPage) {
       doc.addPage();
-      currentPage++;
       y = 40; // Reset Y position for new page
       rowsOnCurrentPage = 0;
       

@@ -1,8 +1,6 @@
 const { jsPDF } = require('jspdf');
-const { schemaNameMap } = require('../utils/schemaNameMap');
 const pdfLayout = require('../models/pdfExportLayout');
 const csvLayout = require('../models/csvExportLayout');
-const { errorMonitor } = require('nodemailer/lib/xoauth2');
 
 const exportController = {
   exportInvoiceXML: async (req, res) => {
