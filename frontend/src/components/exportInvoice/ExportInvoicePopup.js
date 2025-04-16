@@ -9,99 +9,96 @@ const ExportInvoicePopup = ({ onClose, invoiceId }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  if (!Array.isArray(invoiceId)) {
+    invoiceId = [invoiceId];
+  }
+
   const handleXMLExport = async () => {
-    console.log("handleXMLExport called");
-    try {
-      // Make the request to download the XML file
-      const response = await apiClient.get(`${API_URL}/${invoiceId}/xml`, {
-        responseType: "blob", // Important: This tells axios to handle the response as a blob
-      });
+    console.log("invoiceId in exportInvoicePopup", invoiceId);
+    for (const id of invoiceId) {
+      try {
+        const response = await apiClient.get(`${API_URL}/${id}/xml`, {
+          responseType: "blob",
+        });
 
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+        const url = window.URL.createObjectURL(new Blob([response.data]));
 
-      // Create a temporary link element
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${invoiceId}.xml`); // Set the filename
-      document.body.appendChild(link);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `invoice-${invoiceId}.xml`);
+        document.body.appendChild(link);
 
-      // Trigger the download
-      link.click();
+        link.click();
 
-      // Clean up
-      link.remove();
-      window.URL.revokeObjectURL(url);
+        link.remove();
+        window.URL.revokeObjectURL(url);
 
-      setSuccess(true);
-      setMessage("XML file downloaded successfully");
-    } catch (error) {
-      setError("Failed to download XML file");
-      console.error("Error downloading XML:", error);
+        setSuccess(true);
+        setMessage("XML file downloaded successfully");
+      } catch (error) {
+        setError("Failed to download XML file");
+        console.error("Error downloading XML:", error);
+      }
     }
   };
 
   const handlePDFExport = async () => {
-    try {
-      console.log("exportPDF called");
-      const response = await apiClient.get(`${API_URL}/${invoiceId}/pdf`, {
-        responseType: 'blob'
-      });
-      console.log("response", response);
+    for (const id of invoiceId) {
+      try {
+        console.log("exportPDF called");
+        const response = await apiClient.get(`${API_URL}/${id}/pdf`, {
+          responseType: "blob",
+        });
+        console.log("response", response);
 
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+        const url = window.URL.createObjectURL(new Blob([response.data]));
 
-      // Create a temporary link element
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${invoiceId}.pdf`);
-      document.body.appendChild(link);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `invoice-${invoiceId}.pdf`);
+        document.body.appendChild(link);
 
-      // Trigger the download
-      link.click();
+        link.click();
 
-      // Clean up
-      link.remove();
-      window.URL.revokeObjectURL(url);
+        link.remove();
+        window.URL.revokeObjectURL(url);
 
-      setSuccess(true);
-      setMessage("PDF file downloaded successfully");
-    } catch (error) {
-      setError("Failed to download PDF file");
-      console.error("Error downloading PDF:", error);
+        setSuccess(true);
+        setMessage("PDF file downloaded successfully");
+      } catch (error) {
+        setError("Failed to download PDF file");
+        console.error("Error downloading PDF:", error);
+      }
     }
   };
 
   const handleCSVExport = async () => {
-    try {
-      console.log("exportCSV called");
-      const response = await apiClient.get(`${API_URL}/${invoiceId}/csv`, {
-        responseType: 'blob'
-      });
-      console.log("response", response);
+    for (const id of invoiceId) {
+      try {
+        console.log("exportCSV called");
+        const response = await apiClient.get(`${API_URL}/${id}/csv`, {
+          responseType: "blob",
+        });
+        console.log("response", response);
 
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+        const url = window.URL.createObjectURL(new Blob([response.data]));
 
-      // Create a temporary link element
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${invoiceId}.csv`);
-      document.body.appendChild(link);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `invoice-${id}.csv`);
+        document.body.appendChild(link);
 
-      // Trigger the download
-      link.click();
+        link.click();
 
-      // Clean up
-      link.remove();
-      window.URL.revokeObjectURL(url);
+        link.remove();
+        window.URL.revokeObjectURL(url);
 
-      setSuccess(true);
-      setMessage("CSV file downloaded successfully");
-    } catch (error) {
-      setError("Failed to download CSV file");
-      console.error("Error downloading CSV:", error);
+        setSuccess(true);
+        setMessage("CSV file downloaded successfully");
+      } catch (error) {
+        setError("Failed to download CSV file");
+        console.error("Error downloading CSV:", error);
+      }
     }
   };
 
