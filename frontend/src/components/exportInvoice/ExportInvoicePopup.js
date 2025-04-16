@@ -74,7 +74,35 @@ const ExportInvoicePopup = ({ onClose, invoiceId }) => {
   };
 
   const handleCSVExport = async () => {
-    alert("not implemented yet");
+    try {
+      console.log("exportCSV called");
+      const response = await apiClient.get(`${API_URL}/${invoiceId}/csv`, {
+        responseType: 'blob'
+      });
+      console.log("response", response);
+
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      // Create a temporary link element
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice-${invoiceId}.csv`);
+      document.body.appendChild(link);
+
+      // Trigger the download
+      link.click();
+
+      // Clean up
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSuccess(true);
+      setMessage("CSV file downloaded successfully");
+    } catch (error) {
+      setError("Failed to download CSV file");
+      console.error("Error downloading CSV:", error);
+    }
   };
 
   return (

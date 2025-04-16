@@ -1,6 +1,7 @@
 const { jsPDF } = require('jspdf');
 const { schemaNameMap } = require('../utils/schemaNameMap');
 const pdfLayout = require('../models/pdfExportLayout');
+const csvLayout = require('../models/csvExportLayout');
 const { errorMonitor } = require('nodemailer/lib/xoauth2');
 
 const exportController = {
@@ -77,10 +78,34 @@ const exportController = {
   },
 
   exportInvoiceCSV: async (req, res) => {
-    return res.status(500).json({
-      status: 'error',
-      message: 'CSV export not implemented yet'
-    });
+    console.log("exportInvoiceCSV called");
+    try {
+      const invoice = req.invoice.invoiceJson;
+      
+      if (!invoice) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'No invoice data found'
+        });
+      }
+
+      // Generate CSV content
+      const csvContent = csvLayout(invoice);
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=invoice-${req.params.invoiceid}.csv`);
+      
+      // Send the CSV content
+      return res.status(200).send(csvContent);
+    } catch (error) {
+      console.error('CSV generation error:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to generate CSV',
+        details: error.message
+      });
+    }
   }
 };
 
