@@ -52,7 +52,7 @@ const csvExportLayout = (invoice) => {
       ]);
     });
   }
-  sections.push(['']); // Empty line for spacing
+  sections.push(['']);
 
   // Totals Section
   sections.push(['TOTALS']);
@@ -60,15 +60,11 @@ const csvExportLayout = (invoice) => {
   sections.push([`Tax (${invoice.taxRate || 0}%):`, invoice.taxAmount ? parseFloat(invoice.taxAmount).toFixed(2) : 'N/A']);
   sections.push(['Total:', invoice.totalWithTax ? parseFloat(invoice.totalWithTax).toFixed(2) : 'N/A']);
 
-  // Convert sections to CSV string
   const csvContent = sections.map(section => {
-    // For single-column sections (headers and labels), just return the first element
     if (section.length === 1) {
       return section[0];
     }
-    // For multi-column sections (items table), join with commas
     return section.map(cell => {
-      // Escape cells that contain commas or quotes
       if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
         return `"${cell.replace(/"/g, '""')}"`;
       }
