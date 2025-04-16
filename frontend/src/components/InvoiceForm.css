@@ -336,6 +336,13 @@
   margin-top: 20px;
 }
 
+.form-actions.centered {
+  justify-content: center;
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
 .form-button {
   padding: 12px 24px;
   border-radius: 6px;
@@ -345,6 +352,89 @@
   transition: all var(--transition-medium);
   border: none;
   font-family: inherit;
+}
+
+.circle-icon-label {
+  margin-left: 10px;
+}
+
+.circle-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+}
+
+.circle-icon:hover {
+  transform: translateY(-2px);
+}
+
+.form-button.circle-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+}
+
+.form-button.circle-icon:hover {
+  transform: translateY(-2px);
+}
+
+.form-button.circle-icon .circle-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff0000, #000000);
+  color: var(--white);
+  font-size: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-button.circle-icon .circle-icon::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+.form-button.circle-icon .circle-icon-label {
+  color: var(--light-gray);
+  font-size: 0.9rem;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
 }
 
 .form-button.primary {

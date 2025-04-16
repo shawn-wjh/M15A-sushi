@@ -10,6 +10,7 @@ import InvoiceListItem from "./InvoiceListItem";
 import ActionBarIcon from "./ActionBarIcon";
 import InvoicePagination from "./InvoicePagination";
 import ValidationSchemaPopUp from "../invoiceValidationResult/validationSchemaPopUp";
+import ExportInvoicePopup from "../exportInvoice/ExportInvoicePopup";
 
 const API_URL = "/v1/invoices/list";
 
@@ -31,6 +32,7 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isValidationPopUpOpen, setIsValidationPopUpOpen] = useState(false);
+  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
 
   const fetchInvoices = async () => {
     const token = getCookie("token");
@@ -197,9 +199,13 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
         apiClient.delete(`/v1/invoices/${invoiceId}`)
       );
 
+      // Wait for all delete operations to complete
+      await Promise.all(deletePromises);
+
       // Update the UI
       setShowDeleteConfirm(false);
       setSelectedInvoices(new Set());
+      setExpandedInvoices(new Set()); // Also clear expanded state
 
       // Show success message
       setMessage({
@@ -207,7 +213,7 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
         text: `Successfully deleted ${selectedInvoices.size} invoice${selectedInvoices.size !== 1 ? "s" : ""}`,
       });
 
-      // Refresh the invoice list using the extracted function
+      // Force a refresh of the invoice list
       await fetchInvoices();
     } catch (error) {
       console.error("Error deleting invoices:", error);
@@ -224,7 +230,7 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
 
   const handleDownloadSelected = () => {
     // TODO: Implement download functionality
-    alert("Download not yet implemented");
+    setShowDownloadPopup(true);
   };
 
   const handleCancelSelection = () => {
@@ -423,6 +429,13 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
         <ValidationSchemaPopUp
           onClose={() => setIsValidationPopUpOpen(false)}
           invoiceIds={Array.from(selectedInvoices)}
+        />
+      )}
+
+      {showDownloadPopup && (
+        <ExportInvoicePopup
+          onClose={() => setShowDownloadPopup(false)}
+          invoiceId={Array.from(selectedInvoices)}
         />
       )}
     </div>

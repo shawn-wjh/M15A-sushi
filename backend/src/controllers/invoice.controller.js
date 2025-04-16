@@ -92,10 +92,7 @@ const invoiceController = {
       // Store in DynamoDB
       await dbClient.send(new PutCommand(invoiceItem));
 
-      // Check if this is part of a middleware chain (like in create-and-validate)
-      // or a direct route handler (like in /create)
       if (next && req.route && req.route.path === '/create-and-validate') {
-        // Set invoiceId for next functions
         req.params.invoiceid = invoiceId;
         next();
       } else {
@@ -441,6 +438,7 @@ const invoiceController = {
           InvoiceID: invoiceId,
           UserID: Items[0].UserID,
           invoice: ublXml,
+          invoiceJson: updateData,
           timestamp: new Date().toISOString(), // update time last modified
           valid: false, // invalidate the invoice after update by default
         }
