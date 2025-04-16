@@ -42,7 +42,35 @@ const ExportInvoicePopup = ({ onClose, invoiceId }) => {
   };
 
   const handlePDFExport = async () => {
-    alert("not implemented yet");
+    try {
+      console.log("exportPDF called");
+      const response = await apiClient.get(`${API_URL}/${invoiceId}/pdf`, {
+        responseType: 'blob'
+      });
+      console.log("response", response);
+
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      // Create a temporary link element
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice-${invoiceId}.pdf`);
+      document.body.appendChild(link);
+
+      // Trigger the download
+      link.click();
+
+      // Clean up
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSuccess(true);
+      setMessage("PDF file downloaded successfully");
+    } catch (error) {
+      setError("Failed to download PDF file");
+      console.error("Error downloading PDF:", error);
+    }
   };
 
   const handleCSVExport = async () => {

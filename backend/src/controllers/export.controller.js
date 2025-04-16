@@ -1,3 +1,8 @@
+const { jsPDF } = require('jspdf');
+const { schemaNameMap } = require('../utils/schemaNameMap');
+const pdfLayout = require('../models/pdfExportLayout');
+const { errorMonitor } = require('nodemailer/lib/xoauth2');
+
 const exportController = {
   exportInvoiceXML: async (req, res) => {
     console.log("exportInvoiceXML called");
@@ -28,10 +33,47 @@ const exportController = {
   },
 
   exportInvoicePDF: async (req, res) => {
-    return res.status(500).json({
-      status: 'error',
-      message: 'PDF export not implemented yet'
-    });
+    console.log("exportInvoicePDF called");
+    try {
+      console.log("req:", req);
+      const invoice = req.invoice.invoiceJson;
+      console.log("Invoice data:", invoice);
+      
+      if (!invoice) {
+        console.log("error in export controller:", invoice);
+        return res.status(400).json({
+          status: 'error',
+          message: 'No invoice data found'
+        });
+      }
+
+      // Create new PDF document
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Apply the PDF layout
+      await pdfLayout(doc, invoice);
+      
+      // Get the PDF as a buffer
+      const pdfBuffer = doc.output('arraybuffer');
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=invoice-${req.params.invoiceid}.pdf`);
+      
+      // Send the PDF buffer
+      return res.status(200).send(Buffer.from(pdfBuffer));
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to generate PDF',
+        details: error.message
+      });
+    }
   },
 
   exportInvoiceCSV: async (req, res) => {
