@@ -519,109 +519,236 @@ const Dashboard = () => {
       
     return (
       <div className="overview-section">
-        <h2>Dashboard Overview</h2>
+        <div className="overview-header">
+          <h2>Dashboard Overview</h2>
+          <div className="time-filter">
+            <button className="time-filter-btn active">Today</button>
+            <button className="time-filter-btn">This Week</button>
+            <button className="time-filter-btn">This Month</button>
+            <button className="time-filter-btn">This Year</button>
+          </div>
+        </div>
         
         <div className="stats-container">
           <div className="stat-card">
-            <div className="stat-icon invoice-icon"></div>
+            <div className="stat-header">
+              <div className="stat-icon total-invoices-icon"></div>
+              <div className="stat-trend positive">
+                <span>+12%</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 14L12 9L17 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
             <div className="stat-content">
               <div className="stat-value">
                 {statsLoading ? (
                   <span className="loading-indicator">...</span>
                 ) : (
-                  invoiceStats.totalInvoices
+                  <span className="animate-value">{invoiceStats.totalInvoices}</span>
                 )}
               </div>
               <div className="stat-label">Total Invoices</div>
+              <div className="stat-subtitle">From all accounts</div>
             </div>
           </div>
           
           <div className="stat-card">
-            <div className="stat-icon validated-icon"></div>
+            <div className="stat-header">
+              <div className="stat-icon validated-icon"></div>
+              <div className="stat-trend positive">
+                <span>+8%</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 14L12 9L17 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
             <div className="stat-content">
               <div className="stat-value">
                 {statsLoading ? (
                   <span className="loading-indicator">...</span>
                 ) : (
-                  invoiceStats.paidInvoices
+                  <span className="animate-value">{invoiceStats.paidInvoices}</span>
                 )}
               </div>
               <div className="stat-label">Validated Invoices</div>
+              <div className="stat-subtitle">Successfully processed</div>
             </div>
           </div>
           
           <div className="stat-card">
-            <div className="stat-icon pending-icon"></div>
+            <div className="stat-header">
+              <div className="stat-icon pending-icon"></div>
+              <div className="stat-trend negative">
+                <span>-3%</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
             <div className="stat-content">
               <div className="stat-value">
                 {statsLoading ? (
                   <span className="loading-indicator">...</span>
                 ) : (
-                  invoiceStats.pendingInvoices
+                  <span className="animate-value">{invoiceStats.pendingInvoices}</span>
                 )}
               </div>
               <div className="stat-label">Invoices Pending Validation</div>
+              <div className="stat-subtitle">Awaiting processing</div>
             </div>
           </div>
           
           <div className="stat-card">
-            <div className="stat-icon revenue-icon"></div>
+            <div className="stat-header">
+              <div className="stat-icon revenue-icon"></div>
+              <div className="stat-trend positive">
+                <span>+15%</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 14L12 9L17 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
             <div className="stat-content">
               <div className="stat-value">
                 {statsLoading ? (
                   <span className="loading-indicator">...</span>
                 ) : (
-                  invoiceStats.totalRevenue
+                  <span className="animate-value">{invoiceStats.totalRevenue}</span>
                 )}
               </div>
               <div className="stat-label">Total Revenue</div>
+              <div className="stat-subtitle">Across all invoices</div>
             </div>
           </div>
         </div>
         
         <div className="chart-container">
           <div className="chart-card">
-            <h3>Daily Invoice Activity</h3>
+            <div className="chart-card-header">
+              <h3>Daily Invoice Activity</h3>
+              <div className="chart-actions">
+                <button className="chart-action-btn active">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button className="chart-action-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button className="chart-action-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
             {statsLoading ? (
               <div className="chart-loading">
-                <span className="loading-indicator">Loading...</span>
+                <div className="chart-loading-spinner"></div>
+                <span>Loading chart data...</span>
               </div>
             ) : (
-              <div className="chart-placeholder">
+              <div className="chart-body">
                 <canvas ref={chartRef} height="250"></canvas>
               </div>
             )}
           </div>
           
           <div className="chart-card">
-            <h3>Invoice Status</h3>
+            <div className="chart-card-header">
+              <h3>Invoice Status</h3>
+              <select className="chart-period-selector">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Last 90 Days</option>
+                <option>This Year</option>
+              </select>
+            </div>
             {statsLoading ? (
               <div className="chart-loading">
-                <span className="loading-indicator">Loading...</span>
+                <div className="chart-loading-spinner"></div>
+                <span>Loading chart data...</span>
               </div>
             ) : (
-              <div className="chart-placeholder pie-chart-container">
-                <canvas ref={pieChartRef} height="200"></canvas>
-                
-                {invoiceStats.totalInvoices > 0 && (
-                  <div className="pie-chart-total">
-                    <div className="total-value">{invoiceStats.totalInvoices}</div>
-                    <div className="total-label">Total</div>
-                  </div>
-                )}
-                
-                <div className="pie-chart-labels">
-                  <div className="pie-chart-label validated-label">
-                    <div className="label-percentage">{validatedPercentage}%</div>
-                    <div className="label-text">Validated</div>
-                  </div>
-                  <div className="pie-chart-label pending-label">
-                    <div className="label-percentage">{pendingPercentage}%</div>
-                    <div className="label-text">Pending</div>
+              <div className="chart-body">
+                <div className="pie-chart-container">
+                  <canvas ref={pieChartRef} height="200"></canvas>
+                  
+                  {invoiceStats.totalInvoices > 0 && (
+                    <div className="pie-chart-total">
+                      <div className="total-value">{invoiceStats.totalInvoices}</div>
+                      <div className="total-label">Total</div>
+                    </div>
+                  )}
+                  
+                  <div className="pie-chart-labels">
+                    <div className="pie-chart-label validated-label">
+                      <div className="label-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="label-content">
+                        <div className="label-percentage">{validatedPercentage}%</div>
+                        <div className="label-text">Validated</div>
+                      </div>
+                    </div>
+                    <div className="pie-chart-label pending-label">
+                      <div className="label-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#ffcc00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M12 6V12L16 14" stroke="#ffcc00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="label-content">
+                        <div className="label-percentage">{pendingPercentage}%</div>
+                        <div className="label-text">Pending</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+        
+        <div className="recent-activity-section">
+          <div className="section-header">
+            <h3>Recent Activity</h3>
+            <button className="view-all-btn">View All</button>
+          </div>
+          <div className="activity-list">
+            <div className="activity-item new">
+              <div className="activity-icon created"></div>
+              <div className="activity-content">
+                <div className="activity-title">Invoice #1234 created</div>
+                <div className="activity-time">Today, 10:30 AM</div>
+              </div>
+              <div className="activity-amount">$230.00</div>
+            </div>
+            <div className="activity-item">
+              <div className="activity-icon validated"></div>
+              <div className="activity-content">
+                <div className="activity-title">Invoice #1230 validated</div>
+                <div className="activity-time">Yesterday, 2:15 PM</div>
+              </div>
+              <div className="activity-amount">$495.85</div>
+            </div>
+            <div className="activity-item">
+              <div className="activity-icon sent"></div>
+              <div className="activity-content">
+                <div className="activity-title">Invoice #1228 sent</div>
+                <div className="activity-time">Yesterday, 11:20 AM</div>
+              </div>
+              <div className="activity-amount">$1,200.00</div>
+            </div>
           </div>
         </div>
       </div>
