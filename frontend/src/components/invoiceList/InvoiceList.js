@@ -197,9 +197,13 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
         apiClient.delete(`/v1/invoices/${invoiceId}`)
       );
 
+      // Wait for all delete operations to complete
+      await Promise.all(deletePromises);
+
       // Update the UI
       setShowDeleteConfirm(false);
       setSelectedInvoices(new Set());
+      setExpandedInvoices(new Set()); // Also clear expanded state
 
       // Show success message
       setMessage({
@@ -207,7 +211,7 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
         text: `Successfully deleted ${selectedInvoices.size} invoice${selectedInvoices.size !== 1 ? "s" : ""}`,
       });
 
-      // Refresh the invoice list using the extracted function
+      // Force a refresh of the invoice list
       await fetchInvoices();
     } catch (error) {
       console.error("Error deleting invoices:", error);
