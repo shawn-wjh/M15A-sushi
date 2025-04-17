@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import apiClient from "../utils/axiosConfig";
 import { getSearchList, SearchList } from "./SearchList";
-import "./TopBar.css";
 
 const TopBar = () => {
   const history = useHistory();
