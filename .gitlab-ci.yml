@@ -61,6 +61,7 @@ build-and-deploy:
 
     # Include config files
     - cp -r .ebextensions deploy/ || true
+    - cp -r .platform deploy/ || true
     - cp Procfile deploy/ || true
 
     # 🔍 Log structure of deploy folder
