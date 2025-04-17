@@ -7,6 +7,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+//TODO: add a function to check if the user has a valid subscription
 /**
  * Process text prompt for invoice creation
  * @param {Object} req - Express request object
