@@ -247,12 +247,14 @@ const AIInvoiceCreator = () => {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      
-      // Add conversation history to the form data - stringify properly
-      const conversationHistory = messages.slice(1);
+  
+      // Only keep the bits of each message you actually need
+      const conversationHistory = messages
+        .slice(1)
+        .map(({ image, ...keep }) => keep);
+  
       formData.append('conversation', JSON.stringify(conversationHistory));
-      
-      // Add the text message if provided
+  
       if (text) {
         formData.append('text', text);
       }
