@@ -1780,10 +1780,12 @@ const LandingPage = () => {
               </div>
             </div>
             <ul ref={el => pricingFeaturesRef.current[0] = el} className="pricing-features">
-              <li>50 invoices per month</li>
-              <li>5 templates</li>
-              <li>Email support</li>
-              <li>Basic reporting</li>
+              <li className="available">500 invoices per month</li>
+              <li className="available">Creation & validation</li>
+              <li className="available">Email support</li>
+              <li className="unavailable">Sending & exporting</li>
+              <li className="unavailable">Automated invoice generation</li>
+              <li className="unavailable">Financial overview dashboard</li>
             </ul>
             <div className="pricing-cta">
               <button ref={el => pricingButtonsRef.current[0] = el} className="cta-button" onClick={handleSignUp}>Get Started</button>
@@ -1800,11 +1802,12 @@ const LandingPage = () => {
               </div>
             </div>
             <ul ref={el => pricingFeaturesRef.current[1] = el} className="pricing-features">
-              <li>Unlimited invoices</li>
-              <li>All templates</li>
-              <li>Priority support</li>
-              <li>Advanced reporting</li>
-              <li>Client portal</li>
+              <li className="available">1000 invoices per month</li>
+              <li className="available">Creation & validation</li>
+              <li className="available">Sending & exporting</li>
+              <li className="available">Financial overview dashboard</li>
+              <li className="unavailable">Automated invoice generation</li>
+
             </ul>
             <div className="pricing-cta">
               <button ref={el => pricingButtonsRef.current[1] = el} className="cta-button primary" onClick={handleSignUp}>Get Started</button>
@@ -1819,11 +1822,10 @@ const LandingPage = () => {
               </div>
             </div>
             <ul ref={el => pricingFeaturesRef.current[2] = el} className="pricing-features">
-              <li>Everything in Nigiri</li>
-              <li>White-label solution</li>
-              <li>API access</li>
-              <li>Dedicated account manager</li>
-              <li>Custom templates</li>
+              <li className="available">Unlimited invoices</li>
+              <li className="available">All features available in Nigiri</li>
+              <li className="available">Priority support</li>
+              <li className="available">Automated invoice generation</li>
             </ul>
             <div className="pricing-cta">
               <button ref={el => pricingButtonsRef.current[2] = el} className="cta-button" onClick={handleSignUp}>Get Started</button>
