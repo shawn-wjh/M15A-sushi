@@ -52,6 +52,7 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
         response = await apiClient.get(`${API_URL}/shared?${queryParams}`);
       } else {
         response = await apiClient.get(`${API_URL}?${queryParams}`);
+        console.log('response.data.data.invoices:', response.data.data.invoices);
       }
 
       // case where user is not logged in

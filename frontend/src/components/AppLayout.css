@@ -21,6 +21,12 @@
   overflow-y: auto;
 }
 
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 600px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .app-content {
