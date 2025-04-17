@@ -782,6 +782,17 @@ body {
   line-height: 1.5;
 }
 
+.settings-option ul {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+
+.settings-option li {
+  margin-bottom: 5px;
+  color: #d0d0d0;
+  font-size: 14px;
+}
+
 /* Settings form fields */
 .settings-option .form-field {
   margin-bottom: 16px;
