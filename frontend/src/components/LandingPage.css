@@ -795,7 +795,7 @@ button {
   flex: 1;
 }
 
-.pricing-features li {
+.pricing-features li.available {
   margin-bottom: 1.5rem;
   position: relative;
   padding-left: 1.8rem;
@@ -803,8 +803,25 @@ button {
   transform: translateX(-20px);
 }
 
-.pricing-features li::before {
+.pricing-features li.unavailable {
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-left: 1.8rem;
+  opacity: 0;
+  color: var(--light-gray);
+  transform: translateX(-20px);
+}
+
+.pricing-features li.available::before {
   content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--accent-red);
+  font-weight: bold;
+}
+
+.pricing-features li.unavailable::before {
+  content: '✗';
   position: absolute;
   left: 0;
   color: var(--accent-red);

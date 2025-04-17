@@ -1,31 +1,55 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import apiClient from "../utils/axiosConfig";
+import { getSearchList, SearchList } from "./SearchList";
 
 const TopBar = () => {
   const history = useHistory();
   const [user, setUser] = useState(null);
+  const [searchList, setSearchList] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      history.push("/login");
-      return;
-    }
+    const initialSearchList = async () => {
+      const list = await getList();
+      setSearchList(list);
+    };
+    initialSearchList();
+  }, []);
 
-    try {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-    } catch (e) {
-      console.error("Failed to parse user data");
-      history.push("/login");
+  useEffect(() => {
+    if (searchInput.trim() !== "") {
+      const results = getSearchList({ input: searchInput, list: searchList });
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
     }
-  }, [history]);
+  }, [searchInput, searchList]);
+
+  const handleSearchBlur = () => {
+    setTimeout(() => {
+      setIsSearchFocused(false);
+    }, 100);
+  };
 
   return (
     <div className="topbar">
-      <div className="search-bar">
-        <input type="text" placeholder="Search..." />
+      <div className="search-container">
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search invoices..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={handleSearchBlur}
+          />
+        </div>
+        {(isSearchFocused && searchResults.length > 0) && (
+          <SearchList searchResults={searchResults} />
+        )}
       </div>
       <div className="user-menu">
         <div className="notification-icon"></div>
@@ -41,5 +65,18 @@ const TopBar = () => {
     </div>
   );
 };
+
+const getList = async () => {
+  const response = await apiClient.get('/v1/invoices/list');
+  if (response.status === 200) {
+    return response.data.data.invoices;
+  } else if (response.status === 401) {
+    history.push("/login");
+    return [];
+  } else {
+    console.log("Failed to fetch search list");
+    return [];
+  }
+}
 
 export default TopBar;
