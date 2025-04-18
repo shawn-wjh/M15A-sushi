@@ -16,6 +16,8 @@ import './App.css';
 import apiClient from './utils/axiosConfig';
 import parseInvoiceXml from './utils/parseXmlHelper';
 import AIInvoiceCreator from './components/AIInvoiceCreator';
+import { ChatProvider } from './contexts/ChatContext';
+import ChatBotIcon from './components/ChatBotIcon';
 
 // Protected route component
 const ProtectedRoute = ({ component: Component, ...rest }) => {
@@ -104,34 +106,37 @@ const EditInvoiceRoute = (props) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="App">
-        <Switch>
-          <Route exact path="/welcome" component={Welcome} />
-          <PublicRoute restricted={true} exact path="/" component={LandingPage} />
-          <PublicRoute restricted={true} path="/auth" component={Auth} />
-          <PublicRoute restricted={true} path="/login" component={() => <Auth isLoginForm={true} />} />
-          <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
-          <ProtectedRoute path="/dashboard" component={Dashboard} />
-          
-          {/* Invoice creation routes */}
-          <ProtectedRoute path="/invoices/create-selection" component={InvoiceSelectionPage} />
-          <ProtectedRoute path="/invoices/create-from-order" component={CreateFromOrderPage} />
-          <ProtectedRoute path="/invoices/upload-xml" component={XmlUploadSelectionPage} />
-          <ProtectedRoute path="/invoices/upload-xml-dataset" component={XMLDatasetUpload} />
-          <ProtectedRoute path="/invoices/ai-invoice-creator" component={AIInvoiceCreator} />
-          <ProtectedRoute path="/invoices/create" component={InvoiceForm} />
-          
-          <ProtectedRoute path="/invoices/edit/:invoiceid" component={EditInvoiceRoute} />
-          <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
-          <ProtectedRoute path="/validation-result" component={ValidationResults} />
-          <ProtectedRoute path="/settings" component={Dashboard} />
-          <Route path="*">
-            <Redirect to="/" />
-          </Route>
-        </Switch>
-      </div>
-    </BrowserRouter>
+    <ChatProvider>
+      <BrowserRouter>
+        <div className="App">
+          <Switch>
+            <Route exact path="/welcome" component={Welcome} />
+            <PublicRoute restricted={true} exact path="/" component={LandingPage} />
+            <PublicRoute restricted={true} path="/auth" component={Auth} />
+            <PublicRoute restricted={true} path="/login" component={() => <Auth isLoginForm={true} />} />
+            <PublicRoute restricted={true} path="/signup" component={() => <Auth isLoginForm={false} />} />
+            <ProtectedRoute path="/dashboard" component={Dashboard} />
+            
+            {/* Invoice creation routes */}
+            <ProtectedRoute path="/invoices/create-selection" component={InvoiceSelectionPage} />
+            <ProtectedRoute path="/invoices/create-from-order" component={CreateFromOrderPage} />
+            <ProtectedRoute path="/invoices/upload-xml" component={XmlUploadSelectionPage} />
+            <ProtectedRoute path="/invoices/upload-xml-dataset" component={XMLDatasetUpload} />
+            <ProtectedRoute path="/invoices/ai-invoice-creator" component={AIInvoiceCreator} />
+            <ProtectedRoute path="/invoices/create" component={InvoiceForm} />
+            
+            <ProtectedRoute path="/invoices/edit/:invoiceid" component={EditInvoiceRoute} />
+            <ProtectedRoute path="/invoices/:invoiceid" component={InvoicePage} />
+            <ProtectedRoute path="/validation-result" component={ValidationResults} />
+            <ProtectedRoute path="/settings" component={Dashboard} />
+            <Route path="*">
+              <Redirect to="/" />
+            </Route>
+          </Switch>
+          <ChatBotIcon />
+        </div>
+      </BrowserRouter>
+    </ChatProvider>
   );
 }
 

@@ -353,7 +353,136 @@ const createInvoiceFromImage = async (req, res) => {
   }
 };
 
+// Create a new assistant for general enquires; handles all non creation related enquires
+const createAssistant = async (req, res) => {
+  try {
+    const { prompt, conversation = [], currentPage } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        message: 'Prompt is required'
+      });
+    }
+
+    let messages = [
+      {
+        role: 'system',
+        content: `You are Sushi AI 🍣, a friendly and helpful assistant. You are able to answer any question related to the invoice creation process and help users with their current task.
+
+        You have access to the following capabilities:
+        1. General Information:
+           - Answer questions about Sushi Invoice
+           - Explain features and functionality
+           - Provide guidance on using the system
+        
+        2. Page-Specific Actions:
+           ${currentPage ? `
+           Current Page: ${currentPage.path}
+           Page Data: ${JSON.stringify(currentPage.data)}
+           ` : ''}
+           
+           Based on the current page, you can:
+           - On invoice pages: Validate invoices, view details, send invoices
+           - On dashboard: Help with navigation, explain statistics
+           - On settings: Assist with configuration
+           - On creation pages: Guide through the creation process
+
+        3. Available Actions:
+           - Validate invoice: If on an invoice page, can trigger validation
+           - Send invoice: If on an invoice page, can help send the invoice
+           - View details: Can explain any visible information
+           - Navigate: Can suggest relevant pages to visit
+           - Create: Can guide through creation processes
+
+        4. Schema Validation:
+           - Available schemas: peppol, fairwork
+           - When user requests validation, ask which schemas they want to validate against
+           - If user doesn't specify schemas, use both by default
+           - Always confirm validation request before proceeding
+
+        When responding:
+        1. Be concise but helpful
+        2. If you can perform an action, mention it explicitly
+        3. If you need more information, ask for it
+        4. Use the page context to provide relevant help
+        5. If you can't help with something, say so politely
+        6. For validation requests, always include the schemas in the action response
+        `
+      }
+    ];
+    
+    // Add conversation history if provided
+    if (conversation && conversation.length > 0) {
+      const validMessages = conversation.filter(
+        msg => msg.role === 'user' || msg.role === 'assistant'
+      );
+      messages = [...messages, ...validMessages];
+    }
+    
+    // Add the new user message
+    messages.push({
+      role: 'user',
+      content: prompt
+    });
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages,
+      temperature: 0.7,
+      max_tokens: 2000
+    });
+
+    const aiResponse = completion.choices[0].message.content;
+
+    // Check if the response contains any actionable commands
+    const actions = [];
+    if (currentPage?.path?.includes('/invoices/') && currentPage?.data?.invoiceId) {
+      if (aiResponse.toLowerCase().includes('validate')) {
+        // Extract schemas from the response if specified
+        const schemas = [];
+        if (aiResponse.toLowerCase().includes('peppol')) schemas.push('peppol');
+        if (aiResponse.toLowerCase().includes('fairwork')) schemas.push('fairwork');
+        
+        // If no schemas specified, use both
+        const selectedSchemas = schemas.length > 0 ? schemas : ['peppol', 'fairwork'];
+        
+        actions.push({
+          type: 'validate',
+          invoiceId: currentPage.data.invoiceId,
+          schemas: selectedSchemas,
+          message: `I'll validate this invoice against ${selectedSchemas.join(' and ')} schemas. Click the validate button to confirm.`,
+          confirmButton: {
+            label: 'Validate',
+            action: 'confirm_validation'
+          }
+        });
+      }
+      if (aiResponse.toLowerCase().includes('send')) {
+        actions.push({
+          type: 'send',
+          invoiceId: currentPage.data.invoiceId
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: aiResponse,
+      actions
+    });
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error processing request',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createInvoiceFromText,
-  createInvoiceFromImage
+  createInvoiceFromImage,
+  createAssistant
 };

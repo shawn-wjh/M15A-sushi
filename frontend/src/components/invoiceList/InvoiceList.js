@@ -34,6 +34,10 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
   const [isValidationPopUpOpen, setIsValidationPopUpOpen] = useState(false);
   const [showDownloadPopup, setShowDownloadPopup] = useState(false);
 
+  useEffect(() => {
+    fetchInvoices();
+  }, [currentPage, filters, displaySharedInvoices]);
+
   const fetchInvoices = async () => {
     const token = getCookie("token");
     if (!token) {
@@ -110,12 +114,6 @@ const InvoiceList = ({ displaySharedInvoices = false }) => {
       setTotalInvoices(0);
     }
   };
-
-  useEffect(() => {
-    fetchInvoices();
-    // Reset to first page when switching between views
-    setCurrentPage(1);
-  }, [filters, currentPage, history, displaySharedInvoices]);
 
   const toggleInvoice = (invoiceId) => {
     setExpandedInvoices((prev) => {
