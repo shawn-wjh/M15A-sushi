@@ -73,15 +73,49 @@
   }
   
   .image-preview {
-    margin: 1rem 0;
-    text-align: center;
+    width: 60px;
+    height: 60px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #444;
+  }
+  
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 11;
+  }
+  
+  .image-preview:hover .image-overlay,
+  .message-image:hover .image-overlay {
+    opacity: 1;
   }
   
   .image-preview img {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .message-image {
+    margin: 10px 0;
+    max-width: 300px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #444;
+  }
+  
+  .message-image img {
+    width: 100%;
+    display: block;
   }
   
   button[type="submit"] {
@@ -255,23 +289,52 @@
 }
 
 .message-image {
-  margin-bottom: 1rem;
+  margin: 10px 0;
   max-width: 300px;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  transition: transform 0.3s ease;
+  position: relative;
+  border: 1px solid #444;
 }
 
-.message-image:hover {
-  transform: scale(1.02);
+.message-image::after {
+  display: none;
 }
 
 .message-image img {
-  max-width: 100%;
-  border-radius: 8px;
-  border: 1px solid #444;
+  width: 100%;
   display: block;
+}
+
+.delete-image-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ff3b30;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 12;
+  opacity: 1;
+}
+
+.message-image:hover .delete-image-button {
+  opacity: 1 !important;
+}
+
+.delete-image-button:hover {
+  background-color: #d42d23 !important;
+  transform: translate(-50%, -50%) scale(1.1) !important;
 }
 
 .chat-input-form {
@@ -789,4 +852,62 @@
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.5);
   font-weight: 400;
+}
+
+/* Image preview in chat input */
+.image-preview-container {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  position: relative;
+}
+
+.image-preview::after {
+  display: none;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.image-preview:hover img {
+  transform: scale(1.05);
+}
+
+.cancel-image-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ff3b30;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 12;
+  opacity: 1;
+}
+
+.image-preview:hover .cancel-image-button {
+  opacity: 1 !important;
+}
+
+.cancel-image-button:hover {
+  background-color: #d42d23 !important;
+  transform: translate(-50%, -50%) scale(1.1) !important;
+}
+
+.send-button-with-image {
+  margin-left: 8px;
 }

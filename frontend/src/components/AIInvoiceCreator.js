@@ -24,17 +24,80 @@ const AIInvoiceCreator = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-  const [showImagePreview, setShowImagePreview] = useState(false);
-  const [invoiceData, setInvoiceData] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const messageEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const chatInputRef = useRef(null);
   const history = useHistory();
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Set up event listeners for paste events
+  useEffect(() => {
+    const handlePaste = (e) => {
+      if (e.clipboardData && e.clipboardData.items) {
+        const items = e.clipboardData.items;
+        
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            e.preventDefault();
+            const file = items[i].getAsFile();
+            handleImageUpload(file);
+            break;
+          }
+        }
+      }
+    };
+
+    // Add the event listener to the document
+    document.addEventListener('paste', handlePaste);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, []);
+
+  const handleImageUpload = (file) => {
+    if (file) {
+      setImageFile(file);
+      
+      // Create preview for the input area
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        handleImageUpload(file);
+      }
+    }
+  };
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
@@ -46,26 +109,21 @@ const AIInvoiceCreator = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setShowImagePreview(true);
+    handleImageUpload(file);
+  };
 
-      // Add a user message showing the uploaded image
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'user',
-            content: 'I\'m uploading an invoice image.',
-            image: reader.result
-          }
-        ]);
-        
-        // Automatically process the image
-        processImageFile(file);
-      };
-      reader.readAsDataURL(file);
+  const handleDeleteMessageImage = (messageIndex) => {
+    setMessages(prev => {
+      const updatedMessages = [...prev];
+      // Create a new object without the image property
+      const { image, ...messageWithoutImage } = updatedMessages[messageIndex];
+      updatedMessages[messageIndex] = messageWithoutImage;
+      return updatedMessages;
+    });
+    
+    // Ensure file input is reset for future uploads
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -76,10 +134,43 @@ const AIInvoiceCreator = () => {
     
     // Add user message to chat
     const userMessage = input.trim();
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: userMessage }
-    ]);
+    
+    // Store for later reference
+    const currentImageFile = imageFile;
+    const currentImagePreview = imagePreview;
+    
+    // Clear the image immediately to improve UX
+    setImageFile(null);
+    setImagePreview(null);
+    
+    // Reset file input value
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    if (currentImageFile) {
+      // Add message with image if there's an image file
+      setMessages(prev => [
+        ...prev,
+        { 
+          role: 'user', 
+          content: userMessage || 'I\'m uploading an invoice image.', 
+          image: currentImagePreview 
+        }
+      ]);
+      
+      // Process the image
+      await processImageFile(currentImageFile, userMessage);
+    } else {
+      // Text-only message
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', content: userMessage }
+      ]);
+      
+      // Process the text message
+      await processTextMessage(userMessage);
+    }
     
     // Clear input
     setInput('');
@@ -88,9 +179,6 @@ const AIInvoiceCreator = () => {
     if (e.target.querySelector('.chat-textarea')) {
       e.target.querySelector('.chat-textarea').style.height = 'auto';
     }
-    
-    // Process the message
-    await processTextMessage(userMessage);
   };
 
   const processTextMessage = async (text) => {
@@ -153,16 +241,23 @@ const AIInvoiceCreator = () => {
     setIsLoading(false);
   };
 
-  const processImageFile = async (file) => {
+  const processImageFile = async (file, text = '') => {
     setIsLoading(true);
     
     try {
       const formData = new FormData();
       formData.append('image', file);
-      
-      // Add conversation history to the form data - stringify properly
-      const conversationHistory = messages.slice(1);
+  
+      // Only keep the bits of each message you actually need
+      const conversationHistory = messages
+        .slice(1)
+        .map(({ image, ...keep }) => keep);
+  
       formData.append('conversation', JSON.stringify(conversationHistory));
+  
+      if (text) {
+        formData.append('text', text);
+      }
       
       console.log("Sending image with conversation history:", conversationHistory.length, "messages");
       
@@ -221,14 +316,27 @@ const AIInvoiceCreator = () => {
     }
     
     setIsLoading(false);
-    
-    // Reset image file and preview after processing
-    setImageFile(null);
-    setShowImagePreview(false);
   };
 
   const handleImageClick = () => {
     fileInputRef.current.click();
+  };
+
+  const handleCancelImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    // Reset file input value so it can be used again with the same file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    // Handle backspace key press when an image is in preview but no text
+    if (e.key === 'Backspace' && imagePreview && !input.trim()) {
+      e.preventDefault();
+      handleCancelImage();
+    }
   };
 
   const handleCreateInvoice = () => {
@@ -436,8 +544,22 @@ const AIInvoiceCreator = () => {
               <span className="message-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
             {message.image && (
-              <div className="message-image">
-                <img src={message.image} alt="Uploaded invoice" />
+              <div className="message-image" style={{ 
+                margin: '10px 0',
+                maxWidth: '300px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                position: 'relative',
+                border: '1px solid #444'
+              }}>
+                <img 
+                  src={message.image} 
+                  alt="Uploaded invoice" 
+                  style={{
+                    width: '100%',
+                    display: 'block'
+                  }}
+                />
               </div>
             )}
             <p>{message.content}</p>
@@ -565,22 +687,83 @@ const AIInvoiceCreator = () => {
           <div ref={messageEndRef} />
         </div>
         
-        <form className="chat-input-form" onSubmit={handleSendMessage}>
-          <div className="chat-input-container">
-            <button 
-              type="button" 
-              className="upload-button"
-              onClick={handleImageClick}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+        <form 
+          className="chat-input-form" 
+          onSubmit={handleSendMessage}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          ref={chatInputRef}
+        >
+          <div 
+            className="chat-input-container"
+            style={{
+              backgroundColor: isDraggingOver ? 'rgba(70, 70, 70, 0.8)' : 'rgba(37, 37, 37, 0.6)',
+              boxShadow: isDraggingOver ? '0 0 10px rgba(255, 59, 48, 0.5)' : undefined,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {imagePreview ? (
+              <div className="image-preview-container" style={{ position: 'relative', marginRight: '10px' }}>
+                <div className="image-preview" style={{ 
+                  width: '60px', 
+                  height: '60px', 
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  border: '1px solid #444',
+                  position: 'relative'
+                }}>
+                  <img 
+                    src={imagePreview} 
+                    alt="Upload preview" 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+                <button 
+                  type="button"
+                  onClick={handleCancelImage}
+                  style={{
+                    position: 'absolute',
+                    top: '-10px',
+                    right: '-10px',
+                    backgroundColor: '#ff3b30',
+                    color: 'white',
+                    border: '2px solid white',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                    zIndex: 100
+                  }}
+                >
+                  ✖
+                </button>
+              </div>
+            ) : (
+              <button 
+                type="button" 
+                className="upload-button"
+                onClick={handleImageClick}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
             <textarea 
               value={input} 
               onChange={handleInputChange} 
-              placeholder="Describe the invoice you want to create..."
+              placeholder={isDraggingOver ? "Drop image here..." : imagePreview ? "Add a message with your image..." : "Describe the invoice you want to create or paste an image..."}
               disabled={isLoading}
               rows="1"
               className="chat-textarea"
@@ -588,12 +771,16 @@ const AIInvoiceCreator = () => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   handleSendMessage(e);
+                } else if (e.key === 'Backspace' && imagePreview && !input.trim()) {
+                  e.preventDefault();
+                  handleCancelImage();
                 }
               }}
             />
             <button 
               type="submit" 
               disabled={isLoading || (!input.trim() && !imageFile)}
+              className={imagePreview ? "send-button-with-image" : ""}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -609,6 +796,32 @@ const AIInvoiceCreator = () => {
             accept="image/*" 
             onChange={handleFileChange}
           />
+          {isDraggingOver && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 9,
+              pointerEvents: 'none'
+            }}>
+              <div style={{
+                padding: '20px 30px',
+                backgroundColor: 'rgba(40, 40, 40, 0.9)',
+                borderRadius: '8px',
+                border: '2px dashed #ff3b30',
+                color: 'white',
+                fontWeight: 'bold'
+              }}>
+                Drop image here
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </AppLayout>

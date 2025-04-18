@@ -216,12 +216,12 @@
 }
 
 .btn-primary {
-  background-color: #ff4b4b;
-  color: #ffffff;
+  background-color: #ff4b4b !important;
+  color: #ffffff !important;
 }
 
 .btn-primary:hover {
-  background-color: #ff6b6b;
+  background-color: #ff6b6b !important;
   transform: translateY(-1px);
 }
 
