@@ -51,4 +51,6 @@ router.post('/text-to-invoice', openaiController.createInvoiceFromText);
 // Route for creating invoice from image
 router.post('/image-to-invoice', upload.single('image'), openaiController.createInvoiceFromImage);
 
+router.post('/assistant', openaiController.createAssistant);
+
 module.exports = router;
