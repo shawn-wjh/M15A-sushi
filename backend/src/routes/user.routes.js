@@ -10,6 +10,7 @@ const auth = require('../middleware/auth');
 const registrationController = require('../controllers/registration.controller');
 const authController = require('../controllers/auth.controller');
 const peppolController = require('../controllers/peppol.controller');
+const userController = require('../controllers/user.controller');
 
 /**
  * Register user

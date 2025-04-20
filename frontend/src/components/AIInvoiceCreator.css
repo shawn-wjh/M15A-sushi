@@ -138,14 +138,14 @@
     cursor: not-allowed;
   }
   
-  .error-message {
+  /* .error-message {
     padding: 0.75rem;
     margin-bottom: 1rem;
     background-color: #ffebee;
     color: #c62828;
     border-radius: 4px;
     border-left: 4px solid #c62828;
-  }
+  } */
 
 .ai-chat-container {
   width: 100%;

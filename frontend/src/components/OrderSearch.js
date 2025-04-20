@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import getCookie from '../utils/cookieHelper';
+import { getCookie } from '../utils/cookieHelper';
 import './OrderSearch.css';
 import apiClient from '../utils/axiosConfig';
 /**

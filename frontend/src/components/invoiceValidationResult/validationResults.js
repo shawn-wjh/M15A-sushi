@@ -1,6 +1,6 @@
 import { useLocation, useHistory } from "react-router-dom";
 import apiClient from "../../utils/axiosConfig";
-import getCookie from "../../utils/cookieHelper";
+import { getCookie } from "../../utils/cookieHelper";
 import "./validationResults.css";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { FaEdit } from "react-icons/fa";

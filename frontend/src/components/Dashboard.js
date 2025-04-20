@@ -786,7 +786,12 @@ const Dashboard = () => {
           {activeSettingsTab === 'peppol' && <PeppolSettings />}
           
           {activeSettingsTab === 'account' && (
-            <AccountInformation user={user}/>
+            <AccountInformation 
+              user={user} 
+              onUserUpdate={(updatedUser) => {
+                setUser(updatedUser);
+              }}
+            />
           )}
           
           {activeSettingsTab === 'security' && (
