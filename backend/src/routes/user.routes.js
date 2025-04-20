@@ -85,4 +85,16 @@ router.delete(
   peppolController.deleteSettings
 );
 
+/**
+ * Update user's details
+ * @route POST /v1/users/update-details
+ * @returns {object} 200 - Details updated successfully
+ * @returns {Error} 400 - Invalid email or reused password
+ */
+router.post(
+  '/update-details',
+  auth.verifyToken,
+  userController.updateDetails
+);
+
 module.exports = router;
