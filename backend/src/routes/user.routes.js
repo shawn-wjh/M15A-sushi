@@ -10,6 +10,7 @@ const auth = require('../middleware/auth');
 const registrationController = require('../controllers/registration.controller');
 const authController = require('../controllers/auth.controller');
 const peppolController = require('../controllers/peppol.controller');
+const userController = require('../controllers/user.controller');
 
 /**
  * Register user
@@ -83,6 +84,18 @@ router.delete(
   '/peppol-settings',
   auth.verifyToken,
   peppolController.deleteSettings
+);
+
+/**
+ * Update user's details
+ * @route POST /v1/users/update-details
+ * @returns {object} 200 - Details updated successfully
+ * @returns {Error} 400 - Invalid email or reused password
+ */
+router.post(
+  '/update-details',
+  auth.verifyToken,
+  userController.updateDetails
 );
 
 module.exports = router;

@@ -1,6 +1,6 @@
 import { useHistory } from "react-router-dom";
 import apiClient from "../../utils/axiosConfig";
-import getCookie from "../../utils/cookieHelper";
+import { getCookie } from "../../utils/cookieHelper";
 import parseInvoiceXml from "../../utils/parseXmlHelper";
 import { useState, useEffect } from "react";
 import "./InvoiceList.css";

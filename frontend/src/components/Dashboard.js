@@ -786,93 +786,137 @@ const Dashboard = () => {
           {activeSettingsTab === 'peppol' && <PeppolSettings />}
           
           {activeSettingsTab === 'account' && (
-            <AccountInformation user={user}/>
+            <AccountInformation 
+              user={user} 
+              onUserUpdate={(updatedUser) => {
+                setUser(updatedUser);
+              }}
+            />
           )}
           
           {activeSettingsTab === 'security' && (
             <div className="settings-placeholder">
               <div className="settings-option">
-                <h3>Password Management</h3>
-                <p>Change your password to maintain account security</p>
-                <form autoComplete="off" method="post">
-                  {/* Hidden field to prevent autofill */}
-                  <input type="text" name="username" style={{ display: 'none' }} />
-                  <input type="password" name="password" style={{ display: 'none' }} />
+                <h3>Backup Accounts</h3>
+                <p>Link additional email accounts for account recovery and backup</p>
+                
+                <div className="backup-accounts-section">
+                  <div className="linked-accounts">
+                    <h4>Linked Accounts</h4>
+                    <div className="account-list">
+                      <div className="account-item">
+                        <div className="account-info">
+                          <span className="account-email">{user?.email}</span>
+                          <span className="account-status primary">Primary</span>
+                        </div>
+                        <button className="btn btn-secondary btn-sm">Manage</button>
+                      </div>
+                    </div>
+                  </div>
                   
-                  <div className="form-field" style={{ marginTop: '20px' }}>
-                    <label htmlFor="current-password">Current Password</label>
-                    <input 
-                      type="password" 
-                      id="current-password" 
-                      name="current-password"
-                      placeholder="Enter your current password" 
-                      autoComplete="off"
-                      className="settings-input"
-                    />
+                  <div className="add-account-section">
+                    <h4>Add Backup Account</h4>
+                      <div className="form-field">
+                        <input 
+                          type="email" 
+                          id="backup-email"
+                          placeholder="Enter backup email address"
+                          className="settings-input"
+                        />
+                      </div>
+                      <button className="btn btn-primary">
+                        Link Account
+                      </button>
                   </div>
-                  <div className="form-field">
-                    <label htmlFor="new-password">New Password</label>
-                    <input 
-                      type="password" 
-                      id="new-password" 
-                      name="new-password"
-                      placeholder="Enter your new password" 
-                      autoComplete="off"
-                      className="settings-input"
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label htmlFor="confirm-password">Confirm New Password</label>
-                    <input 
-                      type="password" 
-                      id="confirm-password" 
-                      name="confirm-password"
-                      placeholder="Confirm your new password" 
-                      autoComplete="off"
-                      className="settings-input"
-                    />
-                  </div>
-                  <button type="button" className="settings-save-button">
-                    Update Password
-                  </button>
-                </form>
+                </div>
               </div>
-              
+
               <div className="settings-option">
                 <h3>Two-Factor Authentication</h3>
                 <p>Add an extra layer of security to your account</p>
                 
-                <div style={{ marginTop: '20px' }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold', color: '#ffffff', marginBottom: '8px' }}>
-                      Status: <span style={{ color: '#ff4b4b' }}>Disabled</span>
+                <div className="auth-methods">
+                  <div className="auth-method">
+                    <div className="method-content">
+                      <div className="method-header">
+                        <div className="method-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 8V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <div className="method-info">
+                          <h4>Authenticator App</h4>
+                          <p>Use an authenticator app like Google Authenticator or Authy</p>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '16px' }}>
-                      Enhance your account security by enabling 2FA
+                    <div className="method-actions">
+                      <button className="btn btn-primary">Set Up</button>
                     </div>
-                    <button className="settings-save-button" style={{ marginTop: '0' }}>
-                      Enable
-                    </button>
+                  </div>
+
+                  <div className="auth-method">
+                    <div className="method-content">
+                      <div className="method-header">
+                        <div className="method-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 16.92V19.92C22 20.47 21.79 20.98 21.41 21.35C21.04 21.72 20.53 21.92 20 21.92H4C3.47 21.92 2.96 21.72 2.59 21.35C2.22 20.98 2 20.47 2 19.92V16.92" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 2V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M8 12L12 16L16 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <div className="method-info">
+                          <h4>Email Verification</h4>
+                          <p>Receive verification codes via email</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="method-actions">
+                      <button className="btn btn-primary">Enable</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-option">
+                <h3>Session Management</h3>
+                <p>Manage your active sessions and sign out from other devices</p>
+                
+                <div className="active-sessions">
+                  <div className="session-item">
+                    <div className="session-info">
+                      <div className="session-device">
+                        <span className="device-icon">💻</span>
+                        <span className="device-name">Windows PC</span>
+                      </div>
+                      <div className="session-details">
+                        <span className="session-location">New York, USA</span>
+                        <span className="session-time">Active now</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-danger btn-sm">End Session</button>
+                  </div>
+                  
+                  <div className="session-item">
+                    <div className="session-info">
+                      <div className="session-device">
+                        <span className="device-icon">📱</span>
+                        <span className="device-name">iPhone 13</span>
+                      </div>
+                      <div className="session-details">
+                        <span className="session-location">London, UK</span>
+                        <span className="session-time">2 hours ago</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-danger btn-sm">End Session</button>
                   </div>
                 </div>
                 
-                <div style={{ marginTop: '30px' }}>
-                  <h3>Session Management</h3>
-                  <p>Sign out from all other devices</p>
-                  
-                  <div style={{ marginTop: '16px' }}>
-                    <button 
-                      className="settings-save-button" 
-                      style={{ 
-                        backgroundColor: 'transparent', 
-                        border: '1px solid #ff4b4b', 
-                        color: '#ff4b4b', 
-                        marginTop: '0'
-                      }}
-                    >
-                      Sign out everywhere
-                    </button>
-                  </div>
+                <div className="session-actions">
+                  <button className="btn btn-danger">
+                    Sign Out Everywhere
+                  </button>
                 </div>
               </div>
             </div>
