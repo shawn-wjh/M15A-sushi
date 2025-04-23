@@ -814,6 +814,36 @@ const validateFairWorkCommission = (invoice, validationResult) => {
   return validationResult;
 };
 
+const validateBIS30 = (invoice, validationResult) => {
+  console.log("validateBIS30 not implemented yet");
+
+  validationResult.valid = false;
+  validationResult.errors.push(
+    'Missing Tax Scheme (BIS 3.0)'
+  );
+
+  validationResult.errors.push(
+    'Missing VAT Number (BIS 3.0)'
+  );
+
+  return validationResult;
+};
+
+const validateATO = (invoice, validationResult) => {
+  console.log("validateATO not implemented yet");
+
+  validationResult.valid = false;
+  validationResult.errors.push(
+    'Missing ABN (ATO)'
+  );
+
+  validationResult.errors.push(
+    'Missing GST Amount (ATO)'
+  );
+
+  return validationResult;
+};
+
 const validateInvoiceStandardv2 = (req, res, next) => {
   let validationResult = {
     valid: true,
@@ -861,7 +891,8 @@ const validateInvoiceStandardv2 = (req, res, next) => {
       });
     }
 
-    const validSchemas = ['peppol', 'fairwork'];
+    console.log("schemas: ", schemas);
+    const validSchemas = ['peppol', 'fairwork', 'BIS30', 'ATO'];
 
     if (!schemas.every(schema => validSchemas.includes(schema))) {
       return res.status(400).json({
@@ -878,6 +909,14 @@ const validateInvoiceStandardv2 = (req, res, next) => {
 
     if (schemas.includes('fairwork')) {
       validationResult = validateFairWorkCommission(invoice, validationResult);
+    }
+
+    if (schemas.includes('BIS30')) {
+      validationResult = validateBIS30(invoice, validationResult);
+    }
+
+    if (schemas.includes('ATO')) {
+      validationResult = validateATO(invoice, validationResult);
     }
 
     // If validation passes

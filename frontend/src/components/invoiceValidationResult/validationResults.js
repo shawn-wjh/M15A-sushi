@@ -12,6 +12,8 @@ const API_URL = "/v2/invoices";
 export const schemaNameMap = {
   "peppol": "PEPPOL A-NZ",
   "fairwork": "Fair Work Commision",
+  "BIS30": "PEPPOL BIS 3.0",
+  "ATO": "ATO"
 }
 
 async function validateInvoices(invoiceIds, schemas, handleEdit) {
