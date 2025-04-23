@@ -70,6 +70,30 @@ function ValidationSchemaPopUp({ onClose, invoiceIds }) {
             />
             <label>Fairwork Commission</label>
           </div>
+          <div 
+            className={`schema-option ${selectedSchemas.includes('BIS30') ? 'selected' : ''}`}
+            onClick={() => handleSchemaChange('BIS30')}
+          >
+            <input 
+              type="checkbox" 
+              value="BIS30" 
+              checked={selectedSchemas.includes('BIS30')}
+              onChange={() => {}} 
+            />
+            <label>PEPPOL BIS 3.0</label>
+          </div>
+          <div 
+            className={`schema-option ${selectedSchemas.includes('ATO') ? 'selected' : ''}`}
+            onClick={() => handleSchemaChange('ATO')}
+          >
+            <input 
+              type="checkbox" 
+              value="ATO" 
+              checked={selectedSchemas.includes('ATO')}
+              onChange={() => {}} 
+            />
+            <label>ATO</label>
+          </div>
         </div>
         {message && <div className="validation-message">{message.message}</div>}
         <div className="validation-buttons">

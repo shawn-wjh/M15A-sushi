@@ -61,13 +61,13 @@
 }
 
 .validation-schemas {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
 .schema-option {
-  flex: 1;
   background-color: var(--dark-gray);
   border-radius: 8px;
   padding: 1rem;
@@ -77,6 +77,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-height: 60px;
 }
 
 .schema-option:hover {

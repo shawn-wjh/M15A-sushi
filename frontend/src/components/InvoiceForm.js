@@ -1469,6 +1469,30 @@ const InvoiceForm = ({ editMode = false, invoiceToEdit = null }) => {
                       />
                       <label>Fairwork Commission</label>
                     </div>
+                    <div 
+                      className={`schema-option ${selectedSchemas.includes('BIS30') ? 'selected' : ''}`}
+                      onClick={() => handleSchemaChange('BIS30')}
+                    >
+                      <input 
+                        type="checkbox" 
+                        value="BIS30" 
+                        checked={selectedSchemas.includes('BIS30')}
+                        onChange={() => handleSchemaChange('BIS30')} 
+                      />
+                      <label>PEPPOL BIS 3.0</label>
+                    </div>
+                    <div 
+                      className={`schema-option ${selectedSchemas.includes('ATO') ? 'selected' : ''}`}
+                      onClick={() => handleSchemaChange('ATO')}
+                    >
+                      <input 
+                        type="checkbox" 
+                        value="ATO" 
+                        checked={selectedSchemas.includes('ATO')}
+                        onChange={() => handleSchemaChange('ATO')} 
+                      />
+                      <label>ATO</label>
+                    </div>
                   </div>
                 </div>
               )}
